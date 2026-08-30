@@ -12,6 +12,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.authappliation.domain.item.Item
 
@@ -39,4 +40,17 @@ fun FavoriteScreen(
             }
         }
     }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun FavoriteScreenPreview() {
+    FavoriteScreen(
+        items = listOf(
+            Item(id = "1", title = "アイテム1"),
+            Item(id = "2", title = "アイテム2"),
+            Item(id = "3", title = "アイテム3"),
+        ),
+        onItemClick = {},
+    )
 }
