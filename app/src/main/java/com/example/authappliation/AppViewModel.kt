@@ -6,8 +6,11 @@ import com.example.authappliation.domain.auth.IsAuthenticatedUseCase
 import com.example.authappliation.domain.auth.SetAuthenticatedUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -15,6 +18,10 @@ import kotlinx.coroutines.launch
 sealed interface AuthUiState {
     data object Loading : AuthUiState
     data class Ready(val isAuthenticated: Boolean) : AuthUiState
+}
+
+sealed interface AppEvent {
+    data object NavigateLogin : AppEvent
 }
 
 @HiltViewModel
@@ -31,11 +38,14 @@ class AppViewModel @Inject constructor(
             initialValue = AuthUiState.Loading,
         )
 
+    private val _event = MutableSharedFlow<AppEvent>()
+    val event: SharedFlow<AppEvent> = _event.asSharedFlow()
+
     /** ログアウトする。認証状態のみ解除し、アプリデータは削除しない。 */
-    fun logout(onSuccess: () -> Unit) {
+    fun logout() {
         viewModelScope.launch {
             setAuthenticatedUseCase(false)
-            onSuccess()
+            _event.emit(AppEvent.NavigateLogin)
         }
     }
 }

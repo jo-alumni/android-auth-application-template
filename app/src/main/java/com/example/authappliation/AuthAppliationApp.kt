@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -37,17 +38,23 @@ fun AuthAppliationApp(appViewModel: AppViewModel = hiltViewModel()) {
                 currentDestination?.hasRoute(destination.route::class) == true
             }
 
+            LaunchedEffect(navController) {
+                appViewModel.event.collect { event ->
+                    when (event) {
+                        AppEvent.NavigateLogin -> {
+                            navController.navigate(AppRoute.Login) {
+                                popUpTo(0) { inclusive = true }
+                            }
+                        }
+                    }
+                }
+            }
+
             Scaffold(
                 topBar = {
                     if (showBottomBar) {
                         AppTopBar(
-                            onLogoutClick = {
-                                appViewModel.logout(onSuccess = {
-                                    navController.navigate(AppRoute.Login) {
-                                        popUpTo(0) { inclusive = true }
-                                    }
-                                })
-                            },
+                            onLogoutClick = { appViewModel.logout() },
                         )
                     }
                 },
