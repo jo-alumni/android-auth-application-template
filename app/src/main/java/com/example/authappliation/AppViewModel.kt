@@ -2,8 +2,8 @@ package com.example.authappliation
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.authappliation.domain.auth.ClearAuthTokenUseCase
 import com.example.authappliation.domain.auth.IsAuthenticatedUseCase
-import com.example.authappliation.domain.auth.SetAuthenticatedUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -27,7 +27,7 @@ sealed interface AppEvent {
 @HiltViewModel
 class AppViewModel @Inject constructor(
     isAuthenticatedUseCase: IsAuthenticatedUseCase,
-    private val setAuthenticatedUseCase: SetAuthenticatedUseCase,
+    private val clearAuthTokenUseCase: ClearAuthTokenUseCase,
 ) : ViewModel() {
 
     val authState: StateFlow<AuthUiState> = isAuthenticatedUseCase()
@@ -44,7 +44,7 @@ class AppViewModel @Inject constructor(
     /** ログアウトする。認証状態のみ解除し、アプリデータは削除しない。 */
     fun logout() {
         viewModelScope.launch {
-            setAuthenticatedUseCase(false)
+            clearAuthTokenUseCase()
             _event.emit(AppEvent.NavigateLogin)
         }
     }

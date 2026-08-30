@@ -1,27 +1,29 @@
 package com.example.authappliation.data.auth
 
 import androidx.datastore.core.DataStore
-import androidx.datastore.preferences.core.Preferences
-import androidx.datastore.preferences.core.booleanPreferencesKey
-import androidx.datastore.preferences.core.edit
+import com.example.authappliation.data.auth.proto.AuthPrefs
+import com.example.authappliation.data.auth.proto.copy
 import com.example.authappliation.domain.auth.AuthRepository
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
-private val KEY_IS_AUTHENTICATED = booleanPreferencesKey("is_authenticated")
-
-/** DataStore Preferencesで認証状態を永続化する実装。 */
+/** Tink AEAD暗号化されたProto DataStoreで認証トークンを永続化する実装。 */
 @Singleton
 class AuthRepositoryImpl @Inject constructor(
-    private val dataStore: DataStore<Preferences>,
+    private val dataStore: DataStore<AuthPrefs>,
 ) : AuthRepository {
 
-    override fun observeIsAuthenticated(): Flow<Boolean> =
-        dataStore.data.map { preferences -> preferences[KEY_IS_AUTHENTICATED] ?: false }
+    override fun observeAuthToken(): Flow<String?> =
+        dataStore.data.map { prefs -> prefs.authToken.ifEmpty { null } }
 
-    override suspend fun setAuthenticated(value: Boolean) {
-        dataStore.edit { preferences -> preferences[KEY_IS_AUTHENTICATED] = value }
+    override suspend fun setAuthToken(token: String) {
+        require(token.isNotBlank()) { "token must not be blank" }
+        dataStore.updateData { prefs -> prefs.copy { authToken = token } }
+    }
+
+    override suspend fun clearAuthToken() {
+        dataStore.updateData { prefs -> prefs.copy { authToken = "" } }
     }
 }
