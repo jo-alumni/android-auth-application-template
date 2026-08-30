@@ -25,7 +25,7 @@ dependencyResolutionManagement {
 rootProject.name = "AuthAppliation"
 include(":app")
 include(":app:core")
-include(":app:feature:auth")
+include(":app:feature:login")
 include(":app:feature:home")
 include(":app:feature:search")
 include(":app:feature:favorite")

@@ -40,7 +40,7 @@ android {
 
 dependencies {
     implementation(project(":app:core"))
-    implementation(project(":app:feature:auth"))
+    implementation(project(":app:feature:login"))
     implementation(project(":app:feature:home"))
     implementation(project(":app:feature:search"))
     implementation(project(":app:feature:favorite"))

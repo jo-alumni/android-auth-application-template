@@ -5,7 +5,7 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import com.example.authappliation.core.navigation.AppRoute
-import com.example.authappliation.feature.auth.authScreen
+import com.example.authappliation.feature.login.loginScreen
 import com.example.authappliation.feature.detail.detailScreen
 import com.example.authappliation.feature.favorite.favoriteScreen
 import com.example.authappliation.feature.home.homeScreen
@@ -22,7 +22,7 @@ fun AppNavHost(
         startDestination = startDestination,
         modifier = modifier,
     ) {
-        authScreen(navigateHome = {
+        loginScreen(navigateHome = {
             navController.navigate(AppRoute.Home) {
                 popUpTo(AppRoute.Login) { inclusive = true }
             }
