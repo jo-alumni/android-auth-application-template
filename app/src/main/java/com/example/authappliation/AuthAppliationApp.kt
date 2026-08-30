@@ -16,6 +16,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.example.authappliation.core.navigation.AppRoute
 import com.example.authappliation.core.navigation.TopLevelDestination
+import com.example.authappliation.core.ui.AppTopBar
 import com.example.authappliation.navigation.AppBottomBar
 import com.example.authappliation.navigation.AppNavHost
 
@@ -37,6 +38,19 @@ fun AuthAppliationApp(appViewModel: AppViewModel = hiltViewModel()) {
             }
 
             Scaffold(
+                topBar = {
+                    if (showBottomBar) {
+                        AppTopBar(
+                            onLogoutClick = {
+                                appViewModel.logout(onSuccess = {
+                                    navController.navigate(AppRoute.Login) {
+                                        popUpTo(0) { inclusive = true }
+                                    }
+                                })
+                            },
+                        )
+                    }
+                },
                 bottomBar = {
                     if (showBottomBar) {
                         AppBottomBar(navController = navController, currentDestination = currentDestination)
