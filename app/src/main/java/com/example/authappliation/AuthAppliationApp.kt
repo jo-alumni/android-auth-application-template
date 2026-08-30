@@ -43,7 +43,7 @@ fun AuthAppliationApp(appViewModel: AppViewModel = hiltViewModel()) {
                     when (event) {
                         AppEvent.NavigateLogin -> {
                             navController.navigate(AppRoute.Login) {
-                                popUpTo(0) { inclusive = true }
+                                popUpTo(navController.graph.id) { inclusive = true }
                             }
                         }
                     }
