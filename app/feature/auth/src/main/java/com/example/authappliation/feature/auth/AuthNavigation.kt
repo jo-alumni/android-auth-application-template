@@ -6,9 +6,9 @@ import androidx.navigation.compose.composable
 import com.example.authappliation.core.navigation.AppRoute
 
 /** ログイン画面をNavGraphに登録する。NavControllerは公開せずコールバックで通知する。 */
-fun NavGraphBuilder.authScreen(onLoginSuccess: () -> Unit) {
+fun NavGraphBuilder.authScreen(navigateHome: () -> Unit) {
     composable<AppRoute.Login> {
         val viewModel: LoginViewModel = hiltViewModel()
-        LoginScreen(onLoginClick = { viewModel.login(onSuccess = onLoginSuccess) })
+        LoginScreen(onLoginClick = { viewModel.login(onSuccess = navigateHome) })
     }
 }

@@ -8,10 +8,10 @@ import androidx.navigation.compose.composable
 import com.example.authappliation.core.navigation.AppRoute
 
 /** 検索画面をNavGraphに登録する。NavControllerは公開せずコールバックで通知する。 */
-fun NavGraphBuilder.searchScreen(onItemClick: (String) -> Unit) {
+fun NavGraphBuilder.searchScreen(navigateDetail: (String) -> Unit) {
     composable<AppRoute.Search> {
         val viewModel: SearchViewModel = hiltViewModel()
         val items by viewModel.items.collectAsStateWithLifecycle()
-        SearchScreen(items = items, onItemClick = onItemClick)
+        SearchScreen(items = items, onItemClick = navigateDetail)
     }
 }

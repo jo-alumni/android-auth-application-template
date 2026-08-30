@@ -22,14 +22,14 @@ fun AppNavHost(
         startDestination = startDestination,
         modifier = modifier,
     ) {
-        authScreen(onLoginSuccess = {
+        authScreen(navigateHome = {
             navController.navigate(AppRoute.Home) {
                 popUpTo(AppRoute.Login) { inclusive = true }
             }
         })
-        homeScreen(onItemClick = { itemId -> navController.navigate(AppRoute.Detail(itemId)) })
-        searchScreen(onItemClick = { itemId -> navController.navigate(AppRoute.Detail(itemId)) })
-        favoriteScreen(onItemClick = { itemId -> navController.navigate(AppRoute.Detail(itemId)) })
-        detailScreen(onBackClick = { navController.popBackStack() })
+        homeScreen(navigateDetail = { itemId -> navController.navigate(AppRoute.Detail(itemId)) })
+        searchScreen(navigateDetail = { itemId -> navController.navigate(AppRoute.Detail(itemId)) })
+        favoriteScreen(navigateDetail = { itemId -> navController.navigate(AppRoute.Detail(itemId)) })
+        detailScreen(navigateBack = { navController.popBackStack() })
     }
 }
