@@ -15,10 +15,11 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.toRoute
 import com.example.authappliation.core.navigation.AppRoute
+import com.example.authappliation.feature.auth.authScreen
 
 /**
- * ナビゲーション骨格。現時点ではプレースホルダー画面のみを繋いでおり、
- * 各featureモジュールの実装（Step5以降）で実際の画面Composableに置き換える。
+ * ナビゲーション骨格。ログイン画面は:app:feature:authの実装に接続済み。
+ * ホーム/検索/お気に入り/詳細はプレースホルダーのままで、Step6で各featureモジュールに置き換える。
  */
 @Composable
 fun AppNavHost(
@@ -31,17 +32,11 @@ fun AppNavHost(
         startDestination = startDestination,
         modifier = modifier,
     ) {
-        composable<AppRoute.Login> {
-            PlaceholderScreen(title = "ログイン画面") {
-                Button(onClick = {
-                    navController.navigate(AppRoute.Home) {
-                        popUpTo(AppRoute.Login) { inclusive = true }
-                    }
-                }) {
-                    Text("ログイン")
-                }
+        authScreen(onLoginSuccess = {
+            navController.navigate(AppRoute.Home) {
+                popUpTo(AppRoute.Login) { inclusive = true }
             }
-        }
+        })
         composable<AppRoute.Home> {
             PlaceholderScreen(title = "ホーム画面") {
                 Button(onClick = { navController.navigate(AppRoute.Detail(itemId = "1")) }) {
