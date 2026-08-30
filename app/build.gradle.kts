@@ -39,14 +39,14 @@ android {
 }
 
 dependencies {
-    implementation(project(":app:core"))
-    implementation(project(":app:feature:login"))
-    implementation(project(":app:feature:home"))
-    implementation(project(":app:feature:search"))
-    implementation(project(":app:feature:favorite"))
-    implementation(project(":app:feature:detail"))
-    implementation(project(":domain"))
-    implementation(project(":data"))
+    implementation(projects.app.core)
+    implementation(projects.app.feature.login)
+    implementation(projects.app.feature.home)
+    implementation(projects.app.feature.search)
+    implementation(projects.app.feature.favorite)
+    implementation(projects.app.feature.detail)
+    implementation(projects.domain)
+    implementation(projects.data)
 
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.activity.compose)

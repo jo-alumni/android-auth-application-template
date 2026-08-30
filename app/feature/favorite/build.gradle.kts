@@ -27,8 +27,8 @@ android {
 }
 
 dependencies {
-    implementation(project(":app:core"))
-    implementation(project(":domain"))
+    implementation(projects.app.core)
+    implementation(projects.domain)
 
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.compose.material3)
