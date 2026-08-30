@@ -1,26 +1,16 @@
 package com.example.authappliation.navigation
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Button
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
-import androidx.navigation.toRoute
 import com.example.authappliation.core.navigation.AppRoute
 import com.example.authappliation.feature.auth.authScreen
+import com.example.authappliation.feature.detail.detailScreen
+import com.example.authappliation.feature.favorite.favoriteScreen
+import com.example.authappliation.feature.home.homeScreen
+import com.example.authappliation.feature.search.searchScreen
 
-/**
- * ナビゲーション骨格。ログイン画面は:app:feature:authの実装に接続済み。
- * ホーム/検索/お気に入り/詳細はプレースホルダーのままで、Step6で各featureモジュールに置き換える。
- */
 @Composable
 fun AppNavHost(
     navController: NavHostController,
@@ -37,47 +27,9 @@ fun AppNavHost(
                 popUpTo(AppRoute.Login) { inclusive = true }
             }
         })
-        composable<AppRoute.Home> {
-            PlaceholderScreen(title = "ホーム画面") {
-                Button(onClick = { navController.navigate(AppRoute.Detail(itemId = "1")) }) {
-                    Text("詳細画面へ")
-                }
-            }
-        }
-        composable<AppRoute.Search> {
-            PlaceholderScreen(title = "検索画面") {
-                Button(onClick = { navController.navigate(AppRoute.Detail(itemId = "1")) }) {
-                    Text("詳細画面へ")
-                }
-            }
-        }
-        composable<AppRoute.Favorite> {
-            PlaceholderScreen(title = "お気に入り画面") {
-                Button(onClick = { navController.navigate(AppRoute.Detail(itemId = "1")) }) {
-                    Text("詳細画面へ")
-                }
-            }
-        }
-        composable<AppRoute.Detail> { backStackEntry ->
-            val detail: AppRoute.Detail = backStackEntry.toRoute()
-            PlaceholderScreen(title = "詳細画面 (id: ${detail.itemId})") {
-                Button(onClick = { navController.popBackStack() }) {
-                    Text("戻る")
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun PlaceholderScreen(title: String, content: @Composable () -> Unit) {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp),
-    ) {
-        Text(text = title, style = MaterialTheme.typography.headlineSmall)
-        content()
+        homeScreen(onItemClick = { itemId -> navController.navigate(AppRoute.Detail(itemId)) })
+        searchScreen(onItemClick = { itemId -> navController.navigate(AppRoute.Detail(itemId)) })
+        favoriteScreen(onItemClick = { itemId -> navController.navigate(AppRoute.Detail(itemId)) })
+        detailScreen(onBackClick = { navController.popBackStack() })
     }
 }
