@@ -7,7 +7,7 @@ plugins {
 }
 
 android {
-    namespace = "com.example.authappliation.feature.favorite"
+    namespace = "com.example.authapplication.feature.favorite"
     compileSdk {
         version = release(37)
     }

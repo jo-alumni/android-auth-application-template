@@ -7,13 +7,13 @@ plugins {
 }
 
 android {
-    namespace = "com.example.authappliation"
+    namespace = "com.example.authapplication"
     compileSdk {
         version = release(37)
     }
 
     defaultConfig {
-        applicationId = "com.example.authappliation"
+        applicationId = "com.example.authapplication"
         minSdk = 29
         targetSdk = 37
         versionCode = 1

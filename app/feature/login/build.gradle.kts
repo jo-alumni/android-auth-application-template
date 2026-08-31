@@ -7,7 +7,7 @@ plugins {
 }
 
 android {
-    namespace = "com.example.authappliation.feature.login"
+    namespace = "com.example.authapplication.feature.login"
     compileSdk {
         version = release(37)
     }

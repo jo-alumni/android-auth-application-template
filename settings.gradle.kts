@@ -24,7 +24,7 @@ dependencyResolutionManagement {
 
 enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 
-rootProject.name = "AuthAppliation"
+rootProject.name = "AuthApplication"
 include(":app")
 include(":app:core")
 include(":app:feature:login")

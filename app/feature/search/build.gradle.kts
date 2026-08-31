@@ -7,7 +7,7 @@ plugins {
 }
 
 android {
-    namespace = "com.example.authappliation.feature.search"
+    namespace = "com.example.authapplication.feature.search"
     compileSdk {
         version = release(37)
     }

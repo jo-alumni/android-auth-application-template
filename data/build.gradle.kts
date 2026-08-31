@@ -6,7 +6,7 @@ plugins {
 }
 
 android {
-    namespace = "com.example.authappliation.data"
+    namespace = "com.example.authapplication.data"
     compileSdk {
         version = release(37)
     }

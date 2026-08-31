@@ -24,8 +24,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ./gradlew :app:testDebugUnitTest
 
 # 単一テストクラス/メソッドの実行
-./gradlew :app:testDebugUnitTest --tests "com.example.authappliation.ExampleUnitTest"
-./gradlew :app:testDebugUnitTest --tests "com.example.authappliation.ExampleUnitTest.methodName"
+./gradlew :app:testDebugUnitTest --tests "com.example.authapplication.ExampleUnitTest"
+./gradlew :app:testDebugUnitTest --tests "com.example.authapplication.ExampleUnitTest.methodName"
 
 # 実機/エミュレータが必要な計装テスト
 ./gradlew connectedAndroidTest
