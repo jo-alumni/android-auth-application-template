@@ -13,6 +13,7 @@ if [ -n "${ANDROID_HOME:-}" ] && [ ! -f local.properties ]; then
   echo "sdk.dir=${ANDROID_HOME}" > local.properties
 fi
 
-# Gradle Wrapper本体と、ビルド/テストで使う依存関係を事前に解決しておくことで、
-# 以降の ./gradlew タスク実行時のネットワーク待ちを減らす。
-./gradlew testDebugUnitTest assembleDebug lint --stacktrace
+# Gradle Wrapper本体・ビルドスクリプトのプラグイン依存関係だけを事前に解決しておく。
+# test/assemble/lintをフルで実行すると毎セッション起動のコストが大きすぎるため、
+# ここでは行わず、実際に必要になったタイミングで各コマンドに任せる。
+./gradlew help --stacktrace
