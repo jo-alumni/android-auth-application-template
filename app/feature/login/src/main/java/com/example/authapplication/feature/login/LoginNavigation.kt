@@ -1,5 +1,6 @@
 package com.example.authapplication.feature.login
 
+import androidx.compose.runtime.LaunchedEffect
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
@@ -9,6 +10,15 @@ import com.example.authapplication.core.navigation.AppRoute
 fun NavGraphBuilder.loginScreen(navigateHome: () -> Unit) {
     composable<AppRoute.Login> {
         val viewModel: LoginViewModel = hiltViewModel()
-        LoginScreen(onLoginClick = { viewModel.login(onSuccess = navigateHome) })
+
+        LaunchedEffect(viewModel) {
+            viewModel.event.collect { event ->
+                when (event) {
+                    LoginEvent.NavigateHome -> navigateHome()
+                }
+            }
+        }
+
+        LoginScreen(onLoginClick = viewModel::login)
     }
 }
