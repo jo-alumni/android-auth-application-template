@@ -23,6 +23,18 @@
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+
+            <!-- 詳細画面へのディープリンク（例: authapplication://detail/123） -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
+                <data
+                    android:scheme="authapplication"
+                    android:host="detail" />
+            </intent-filter>
         </activity>
     </application>
 
