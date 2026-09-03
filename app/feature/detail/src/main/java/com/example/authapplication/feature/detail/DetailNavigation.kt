@@ -6,6 +6,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
 import androidx.navigation.navDeepLink
+import com.example.authapplication.core.navigation.AppNavTransitions
 import com.example.authapplication.core.navigation.AppRoute
 
 /** 詳細画面のディープリンクのベースURL。`{itemId}` は [AppRoute.Detail.itemId] にマッピングされる。 */
@@ -20,6 +21,8 @@ const val DETAIL_DEEP_LINK_BASE_PATH = "authapplication://detail"
 fun NavGraphBuilder.detailScreen(navigateBack: () -> Unit) {
     composable<AppRoute.Detail>(
         deepLinks = listOf(navDeepLink<AppRoute.Detail>(basePath = DETAIL_DEEP_LINK_BASE_PATH)),
+        enterTransition = AppNavTransitions.slideInFromRight,
+        popExitTransition = AppNavTransitions.slideOutToRight,
     ) {
         val viewModel: DetailViewModel = hiltViewModel()
         val uiState by viewModel.uiState.collectAsStateWithLifecycle()

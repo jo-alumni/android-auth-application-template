@@ -5,11 +5,17 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
+import com.example.authapplication.core.navigation.AppNavTransitions
 import com.example.authapplication.core.navigation.AppRoute
 
 /** 検索画面をNavGraphに登録する。NavControllerは公開せずコールバックで通知する。 */
 fun NavGraphBuilder.searchScreen(navigateDetail: (String) -> Unit) {
-    composable<AppRoute.Search> {
+    composable<AppRoute.Search>(
+        enterTransition = AppNavTransitions.fadeEnter,
+        exitTransition = AppNavTransitions.fadeExit,
+        popEnterTransition = AppNavTransitions.fadeEnter,
+        popExitTransition = AppNavTransitions.fadeExit,
+    ) {
         val viewModel: SearchViewModel = hiltViewModel()
         val items by viewModel.items.collectAsStateWithLifecycle()
         SearchScreen(items = items, onItemClick = navigateDetail)
