@@ -42,8 +42,8 @@ fun AuthApplicationApp(appViewModel: AppViewModel = hiltViewModel()) {
                 appViewModel.event.collect { event ->
                     when (event) {
                         AppEvent.NavigateLogin -> {
-                            navController.navigate(AppRoute.Login) {
-                                popUpTo(navController.graph.id) { inclusive = true }
+                            navController.navigate(AppRoute.AuthGraph) {
+                                popUpTo(AppRoute.MainGraph) { inclusive = true }
                             }
                         }
                     }
@@ -66,7 +66,7 @@ fun AuthApplicationApp(appViewModel: AppViewModel = hiltViewModel()) {
             ) { innerPadding ->
                 AppNavHost(
                     navController = navController,
-                    startDestination = if (state.isAuthenticated) AppRoute.Home else AppRoute.Login,
+                    startDestination = if (state.isAuthenticated) AppRoute.MainGraph else AppRoute.AuthGraph,
                     modifier = Modifier.padding(innerPadding),
                 )
             }

@@ -8,8 +8,16 @@ import kotlinx.serialization.Serializable
  * （composable<T> / navController.navigate(T)）でこれらの型を直接使用する。
  */
 sealed interface AppRoute {
+    /** 認証前の画面群（[Login]）をまとめるネストされたNavGraphのルート。 */
+    @Serializable
+    data object AuthGraph : AppRoute
+
     @Serializable
     data object Login : AppRoute
+
+    /** 認証後の画面群（[Home] / [Search] / [Favorite] / [Detail]）をまとめるネストされたNavGraphのルート。 */
+    @Serializable
+    data object MainGraph : AppRoute
 
     @Serializable
     data object Home : AppRoute
