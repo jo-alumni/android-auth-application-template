@@ -4,11 +4,15 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
+import com.example.authapplication.core.navigation.AppNavTransitions
 import com.example.authapplication.core.navigation.AppRoute
 
 /** ログイン画面をNavGraphに登録する。NavControllerは公開せずコールバックで通知する。 */
 fun NavGraphBuilder.loginScreen(navigateHome: () -> Unit) {
-    composable<AppRoute.Login> {
+    composable<AppRoute.Login>(
+        enterTransition = AppNavTransitions.fadeEnter,
+        exitTransition = AppNavTransitions.fadeExit,
+    ) {
         val viewModel: LoginViewModel = hiltViewModel()
 
         LaunchedEffect(viewModel) {
