@@ -1,4 +1,4 @@
-package com.example.authapplication
+package com.example.authapplication.domain.testing
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi

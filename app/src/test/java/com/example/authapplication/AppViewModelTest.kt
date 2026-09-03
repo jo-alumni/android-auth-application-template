@@ -2,7 +2,9 @@ package com.example.authapplication
 
 import app.cash.turbine.test
 import com.example.authapplication.domain.auth.ClearAuthTokenUseCase
+import com.example.authapplication.domain.auth.FakeAuthRepository
 import com.example.authapplication.domain.auth.IsAuthenticatedUseCase
+import com.example.authapplication.domain.testing.MainDispatcherRule
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest

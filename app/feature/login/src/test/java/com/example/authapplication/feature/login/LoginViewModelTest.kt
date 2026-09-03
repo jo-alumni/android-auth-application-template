@@ -1,7 +1,9 @@
 package com.example.authapplication.feature.login
 
 import app.cash.turbine.test
+import com.example.authapplication.domain.auth.FakeAuthRepository
 import com.example.authapplication.domain.auth.SetAuthTokenUseCase
+import com.example.authapplication.domain.testing.MainDispatcherRule
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest

@@ -1,6 +1,5 @@
-package com.example.authapplication
+package com.example.authapplication.domain.auth
 
-import com.example.authapplication.domain.auth.AuthRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 
