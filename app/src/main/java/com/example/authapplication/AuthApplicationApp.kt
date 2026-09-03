@@ -13,6 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavDestination.Companion.hasRoute
+import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.example.authapplication.core.navigation.AppRoute
@@ -22,7 +23,10 @@ import com.example.authapplication.navigation.AppBottomBar
 import com.example.authapplication.navigation.AppNavHost
 
 @Composable
-fun AuthApplicationApp(appViewModel: AppViewModel = hiltViewModel()) {
+fun AuthApplicationApp(
+    appViewModel: AppViewModel = hiltViewModel(),
+    navController: NavHostController = rememberNavController(),
+) {
     val authState by appViewModel.authState.collectAsStateWithLifecycle()
     when (val state = authState) {
         AuthUiState.Loading -> {
@@ -32,7 +36,6 @@ fun AuthApplicationApp(appViewModel: AppViewModel = hiltViewModel()) {
         }
 
         is AuthUiState.Ready -> {
-            val navController = rememberNavController()
             val currentDestination = navController.currentBackStackEntryAsState().value?.destination
             val showBottomBar = TopLevelDestination.entries.any { destination ->
                 currentDestination?.hasRoute(destination.route::class) == true
