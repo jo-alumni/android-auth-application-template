@@ -1,7 +1,9 @@
 package com.example.authapplication.feature.login
 
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
 import com.example.authapplication.core.navigation.AppNavTransitions
@@ -14,6 +16,7 @@ fun NavGraphBuilder.loginScreen(navigateHome: () -> Unit) {
         exitTransition = AppNavTransitions.fadeExit,
     ) {
         val viewModel: LoginViewModel = hiltViewModel()
+        val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
         LaunchedEffect(viewModel) {
             viewModel.event.collect { event ->
@@ -23,6 +26,6 @@ fun NavGraphBuilder.loginScreen(navigateHome: () -> Unit) {
             }
         }
 
-        LoginScreen(onLoginClick = viewModel::login)
+        LoginScreen(uiState = uiState, onLoginClick = viewModel::login)
     }
 }
