@@ -3,20 +3,31 @@ package com.example.authapplication.feature.login
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 
 @Composable
 fun LoginScreen(
-    onLoginClick: () -> Unit,
+    uiState: LoginUiState,
+    onLoginClick: (id: String, password: String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    var id by rememberSaveable { mutableStateOf("") }
+    var password by rememberSaveable { mutableStateOf("") }
+
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -24,8 +35,30 @@ fun LoginScreen(
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         Text(text = "ログイン画面", style = MaterialTheme.typography.headlineSmall)
-        Button(onClick = onLoginClick) {
-            Text("ログイン")
+        OutlinedTextField(
+            value = id,
+            onValueChange = { id = it },
+            label = { Text("ID") },
+            singleLine = true,
+            modifier = Modifier.fillMaxWidth(),
+        )
+        OutlinedTextField(
+            value = password,
+            onValueChange = { password = it },
+            label = { Text("パスワード") },
+            singleLine = true,
+            visualTransformation = PasswordVisualTransformation(),
+            modifier = Modifier.fillMaxWidth(),
+        )
+        if (uiState is LoginUiState.Error) {
+            Text(text = uiState.message, color = MaterialTheme.colorScheme.error)
+        }
+        Button(
+            onClick = { onLoginClick(id, password) },
+            enabled = uiState !is LoginUiState.Loading,
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            Text(if (uiState is LoginUiState.Loading) "ログイン中..." else "ログイン")
         }
     }
 }
@@ -33,5 +66,5 @@ fun LoginScreen(
 @Preview(showBackground = true)
 @Composable
 private fun LoginScreenPreview() {
-    LoginScreen(onLoginClick = {})
+    LoginScreen(uiState = LoginUiState.Idle, onLoginClick = { _, _ -> })
 }
