@@ -1,20 +1,17 @@
+import org.gradle.api.artifacts.VersionCatalogsExtension
+import org.gradle.kotlin.dsl.getByType
+
 plugins {
-    alias(libs.plugins.android.application)
-    alias(libs.plugins.kotlin.compose)
-    alias(libs.plugins.kotlin.serialization)
-    alias(libs.plugins.ksp)
-    alias(libs.plugins.hilt.android)
+    id("authapplication.android.application")
+    id("authapplication.android.compose")
+    id("authapplication.android.feature")
 }
 
 android {
     namespace = "com.example.authapplication"
-    compileSdk {
-        version = release(37)
-    }
 
     defaultConfig {
         applicationId = "com.example.authapplication"
-        minSdk = 29
         targetSdk = 37
         versionCode = 1
         versionName = "1.0"
@@ -29,14 +26,13 @@ android {
             }
         }
     }
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
-    }
-    buildFeatures {
-        compose = true
-    }
 }
+
+// NOTE: TYPESAFE_PROJECT_ACCESSORS(projects.xxx)有効時、build-logic(included build)由来の
+// プラグインIDを plugins{} で適用したスクリプトでは `libs.xxx` の型安全アクセサが解決できなくなる
+// (Gradleの既知の制限)。そのため、同名の`libs`をローカルvalとして再定義し、
+// `libs.findLibrary("...")` 経由でカタログを参照する。
+val libs = extensions.getByType<VersionCatalogsExtension>().named("libs")
 
 dependencies {
     implementation(projects.app.core)
@@ -48,32 +44,20 @@ dependencies {
     implementation(projects.domain)
     implementation(projects.data)
 
-    implementation(platform(libs.androidx.compose.bom))
-    implementation(libs.androidx.activity.compose)
-    implementation(libs.androidx.compose.material3)
-    implementation(libs.androidx.compose.ui)
-    implementation(libs.androidx.compose.ui.graphics)
-    implementation(libs.androidx.compose.ui.tooling.preview)
-    implementation(libs.androidx.core.ktx)
-    implementation(libs.androidx.lifecycle.runtime.ktx)
-    implementation(libs.androidx.lifecycle.runtime.compose)
-    implementation(libs.androidx.lifecycle.viewmodel.compose)
-    implementation(libs.androidx.navigation.compose)
-    implementation(libs.androidx.hilt.lifecycle.viewmodel.compose)
-    implementation(libs.kotlinx.serialization.json)
-    implementation(libs.hilt.android)
-    ksp(libs.hilt.compiler)
-    testImplementation(libs.junit)
-    testImplementation(libs.kotlinx.coroutines.test)
-    testImplementation(libs.turbine)
+    implementation(libs.findLibrary("androidx-core-ktx").get())
+    implementation(libs.findLibrary("androidx-lifecycle-runtime-ktx").get())
+
+    testImplementation(libs.findLibrary("junit").get())
+    testImplementation(libs.findLibrary("kotlinx-coroutines-test").get())
+    testImplementation(libs.findLibrary("turbine").get())
     testImplementation(testFixtures(projects.domain))
-    androidTestImplementation(platform(libs.androidx.compose.bom))
-    androidTestImplementation(libs.androidx.compose.ui.test.junit4)
-    androidTestImplementation(libs.androidx.espresso.core)
-    androidTestImplementation(libs.androidx.junit)
-    androidTestImplementation(libs.hilt.android.testing)
-    androidTestImplementation(libs.androidx.navigation.testing)
-    kspAndroidTest(libs.hilt.compiler)
-    debugImplementation(libs.androidx.compose.ui.test.manifest)
-    debugImplementation(libs.androidx.compose.ui.tooling)
+    androidTestImplementation(platform(libs.findLibrary("androidx-compose-bom").get()))
+    androidTestImplementation(libs.findLibrary("androidx-compose-ui-test-junit4").get())
+    androidTestImplementation(libs.findLibrary("androidx-espresso-core").get())
+    androidTestImplementation(libs.findLibrary("androidx-junit").get())
+    androidTestImplementation(libs.findLibrary("hilt-android-testing").get())
+    androidTestImplementation(libs.findLibrary("androidx-navigation-testing").get())
+    kspAndroidTest(libs.findLibrary("hilt-compiler").get())
+    debugImplementation(libs.findLibrary("androidx-compose-ui-test-manifest").get())
+    debugImplementation(libs.findLibrary("androidx-compose-ui-tooling").get())
 }
