@@ -1,24 +1,14 @@
+import org.gradle.api.artifacts.VersionCatalogsExtension
+import org.gradle.kotlin.dsl.getByType
+
 plugins {
-    alias(libs.plugins.android.library)
-    alias(libs.plugins.ksp)
-    alias(libs.plugins.hilt.android)
+    id("authapplication.android.library")
+    id("authapplication.hilt")
     alias(libs.plugins.protobuf)
 }
 
 android {
     namespace = "com.example.authapplication.data"
-    compileSdk {
-        version = release(37)
-    }
-
-    defaultConfig {
-        minSdk = 29
-    }
-
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
-    }
 }
 
 // protobuf-gradle-pluginが生成するjava/kotlinソースを、AGP built-in KotlinのKSPが
@@ -26,7 +16,6 @@ android {
 // (gradle.properties の android.disallowKotlinSourceSets=false 参照)。
 // AGPのbuilt-in Kotlinはvariant用のKotlinSourceSetを遅延生成するため afterEvaluate で登録する。
 afterEvaluate {
-    // srcDirにTaskProviderを渡すことで、Gradleが自動的にタスク依存関係を解決する。
     kotlin.sourceSets.getByName("debug") {
         kotlin.srcDir(tasks.named("generateDebugProto"))
     }
@@ -53,17 +42,21 @@ protobuf {
     }
 }
 
+// NOTE: TYPESAFE_PROJECT_ACCESSORS(projects.xxx)有効時、build-logic(included build)由来の
+// プラグインIDを plugins{} で適用したスクリプトでは `libs.xxx` の型安全アクセサが解決できなくなる
+// (Gradleの既知の制限)。そのため、同名の`libs`をローカルvalとして再定義し、
+// `libs.findLibrary("...")` 経由でカタログを参照する。
+val libs = extensions.getByType<VersionCatalogsExtension>().named("libs")
+
 dependencies {
     implementation(projects.domain)
-    implementation(libs.androidx.core.ktx)
-    implementation(libs.androidx.datastore.core)
-    implementation(libs.kotlinx.coroutines.core)
-    implementation(libs.hilt.android)
-    implementation(libs.tink.android)
-    implementation(libs.protobuf.kotlin.lite)
-    implementation(libs.protobuf.javalite)
-    ksp(libs.hilt.compiler)
+    implementation(libs.findLibrary("androidx-core-ktx").get())
+    implementation(libs.findLibrary("androidx-datastore-core").get())
+    implementation(libs.findLibrary("kotlinx-coroutines-core").get())
+    implementation(libs.findLibrary("tink-android").get())
+    implementation(libs.findLibrary("protobuf-kotlin-lite").get())
+    implementation(libs.findLibrary("protobuf-javalite").get())
 
-    testImplementation(libs.junit)
-    testImplementation(libs.kotlinx.coroutines.core)
+    testImplementation(libs.findLibrary("junit").get())
+    testImplementation(libs.findLibrary("kotlinx-coroutines-core").get())
 }

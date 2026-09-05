@@ -44,6 +44,8 @@ Gradleモジュールは以下の依存方向を持つ多層構成（`:app` が�
 - `:domain` — UseCase・Repositoryインターフェース・モデル（Android非依存のKotlinモジュール）。
 - `:data` — Repository実装（DataStoreベースの `AuthRepositoryImpl` など）とHiltの `DataStoreModule` / `RepositoryModule`。
 
+Android Library設定・Compose有効化・Hilt設定など、モジュール間で重複しがちなGradle設定は `build-logic`（Convention Plugin。`settings.gradle.kts` の `pluginManagement.includeBuild("build-logic")` で取り込まれるcomposite build）に集約している。各モジュールは `id("authapplication.android.library")` のようなConvention Plugin IDを適用し、`namespace` やモジュール固有の依存関係のみを自身の `build.gradle.kts` に残す。
+
 認証状態は `DataStore → AuthRepository → IsAuthenticatedUseCase/SetAuthenticatedUseCase → AppViewModel.authState(StateFlow<AuthUiState>)` という流れで伝播し、`AppNavHost` の startDestination 決定やログアウト時の遷移に使われる。ログアウトなどの単発の画面遷移イベントは `AppViewModel.event`（`SharedFlow<AppEvent>`）で通知される([.claude/rules/viewmodel-event-handling.md](.claude/rules/viewmodel-event-handling.md) 参照)。
 
 ## 規約

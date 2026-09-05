@@ -1,51 +1,28 @@
+import org.gradle.api.artifacts.VersionCatalogsExtension
+import org.gradle.kotlin.dsl.getByType
+
 plugins {
-    alias(libs.plugins.android.library)
-    alias(libs.plugins.kotlin.compose)
-    alias(libs.plugins.kotlin.serialization)
-    alias(libs.plugins.ksp)
-    alias(libs.plugins.hilt.android)
+    id("authapplication.android.library")
+    id("authapplication.android.compose")
+    id("authapplication.android.feature")
 }
 
 android {
     namespace = "com.example.authapplication.feature.login"
-    compileSdk {
-        version = release(37)
-    }
-
-    defaultConfig {
-        minSdk = 29
-    }
-
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
-    }
-
-    buildFeatures {
-        compose = true
-    }
 }
+
+// NOTE: TYPESAFE_PROJECT_ACCESSORS(projects.xxx)有効時、build-logic(included build)由来の
+// プラグインIDを plugins{} で適用したスクリプトでは `libs.xxx` の型安全アクセサが解決できなくなる
+// (Gradleの既知の制限)。そのため、同名の`libs`をローカルvalとして再定義し、
+// `libs.findLibrary("...")` 経由でカタログを参照する。
+val libs = extensions.getByType<VersionCatalogsExtension>().named("libs")
 
 dependencies {
     implementation(projects.app.core)
     implementation(projects.domain)
 
-    implementation(platform(libs.androidx.compose.bom))
-    implementation(libs.androidx.compose.material3)
-    implementation(libs.androidx.compose.ui)
-    implementation(libs.androidx.compose.ui.graphics)
-    implementation(libs.androidx.compose.ui.tooling.preview)
-    implementation(libs.androidx.navigation.compose)
-    implementation(libs.androidx.activity.compose)
-    implementation(libs.androidx.lifecycle.runtime.compose)
-    implementation(libs.androidx.lifecycle.viewmodel.compose)
-    implementation(libs.androidx.hilt.lifecycle.viewmodel.compose)
-    implementation(libs.kotlinx.serialization.json)
-    implementation(libs.hilt.android)
-    ksp(libs.hilt.compiler)
-
-    testImplementation(libs.junit)
-    testImplementation(libs.kotlinx.coroutines.test)
-    testImplementation(libs.turbine)
+    testImplementation(libs.findLibrary("junit").get())
+    testImplementation(libs.findLibrary("kotlinx-coroutines-test").get())
+    testImplementation(libs.findLibrary("turbine").get())
     testImplementation(testFixtures(projects.domain))
 }
