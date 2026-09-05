@@ -17,7 +17,7 @@ fun NavGraphBuilder.homeScreen(navigateDetail: (String) -> Unit) {
         popExitTransition = AppNavTransitions.fadeExit,
     ) {
         val viewModel: HomeViewModel = hiltViewModel()
-        val items by viewModel.items.collectAsStateWithLifecycle()
-        HomeScreen(items = items, onItemClick = navigateDetail)
+        val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+        HomeScreen(uiState = uiState, onItemClick = navigateDetail)
     }
 }
