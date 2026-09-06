@@ -23,7 +23,6 @@ import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.onSizeChanged
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.IntOffset
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -110,21 +109,21 @@ fun AuthApplicationApp(
                     }
                 },
             ) { innerPadding ->
-                // ボトムバーが隠れている分だけ下端の余白を減らすが、OSのシステムナビゲーションバー分の
-                // 余白は必ず確保する(AppBottomBarの高さにはシステムナビゲーションバー分のinsetが
-                // 畳み込まれているため、0dpまでクランプするとその分の余白まで失われてしまう)
-                val density = LocalDensity.current
+                // リストの表示領域(レイアウトサイズ)自体はシステムナビゲーションバー領域まで広げる。
+                // ボトムバーのスクロール連動オフセット(bottomBarOffsetHeightPx)にリアルタイム/準
+                // リアルタイムに追従させてLazyColumnのcontentPaddingを動かすと、contentPaddingは
+                // レイアウト計算に直接使われる測定入力のため、フレームごとにremeasureが発生して
+                // カクつく(離散化+animateDpAsStateで緩和を試みても、アニメーション中は結局毎フレーム
+                // 値が変わり続けるため解消しなかった)。
+                // そこで動的な追従はやめ、contentPaddingはシステムナビゲーションバー分の固定値にする。
+                // ボトムバー表示中はリスト末尾がボトムバーの背後に隠れることがあるが、ボトムバーが
+                // 隠れればナビゲーションバー手前まで完全に表示される。
                 val navigationBarPadding = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
-                val hiddenBottomBarHeight = with(density) { (-bottomBarOffsetHeightPx).toDp() }
-                val contentPadding = PaddingValues(
-                    top = innerPadding.calculateTopPadding(),
-                    bottom = (innerPadding.calculateBottomPadding() - hiddenBottomBarHeight)
-                        .coerceAtLeast(navigationBarPadding),
-                )
                 AppNavHost(
                     navController = navController,
                     startDestination = if (state.isAuthenticated) AppRoute.MainGraph else AppRoute.AuthGraph,
-                    modifier = Modifier.padding(contentPadding),
+                    modifier = Modifier.padding(top = innerPadding.calculateTopPadding()),
+                    listContentPadding = PaddingValues(bottom = navigationBarPadding),
                 )
             }
         }

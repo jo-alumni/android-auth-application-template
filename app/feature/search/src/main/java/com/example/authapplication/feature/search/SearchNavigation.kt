@@ -1,5 +1,6 @@
 package com.example.authapplication.feature.search
 
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.runtime.getValue
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -9,7 +10,10 @@ import com.example.authapplication.core.navigation.AppNavTransitions
 import com.example.authapplication.core.navigation.AppRoute
 
 /** 検索画面をNavGraphに登録する。NavControllerは公開せずコールバックで通知する。 */
-fun NavGraphBuilder.searchScreen(navigateDetail: (String) -> Unit) {
+fun NavGraphBuilder.searchScreen(
+    navigateDetail: (String) -> Unit,
+    contentPadding: PaddingValues = PaddingValues(),
+) {
     composable<AppRoute.Search>(
         enterTransition = AppNavTransitions.fadeEnter,
         exitTransition = AppNavTransitions.fadeExit,
@@ -18,6 +22,6 @@ fun NavGraphBuilder.searchScreen(navigateDetail: (String) -> Unit) {
     ) {
         val viewModel: SearchViewModel = hiltViewModel()
         val items by viewModel.items.collectAsStateWithLifecycle()
-        SearchScreen(items = items, onItemClick = navigateDetail)
+        SearchScreen(items = items, onItemClick = navigateDetail, contentPadding = contentPadding)
     }
 }

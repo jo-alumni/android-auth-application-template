@@ -3,6 +3,7 @@ package com.example.authapplication.feature.detail
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
@@ -22,7 +23,10 @@ fun DetailScreen(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .padding(16.dp),
+            .padding(16.dp)
+            // 親のAppNavHostはリスト画面のためにシステムナビゲーションバー領域まで広げているため、
+            // この画面では自前でナビゲーションバー分の余白を確保する
+            .navigationBarsPadding(),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         val message = when (uiState) {
