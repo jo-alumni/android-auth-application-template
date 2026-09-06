@@ -28,7 +28,6 @@ fun FavoriteScreen(
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
-        Text(text = "お気に入り画面", style = MaterialTheme.typography.headlineSmall)
         LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
             items(items = items, key = { it.id }) { item ->
                 Card(
