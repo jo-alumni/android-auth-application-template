@@ -30,4 +30,8 @@ sealed interface AppRoute {
 
     @Serializable
     data class Detail(val itemId: String) : AppRoute
+
+    /** ホーム/検索/お気に入りから遷移する通知一覧画面。全画面ダイアログとして表示する。 */
+    @Serializable
+    data object Notification : AppRoute
 }

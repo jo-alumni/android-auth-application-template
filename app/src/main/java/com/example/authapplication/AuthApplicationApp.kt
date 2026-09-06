@@ -57,6 +57,7 @@ fun AuthApplicationApp(
                 topBar = {
                     if (showBottomBar) {
                         AppTopBar(
+                            onNotificationClick = { navController.navigate(AppRoute.Notification) },
                             onLogoutClick = { appViewModel.logout() },
                         )
                     }
