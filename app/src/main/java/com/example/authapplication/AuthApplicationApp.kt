@@ -1,6 +1,7 @@
 package com.example.authapplication
 
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
@@ -19,7 +20,9 @@ import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavDestination.Companion.hasRoute
@@ -105,10 +108,17 @@ fun AuthApplicationApp(
                     }
                 },
             ) { innerPadding ->
+                // ボトムバーが隠れている分だけ下端の余白を減らし、表示領域をバーの位置まで広げる
+                val density = LocalDensity.current
+                val hiddenBottomBarHeight = with(density) { (-bottomBarOffsetHeightPx).toDp() }
+                val contentPadding = PaddingValues(
+                    top = innerPadding.calculateTopPadding(),
+                    bottom = (innerPadding.calculateBottomPadding() - hiddenBottomBarHeight).coerceAtLeast(0.dp),
+                )
                 AppNavHost(
                     navController = navController,
                     startDestination = if (state.isAuthenticated) AppRoute.MainGraph else AppRoute.AuthGraph,
-                    modifier = Modifier.padding(innerPadding),
+                    modifier = Modifier.padding(contentPadding),
                 )
             }
         }
