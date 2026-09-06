@@ -28,7 +28,7 @@ fun HomeScreen(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .padding(16.dp),
+            .padding(horizontal = 16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         when (uiState) {

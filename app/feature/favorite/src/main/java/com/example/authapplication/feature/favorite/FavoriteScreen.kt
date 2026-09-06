@@ -25,7 +25,7 @@ fun FavoriteScreen(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .padding(16.dp),
+            .padding(horizontal = 16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
