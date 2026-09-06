@@ -24,6 +24,7 @@ import androidx.compose.ui.tooling.preview.Preview
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AppTopBar(
+    title: String,
     onNotificationClick: () -> Unit,
     onLogoutClick: () -> Unit,
     modifier: Modifier = Modifier,
@@ -31,7 +32,7 @@ fun AppTopBar(
     var showLogoutDialog by remember { mutableStateOf(false) }
 
     TopAppBar(
-        title = {},
+        title = { Text(title) },
         actions = {
             IconButton(onClick = onNotificationClick) {
                 Icon(imageVector = Icons.Filled.Notifications, contentDescription = "通知")
@@ -70,5 +71,5 @@ fun AppTopBar(
 @Preview(showBackground = true)
 @Composable
 private fun AppTopBarPreview() {
-    AppTopBar(onNotificationClick = {}, onLogoutClick = {})
+    AppTopBar(title = "ホーム", onNotificationClick = {}, onLogoutClick = {})
 }

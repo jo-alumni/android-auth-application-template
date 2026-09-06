@@ -37,9 +37,10 @@ fun AuthApplicationApp(
 
         is AuthUiState.Ready -> {
             val currentDestination = navController.currentBackStackEntryAsState().value?.destination
-            val showBottomBar = TopLevelDestination.entries.any { destination ->
+            val currentTopLevelDestination = TopLevelDestination.entries.firstOrNull { destination ->
                 currentDestination?.hasRoute(destination.route::class) == true
             }
+            val showBottomBar = currentTopLevelDestination != null
 
             LaunchedEffect(navController) {
                 appViewModel.event.collect { event ->
@@ -55,8 +56,9 @@ fun AuthApplicationApp(
 
             Scaffold(
                 topBar = {
-                    if (showBottomBar) {
+                    if (currentTopLevelDestination != null) {
                         AppTopBar(
+                            title = currentTopLevelDestination.label,
                             onNotificationClick = { navController.navigate(AppRoute.Notification) },
                             onLogoutClick = { appViewModel.logout() },
                         )
