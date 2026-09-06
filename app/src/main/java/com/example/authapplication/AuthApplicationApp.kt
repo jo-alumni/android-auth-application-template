@@ -2,14 +2,24 @@ package com.example.authapplication
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
+import androidx.compose.ui.input.nestedscroll.NestedScrollSource
+import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.unit.IntOffset
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavDestination.Companion.hasRoute
@@ -21,6 +31,7 @@ import com.example.authapplication.core.navigation.TopLevelDestination
 import com.example.authapplication.core.ui.AppTopBar
 import com.example.authapplication.navigation.AppBottomBar
 import com.example.authapplication.navigation.AppNavHost
+import kotlin.math.roundToInt
 
 @Composable
 fun AuthApplicationApp(
@@ -42,6 +53,23 @@ fun AuthApplicationApp(
             }
             val showBottomBar = currentTopLevelDestination != null
 
+            var bottomBarHeightPx by remember { mutableFloatStateOf(0f) }
+            var bottomBarOffsetHeightPx by remember { mutableFloatStateOf(0f) }
+            val bottomBarNestedScrollConnection = remember {
+                object : NestedScrollConnection {
+                    override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
+                        val newOffset = bottomBarOffsetHeightPx + available.y
+                        bottomBarOffsetHeightPx = newOffset.coerceIn(-bottomBarHeightPx, 0f)
+                        return Offset.Zero
+                    }
+                }
+            }
+
+            // タブ切り替え時は常にボトムバーを表示状態から始める
+            LaunchedEffect(currentTopLevelDestination) {
+                bottomBarOffsetHeightPx = 0f
+            }
+
             LaunchedEffect(navController) {
                 appViewModel.event.collect { event ->
                     when (event) {
@@ -55,6 +83,7 @@ fun AuthApplicationApp(
             }
 
             Scaffold(
+                modifier = Modifier.nestedScroll(bottomBarNestedScrollConnection),
                 topBar = {
                     if (currentTopLevelDestination != null) {
                         AppTopBar(
@@ -66,7 +95,13 @@ fun AuthApplicationApp(
                 },
                 bottomBar = {
                     if (showBottomBar) {
-                        AppBottomBar(navController = navController, currentDestination = currentDestination)
+                        AppBottomBar(
+                            navController = navController,
+                            currentDestination = currentDestination,
+                            modifier = Modifier
+                                .onSizeChanged { bottomBarHeightPx = it.height.toFloat() }
+                                .offset { IntOffset(x = 0, y = -bottomBarOffsetHeightPx.roundToInt()) },
+                        )
                     }
                 },
             ) { innerPadding ->
