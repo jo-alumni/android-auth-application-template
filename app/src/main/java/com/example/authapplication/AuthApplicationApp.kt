@@ -2,7 +2,10 @@ package com.example.authapplication
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.CircularProgressIndicator
@@ -22,7 +25,6 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.IntOffset
-import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavDestination.Companion.hasRoute
@@ -108,12 +110,16 @@ fun AuthApplicationApp(
                     }
                 },
             ) { innerPadding ->
-                // ボトムバーが隠れている分だけ下端の余白を減らし、表示領域をバーの位置まで広げる
+                // ボトムバーが隠れている分だけ下端の余白を減らすが、OSのシステムナビゲーションバー分の
+                // 余白は必ず確保する(AppBottomBarの高さにはシステムナビゲーションバー分のinsetが
+                // 畳み込まれているため、0dpまでクランプするとその分の余白まで失われてしまう)
                 val density = LocalDensity.current
+                val navigationBarPadding = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
                 val hiddenBottomBarHeight = with(density) { (-bottomBarOffsetHeightPx).toDp() }
                 val contentPadding = PaddingValues(
                     top = innerPadding.calculateTopPadding(),
-                    bottom = (innerPadding.calculateBottomPadding() - hiddenBottomBarHeight).coerceAtLeast(0.dp),
+                    bottom = (innerPadding.calculateBottomPadding() - hiddenBottomBarHeight)
+                        .coerceAtLeast(navigationBarPadding),
                 )
                 AppNavHost(
                     navController = navController,
