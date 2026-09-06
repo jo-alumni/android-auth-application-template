@@ -110,21 +110,20 @@ fun AuthApplicationApp(
                     }
                 },
             ) { innerPadding ->
-                // ボトムバーが隠れている分だけ下端の余白を減らすが、OSのシステムナビゲーションバー分の
-                // 余白は必ず確保する(AppBottomBarの高さにはシステムナビゲーションバー分のinsetが
-                // 畳み込まれているため、0dpまでクランプするとその分の余白まで失われてしまう)
+                // リストの表示領域(レイアウトサイズ)自体はシステムナビゲーションバー領域まで広げ、
+                // スクロール時の余白(listBottomPadding)としてのみボトムバー/ナビゲーションバー分を
+                // 確保する。これにより、スクロール中はアイテムがナビゲーションバー裏まで描画されつつ、
+                // 最後までスクロールし切った状態ではナビゲーションバーと重ならない。
                 val density = LocalDensity.current
                 val navigationBarPadding = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
                 val hiddenBottomBarHeight = with(density) { (-bottomBarOffsetHeightPx).toDp() }
-                val contentPadding = PaddingValues(
-                    top = innerPadding.calculateTopPadding(),
-                    bottom = (innerPadding.calculateBottomPadding() - hiddenBottomBarHeight)
-                        .coerceAtLeast(navigationBarPadding),
-                )
+                val listBottomPadding = (innerPadding.calculateBottomPadding() - hiddenBottomBarHeight)
+                    .coerceAtLeast(navigationBarPadding)
                 AppNavHost(
                     navController = navController,
                     startDestination = if (state.isAuthenticated) AppRoute.MainGraph else AppRoute.AuthGraph,
-                    modifier = Modifier.padding(contentPadding),
+                    modifier = Modifier.padding(top = innerPadding.calculateTopPadding()),
+                    listContentPadding = PaddingValues(bottom = listBottomPadding),
                 )
             }
         }

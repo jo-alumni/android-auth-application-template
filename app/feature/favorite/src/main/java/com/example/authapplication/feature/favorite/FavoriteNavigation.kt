@@ -1,5 +1,6 @@
 package com.example.authapplication.feature.favorite
 
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.runtime.getValue
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -9,7 +10,10 @@ import com.example.authapplication.core.navigation.AppNavTransitions
 import com.example.authapplication.core.navigation.AppRoute
 
 /** お気に入り画面をNavGraphに登録する。NavControllerは公開せずコールバックで通知する。 */
-fun NavGraphBuilder.favoriteScreen(navigateDetail: (String) -> Unit) {
+fun NavGraphBuilder.favoriteScreen(
+    navigateDetail: (String) -> Unit,
+    contentPadding: PaddingValues = PaddingValues(),
+) {
     composable<AppRoute.Favorite>(
         enterTransition = AppNavTransitions.fadeEnter,
         exitTransition = AppNavTransitions.fadeExit,
@@ -18,6 +22,6 @@ fun NavGraphBuilder.favoriteScreen(navigateDetail: (String) -> Unit) {
     ) {
         val viewModel: FavoriteViewModel = hiltViewModel()
         val items by viewModel.items.collectAsStateWithLifecycle()
-        FavoriteScreen(items = items, onItemClick = navigateDetail)
+        FavoriteScreen(items = items, onItemClick = navigateDetail, contentPadding = contentPadding)
     }
 }

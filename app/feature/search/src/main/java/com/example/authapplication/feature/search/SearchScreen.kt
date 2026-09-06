@@ -2,6 +2,7 @@ package com.example.authapplication.feature.search
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -27,6 +28,7 @@ fun SearchScreen(
     items: List<Item>,
     onItemClick: (String) -> Unit,
     modifier: Modifier = Modifier,
+    contentPadding: PaddingValues = PaddingValues(),
 ) {
     var query by rememberSaveable { mutableStateOf("") }
     val filteredItems = remember(items, query) {
@@ -48,7 +50,10 @@ fun SearchScreen(
             label = { Text("検索キーワード") },
             modifier = Modifier.fillMaxWidth(),
         )
-        LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        LazyColumn(
+            contentPadding = contentPadding,
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
             items(items = filteredItems, key = { it.id }) { item ->
                 Card(
                     onClick = { onItemClick(item.id) },
