@@ -1,6 +1,5 @@
 package com.example.authapplication
 
-import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.WindowInsets
@@ -13,7 +12,6 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.remember
@@ -111,34 +109,21 @@ fun AuthApplicationApp(
                     }
                 },
             ) { innerPadding ->
-                // リストの表示領域(レイアウトサイズ)自体はシステムナビゲーションバー領域まで広げ、
-                // スクロール時の余白(listBottomPadding)としてのみボトムバー/ナビゲーションバー分を
-                // 確保する。これにより、スクロール中はアイテムがナビゲーションバー裏まで描画されつつ、
-                // 最後までスクロールし切った状態ではナビゲーションバーと重ならない。
-                //
-                // ドラッグ中の連続的なpx値をそのままLazyColumnのcontentPaddingへ流すと、
-                // contentPaddingはレイアウト計算に直接使われる測定入力のため、フレームごとに
-                // remeasureが発生してカクつく。そこで「ボトムバーが半分以上隠れたか」という
-                // 離散的な状態に変換し、その状態が切り替わった時だけanimateDpAsStateで
-                // なめらかに遷移させる。
+                // リストの表示領域(レイアウトサイズ)自体はシステムナビゲーションバー領域まで広げる。
+                // ボトムバーのスクロール連動オフセット(bottomBarOffsetHeightPx)にリアルタイム/準
+                // リアルタイムに追従させてLazyColumnのcontentPaddingを動かすと、contentPaddingは
+                // レイアウト計算に直接使われる測定入力のため、フレームごとにremeasureが発生して
+                // カクつく(離散化+animateDpAsStateで緩和を試みても、アニメーション中は結局毎フレーム
+                // 値が変わり続けるため解消しなかった)。
+                // そこで動的な追従はやめ、contentPaddingはシステムナビゲーションバー分の固定値にする。
+                // ボトムバー表示中はリスト末尾がボトムバーの背後に隠れることがあるが、ボトムバーが
+                // 隠れればナビゲーションバー手前まで完全に表示される。
                 val navigationBarPadding = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
-                val isBottomBarMostlyHidden by remember {
-                    derivedStateOf { bottomBarHeightPx > 0f && bottomBarOffsetHeightPx < -bottomBarHeightPx / 2f }
-                }
-                val targetListBottomPadding = if (isBottomBarMostlyHidden) {
-                    navigationBarPadding
-                } else {
-                    innerPadding.calculateBottomPadding()
-                }
-                val listBottomPadding by animateDpAsState(
-                    targetValue = targetListBottomPadding,
-                    label = "listBottomPadding",
-                )
                 AppNavHost(
                     navController = navController,
                     startDestination = if (state.isAuthenticated) AppRoute.MainGraph else AppRoute.AuthGraph,
                     modifier = Modifier.padding(top = innerPadding.calculateTopPadding()),
-                    listContentPadding = PaddingValues(bottom = listBottomPadding),
+                    listContentPadding = PaddingValues(bottom = navigationBarPadding),
                 )
             }
         }
