@@ -10,6 +10,7 @@ import com.example.authapplication.feature.login.loginScreen
 import com.example.authapplication.feature.detail.detailScreen
 import com.example.authapplication.feature.favorite.favoriteScreen
 import com.example.authapplication.feature.home.homeScreen
+import com.example.authapplication.feature.notification.notificationScreen
 import com.example.authapplication.feature.search.searchScreen
 
 /**
@@ -41,6 +42,7 @@ fun AppNavHost(
             searchScreen(navigateDetail = { itemId -> navController.navigate(AppRoute.Detail(itemId)) })
             favoriteScreen(navigateDetail = { itemId -> navController.navigate(AppRoute.Detail(itemId)) })
             detailScreen(navigateBack = { navController.popBackStack() })
+            notificationScreen(navigateBack = { navController.popBackStack() })
         }
     }
 }

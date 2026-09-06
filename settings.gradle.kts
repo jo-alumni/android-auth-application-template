@@ -33,6 +33,7 @@ include(":app:feature:home")
 include(":app:feature:search")
 include(":app:feature:favorite")
 include(":app:feature:detail")
+include(":app:feature:notification")
 include(":domain")
 include(":data")
  

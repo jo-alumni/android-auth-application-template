@@ -41,6 +41,7 @@ dependencies {
     implementation(projects.app.feature.search)
     implementation(projects.app.feature.favorite)
     implementation(projects.app.feature.detail)
+    implementation(projects.app.feature.notification)
     implementation(projects.domain)
     implementation(projects.data)
 
