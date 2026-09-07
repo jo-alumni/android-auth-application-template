@@ -43,6 +43,7 @@ fun AuthApplicationApp(
     navController: NavHostController = rememberNavController(),
 ) {
     val authState by appViewModel.authState.collectAsStateWithLifecycle()
+    val isErrorInjectionEnabled by appViewModel.isErrorInjectionEnabled.collectAsStateWithLifecycle()
     when (val state = authState) {
         AuthUiState.Loading -> {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -92,6 +93,8 @@ fun AuthApplicationApp(
                     if (currentTopLevelDestination != null) {
                         AppTopBar(
                             title = currentTopLevelDestination.label,
+                            isErrorInjectionEnabled = isErrorInjectionEnabled,
+                            onErrorInjectionChange = appViewModel::setErrorInjectionEnabled,
                             onNotificationClick = { navController.navigate(AppRoute.Notification) },
                             onLogoutClick = { appViewModel.logout() },
                         )

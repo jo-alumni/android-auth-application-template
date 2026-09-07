@@ -14,9 +14,13 @@ class FakeFavoriteRepository(
 
     private val favoriteIds = MutableStateFlow(initialFavoriteIds)
 
+    /** 設定すると [toggleFavorite] が常にこの例外を投げる。更新失敗時の挙動をテストするために使う。 */
+    var toggleError: Throwable? = null
+
     override fun observeFavoriteIds(): Flow<Set<String>> = favoriteIds
 
     override suspend fun toggleFavorite(itemId: String) {
+        toggleError?.let { throw it }
         favoriteIds.update { ids -> if (itemId in ids) ids - itemId else ids + itemId }
     }
 }

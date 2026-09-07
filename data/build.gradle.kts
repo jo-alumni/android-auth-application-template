@@ -61,4 +61,5 @@ dependencies {
     testImplementation(libs.findLibrary("junit").get())
     testImplementation(libs.findLibrary("kotlinx-coroutines-core").get())
     testImplementation(libs.findLibrary("kotlinx-coroutines-test").get())
+    testImplementation(testFixtures(projects.domain))
 }

@@ -1,10 +1,12 @@
 package com.example.authapplication.data.di
 
 import com.example.authapplication.data.auth.AuthRepositoryImpl
+import com.example.authapplication.data.debug.ErrorInjectionRepositoryImpl
 import com.example.authapplication.data.favorite.FavoriteRepositoryImpl
 import com.example.authapplication.data.item.ItemRepositoryImpl
 import com.example.authapplication.data.notification.NotificationRepositoryImpl
 import com.example.authapplication.domain.auth.AuthRepository
+import com.example.authapplication.domain.debug.ErrorInjectionRepository
 import com.example.authapplication.domain.favorite.FavoriteRepository
 import com.example.authapplication.domain.item.ItemRepository
 import com.example.authapplication.domain.notification.NotificationRepository
@@ -28,4 +30,7 @@ abstract class RepositoryModule {
 
     @Binds
     abstract fun bindNotificationRepository(impl: NotificationRepositoryImpl): NotificationRepository
+
+    @Binds
+    abstract fun bindErrorInjectionRepository(impl: ErrorInjectionRepositoryImpl): ErrorInjectionRepository
 }

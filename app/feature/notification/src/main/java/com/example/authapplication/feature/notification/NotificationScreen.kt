@@ -25,6 +25,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.example.authapplication.core.ui.ErrorContent
 import com.example.authapplication.domain.notification.Notification
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -32,6 +33,7 @@ import com.example.authapplication.domain.notification.Notification
 fun NotificationScreen(
     uiState: NotificationUiState,
     onCloseClick: () -> Unit,
+    onRetryClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Surface(modifier = modifier.fillMaxSize()) {
@@ -70,6 +72,10 @@ fun NotificationScreen(
                         }
                     }
 
+                    is NotificationUiState.Error -> {
+                        ErrorContent(message = uiState.message, onRetryClick = onRetryClick)
+                    }
+
                     is NotificationUiState.Success -> {
                         LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                             items(items = uiState.notifications, key = { it.id }) { notification ->
@@ -99,5 +105,16 @@ private fun NotificationScreenPreview() {
             ),
         ),
         onCloseClick = {},
+        onRetryClick = {},
+    )
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun NotificationScreenErrorPreview() {
+    NotificationScreen(
+        uiState = NotificationUiState.Error(message = "通知の取得に失敗しました"),
+        onCloseClick = {},
+        onRetryClick = {},
     )
 }

@@ -1,7 +1,10 @@
 package com.example.authapplication.feature.search
 
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavGraphBuilder
@@ -23,13 +26,25 @@ fun NavGraphBuilder.searchScreen(
         val viewModel: SearchViewModel = hiltViewModel()
         val uiState by viewModel.uiState.collectAsStateWithLifecycle()
         val query by viewModel.query.collectAsStateWithLifecycle()
+        val snackbarHostState = remember { SnackbarHostState() }
+
+        LaunchedEffect(viewModel) {
+            viewModel.event.collect { event ->
+                when (event) {
+                    is SearchEvent.ShowErrorSnackbar -> snackbarHostState.showSnackbar(event.message)
+                }
+            }
+        }
+
         SearchScreen(
             uiState = uiState,
             query = query,
             onQueryChange = viewModel::onQueryChange,
             onItemClick = navigateDetail,
             onFavoriteClick = viewModel::toggleFavorite,
+            onRetryClick = viewModel::retry,
             contentPadding = contentPadding,
+            snackbarHostState = snackbarHostState,
         )
     }
 }

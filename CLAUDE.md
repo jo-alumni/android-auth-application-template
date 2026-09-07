@@ -51,6 +51,8 @@ Android Library設定・Compose有効化・Hilt設定など、モジュール間
 
 認証状態は `DataStore → AuthRepository → IsAuthenticatedUseCase/SetAuthenticatedUseCase → AppViewModel.authState(StateFlow<AuthUiState>)` という流れで伝播し、`AppNavHost` の startDestination 決定やログアウト時の遷移に使われる。ログアウトなどの単発の画面遷移イベントは `AppViewModel.event`（`SharedFlow<AppEvent>`）で通知される([.claude/rules/viewmodel-event-handling.md](.claude/rules/viewmodel-event-handling.md) 参照)。
 
+失敗系は `:data` のリポジトリ実装が `AppDataException`（`:domain` の `domain/error`）を投げ、各ViewModelが `Flow.catch` で `XxxUiState.Error` に変換する。リトライは `MutableStateFlow<Int>` のトリガーを `flatMapLatest` の上流に置き、購読をやり直すことで実現している。一覧の表示を保ったまま伝えたい失敗（お気に入りトグルの失敗）は状態ではなく `SharedFlow<XxxEvent>` のSnackbarイベントとして通知する。実際に失敗する通信処理が無いため、TopAppBarのデバッグメニューの「エラーを発生させる」スイッチ（`ErrorInjectionRepository`）でリポジトリ層に例外を注入して動作確認できる([.claude/rules/error-handling.md](.claude/rules/error-handling.md) 参照)。
+
 ## 規約
 
 - `.claude/rules/` 配下に規約ファイルを追加・編集する際は、必ず先頭にYAML frontmatterをつける。frontmatterには少なくとも以下のキーを含める。
@@ -61,4 +63,5 @@ Android Library設定・Compose有効化・Hilt設定など、モジュール間
   - [.claude/rules/viewmodel-event-handling.md](.claude/rules/viewmodel-event-handling.md) — ViewModel→UIの単発イベントはコールバック引数ではなくSharedFlowで配信する
   - [.claude/rules/compose-navigation.md](.claude/rules/compose-navigation.md) — Navigationファイルのコールバックは `navigateXxx` のように遷移視点で命名する
   - [.claude/rules/compose-preview.md](.claude/rules/compose-preview.md) — publicなComposable関数には同名+`Preview`の `@Preview` 関数を必ず用意する
-  - [.claude/rules/viewmodel-uistate.md](.claude/rules/viewmodel-uistate.md) — ViewModelが公開する画面状態は `sealed interface XxxUiState`(Loading/Empty/Success)で表現する
+  - [.claude/rules/viewmodel-uistate.md](.claude/rules/viewmodel-uistate.md) — ViewModelが公開する画面状態は `sealed interface XxxUiState`(Loading/Empty/Success/Error)で表現する
+  - [.claude/rules/error-handling.md](.claude/rules/error-handling.md) — リポジトリ層の例外は `Flow.catch` で `UiState.Error` に変換し、リトライは購読のやり直しで実現する

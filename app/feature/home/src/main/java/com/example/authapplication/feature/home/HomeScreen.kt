@@ -10,12 +10,16 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.example.authapplication.core.ui.ErrorContent
 import com.example.authapplication.core.ui.ItemCard
 import com.example.authapplication.domain.item.Item
 
@@ -24,47 +28,61 @@ fun HomeScreen(
     uiState: HomeUiState,
     onItemClick: (String) -> Unit,
     onFavoriteClick: (String) -> Unit,
+    onRetryClick: () -> Unit,
     modifier: Modifier = Modifier,
     contentPadding: PaddingValues = PaddingValues(),
+    // Snackbarの表示はイベントを受け取るNavigation側が制御するため、
+    // ホストの状態を外から渡せるようにする(Previewでは既定値で足りる)。
+    snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
 ) {
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .padding(horizontal = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp),
-    ) {
-        when (uiState) {
-            HomeUiState.Loading -> {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator()
+    Box(modifier = modifier.fillMaxSize()) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+        ) {
+            when (uiState) {
+                HomeUiState.Loading -> {
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        CircularProgressIndicator()
+                    }
                 }
-            }
 
-            HomeUiState.Empty -> {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text(
-                        text = "アイテムがありません",
-                        style = MaterialTheme.typography.bodyLarge,
-                    )
-                }
-            }
-
-            is HomeUiState.Success -> {
-                LazyColumn(
-                    contentPadding = contentPadding,
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
-                ) {
-                    items(items = uiState.items, key = { it.id }) { item ->
-                        ItemCard(
-                            title = item.title,
-                            isFavorite = item.isFavorite,
-                            onClick = { onItemClick(item.id) },
-                            onFavoriteClick = { onFavoriteClick(item.id) },
+                HomeUiState.Empty -> {
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        Text(
+                            text = "アイテムがありません",
+                            style = MaterialTheme.typography.bodyLarge,
                         )
+                    }
+                }
+
+                is HomeUiState.Error -> {
+                    ErrorContent(message = uiState.message, onRetryClick = onRetryClick)
+                }
+
+                is HomeUiState.Success -> {
+                    LazyColumn(
+                        contentPadding = contentPadding,
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        items(items = uiState.items, key = { it.id }) { item ->
+                            ItemCard(
+                                title = item.title,
+                                isFavorite = item.isFavorite,
+                                onClick = { onItemClick(item.id) },
+                                onFavoriteClick = { onFavoriteClick(item.id) },
+                            )
+                        }
                     }
                 }
             }
         }
+        SnackbarHost(
+            hostState = snackbarHostState,
+            modifier = Modifier.align(Alignment.BottomCenter),
+        )
     }
 }
 
@@ -81,17 +99,39 @@ private fun HomeScreenPreview() {
         ),
         onItemClick = {},
         onFavoriteClick = {},
+        onRetryClick = {},
     )
 }
 
 @Preview(showBackground = true)
 @Composable
 private fun HomeScreenLoadingPreview() {
-    HomeScreen(uiState = HomeUiState.Loading, onItemClick = {}, onFavoriteClick = {})
+    HomeScreen(
+        uiState = HomeUiState.Loading,
+        onItemClick = {},
+        onFavoriteClick = {},
+        onRetryClick = {},
+    )
 }
 
 @Preview(showBackground = true)
 @Composable
 private fun HomeScreenEmptyPreview() {
-    HomeScreen(uiState = HomeUiState.Empty, onItemClick = {}, onFavoriteClick = {})
+    HomeScreen(
+        uiState = HomeUiState.Empty,
+        onItemClick = {},
+        onFavoriteClick = {},
+        onRetryClick = {},
+    )
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun HomeScreenErrorPreview() {
+    HomeScreen(
+        uiState = HomeUiState.Error(message = "アイテムの取得に失敗しました"),
+        onItemClick = {},
+        onFavoriteClick = {},
+        onRetryClick = {},
+    )
 }

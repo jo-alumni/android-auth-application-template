@@ -1,5 +1,5 @@
 ---
-description: ViewModelがUIに公開する状態はLoading/Empty/Successを基本形とするsealed interface XxxUiStateで表現する
+description: ViewModelがUIに公開する状態はLoading/Empty/Success/Errorを基本形とするsealed interface XxxUiStateで表現する
 globs:
   - "**/*ViewModel.kt"
   - "app/feature/*/src/main/java/**/*Screen.kt"
@@ -14,11 +14,12 @@ alwaysApply: false
   画面状態として公開しない。
 - 定義位置は **対象 ViewModel と同じファイルの先頭**(`@HiltViewModel` クラスの上)とし、
   KDoc で「◯◯画面の表示状態。」と一行説明を付ける。
-- 基本形は `Loading` / `Empty` / `Success(data)` の3状態。値を持たない状態は `data object`、
-  値を持つ状態は `data class` で表す。
+- 基本形は `Loading` / `Empty` / `Success(data)` / `Error(message)` の4状態。値を持たない状態は
+  `data object`、値を持つ状態は `data class` で表す。取得が失敗し得ないFlowなら `Error` は省いてよい。
 - 画面固有の状態は基本形に**追加**してよい(例: `DetailUiState.NotFound`、
   `SearchUiState.NoResults(query)`)。「データが0件」と「絞り込み結果が0件」のように
   ユーザーへの説明が変わるものは、別の状態として区別する。
+- `Error` への変換とリトライの実装方法は [error-handling.md](error-handling.md) を参照。
 - 「空かどうか」「絞り込み結果がどうか」の判定は **ViewModel 側**で行い、Composable では判定しない。
   Composable は `uiState` を受け取り `when` で網羅する(`else` を書かず、状態の追加漏れを
   コンパイルエラーで検出できる状態を保つ)。
