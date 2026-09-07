@@ -9,8 +9,8 @@ import com.example.authapplication.domain.item.ObserveItemsUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -20,7 +20,6 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 /** ホーム画面の表示状態。 */
@@ -47,15 +46,23 @@ class HomeViewModel @Inject constructor(
 ) : ViewModel() {
 
     /**
-     * 再読み込みのトリガー。値が変わるたびに [flatMapLatest] が下流のFlowを購読し直す。
-     * 例外で異常終了したFlowはそのままでは再開しないため、購読ごと作り直すことでリトライを実現する。
+     * 再読み込みのトリガー。リトライは「状態」ではなく「出来事」なので [MutableSharedFlow] で表す。
+     * 流れるたびに [flatMapLatest] が下流のFlowを購読し直し、例外で異常終了して
+     * そのままでは再開しないFlowを作り直すことでリトライを実現する。
+     *
+     * バッファを1つ持たせて [MutableSharedFlow.tryEmit] で流すため、[retry] はsuspendにならない。
      */
-    private val retryTrigger = MutableStateFlow(0)
+    private val retryTrigger = MutableSharedFlow<Unit>(
+        extraBufferCapacity = 1,
+        onBufferOverflow = BufferOverflow.DROP_OLDEST,
+    )
 
     private val _event = MutableSharedFlow<HomeEvent>()
     val event: SharedFlow<HomeEvent> = _event.asSharedFlow()
 
     val uiState: StateFlow<HomeUiState> = retryTrigger
+        // 購読開始時にも一度流し、初回の読み込みとリトライを同じ経路に乗せる。
+        .onStart { emit(Unit) }
         .flatMapLatest {
             observeItemsUseCase()
                 .map { items -> if (items.isEmpty()) HomeUiState.Empty else HomeUiState.Success(items) }
@@ -71,7 +78,7 @@ class HomeViewModel @Inject constructor(
         )
 
     fun retry() {
-        retryTrigger.update { it + 1 }
+        retryTrigger.tryEmit(Unit)
     }
 
     /**

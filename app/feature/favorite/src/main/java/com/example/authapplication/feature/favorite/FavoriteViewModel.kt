@@ -9,8 +9,8 @@ import com.example.authapplication.domain.item.Item
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -20,7 +20,6 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 /** お気に入り画面の表示状態。 */
@@ -47,12 +46,17 @@ class FavoriteViewModel @Inject constructor(
 ) : ViewModel() {
 
     /** 再読み込みのトリガー。詳しくは `HomeViewModel.retryTrigger` のコメントを参照。 */
-    private val retryTrigger = MutableStateFlow(0)
+    private val retryTrigger = MutableSharedFlow<Unit>(
+        extraBufferCapacity = 1,
+        onBufferOverflow = BufferOverflow.DROP_OLDEST,
+    )
 
     private val _event = MutableSharedFlow<FavoriteEvent>()
     val event: SharedFlow<FavoriteEvent> = _event.asSharedFlow()
 
     val uiState: StateFlow<FavoriteUiState> = retryTrigger
+        // 購読開始時にも一度流し、初回の読み込みとリトライを同じ経路に乗せる。
+        .onStart { emit(Unit) }
         .flatMapLatest {
             observeFavoriteItemsUseCase()
                 .map { items ->
@@ -68,7 +72,7 @@ class FavoriteViewModel @Inject constructor(
         )
 
     fun retry() {
-        retryTrigger.update { it + 1 }
+        retryTrigger.tryEmit(Unit)
     }
 
     /** 一覧の表示は保ったまま失敗だけを伝えるため、一度きりのイベントとして通知する。 */

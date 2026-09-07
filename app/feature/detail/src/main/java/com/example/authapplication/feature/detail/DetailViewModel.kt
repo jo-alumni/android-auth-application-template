@@ -11,7 +11,8 @@ import com.example.authapplication.domain.item.ItemRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.channels.BufferOverflow
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.catch
@@ -19,7 +20,6 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.flow.update
 
 /** 詳細画面の表示状態。 */
 sealed interface DetailUiState {
@@ -44,9 +44,14 @@ class DetailViewModel @Inject constructor(
 ) : ViewModel() {
 
     /** 再読み込みのトリガー。詳しくは `HomeViewModel.retryTrigger` のコメントを参照。 */
-    private val retryTrigger = MutableStateFlow(0)
+    private val retryTrigger = MutableSharedFlow<Unit>(
+        extraBufferCapacity = 1,
+        onBufferOverflow = BufferOverflow.DROP_OLDEST,
+    )
 
     val uiState: StateFlow<DetailUiState> = retryTrigger
+        // 購読開始時にも一度流し、初回の読み込みとリトライを同じ経路に乗せる。
+        .onStart { emit(Unit) }
         .flatMapLatest {
             flow {
                 val itemId = savedStateHandle.toRoute<AppRoute.Detail>().itemId
@@ -63,6 +68,6 @@ class DetailViewModel @Inject constructor(
         )
 
     fun retry() {
-        retryTrigger.update { it + 1 }
+        retryTrigger.tryEmit(Unit)
     }
 }

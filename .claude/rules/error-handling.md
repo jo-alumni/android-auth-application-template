@@ -1,5 +1,5 @@
 ---
-description: リポジトリ層の例外はFlow.catchでUiState.Errorへ変換し、リトライは購読をやり直すことで実現する。一覧を保ったまま伝えたい失敗はSharedFlowイベント経由でSnackbarに出す
+description: リポジトリ層の例外はFlow.catchでUiState.Errorへ変換し、リトライはSharedFlow<Unit>のトリガーで購読をやり直すことで実現する。一覧を保ったまま伝えたい失敗はSharedFlowイベント経由でSnackbarに出す
 globs:
   - "**/*ViewModel.kt"
   - "app/feature/*/src/main/java/**/*Screen.kt"
@@ -26,8 +26,12 @@ alwaysApply: false
 
 ### 3. リトライは「購読のやり直し」で実装する
 - 例外で異常終了したFlowは、そのままでは再開しない。
-  `MutableStateFlow<Int>` のトリガーを `flatMapLatest` の上流に置き、
-  値を進めることで下流のFlowを購読し直す。
+  `MutableSharedFlow<Unit>` のトリガーを `flatMapLatest` の上流に置き、
+  流すことで下流のFlowを購読し直す。リトライは「状態」ではなく「出来事」なので
+  `StateFlow` ではなく `SharedFlow` で表す(`MutableStateFlow<Unit>` は同じ値を畳み込むため
+  そもそも動かず、`MutableStateFlow<Int>` のカウンタは値に意味が無い)。
+- トリガー自体は購読開始時には流れないため、`onStart { emit(Unit) }` で初回も同じ経路に乗せる。
+  UI から呼ぶ `retry()` を suspend にしないよう、バッファを1つ持たせて `tryEmit` する。
 - リトライ直後にローディングへ戻すため、`catch` の手前に
   `onStart { emit(XxxUiState.Loading) }` を置く。
 - UIには `ErrorContent(message, onRetryClick)`(:app:core)を使い、
@@ -63,12 +67,16 @@ fun toggleFavorite(itemId: String) {
 
 ```kotlin
 // Good: catchでUiStateへ変換し、trigger + flatMapLatest でリトライできるようにする
-private val retryTrigger = MutableStateFlow(0)
+private val retryTrigger = MutableSharedFlow<Unit>(
+    extraBufferCapacity = 1,
+    onBufferOverflow = BufferOverflow.DROP_OLDEST,
+)
 
 private val _event = MutableSharedFlow<HomeEvent>()
 val event: SharedFlow<HomeEvent> = _event.asSharedFlow()
 
 val uiState: StateFlow<HomeUiState> = retryTrigger
+    .onStart { emit(Unit) } // 購読開始時にも一度流し、初回の読み込みも同じ経路に乗せる
     .flatMapLatest {
         observeItemsUseCase()
             .map { items -> if (items.isEmpty()) HomeUiState.Empty else HomeUiState.Success(items) }
@@ -78,7 +86,7 @@ val uiState: StateFlow<HomeUiState> = retryTrigger
     .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), HomeUiState.Loading)
 
 fun retry() {
-    retryTrigger.update { it + 1 }
+    retryTrigger.tryEmit(Unit)
 }
 
 // 一覧の表示は保ったまま失敗だけを伝えるので、状態ではなくイベントにする
