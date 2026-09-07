@@ -3,14 +3,16 @@ package com.example.authapplication.feature.search
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.authapplication.domain.favorite.ToggleFavoriteUseCase
 import com.example.authapplication.domain.item.Item
-import com.example.authapplication.domain.item.ItemRepository
+import com.example.authapplication.domain.item.ObserveItemsUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 
 /** 検索画面の表示状態。 */
 sealed interface SearchUiState {
@@ -27,7 +29,8 @@ sealed interface SearchUiState {
 
 @HiltViewModel
 class SearchViewModel @Inject constructor(
-    itemRepository: ItemRepository,
+    observeItemsUseCase: ObserveItemsUseCase,
+    private val toggleFavoriteUseCase: ToggleFavoriteUseCase,
     private val savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
 
@@ -38,7 +41,7 @@ class SearchViewModel @Inject constructor(
     val query: StateFlow<String> = savedStateHandle.getStateFlow(KEY_QUERY, "")
 
     val uiState: StateFlow<SearchUiState> =
-        combine(itemRepository.observeItems(), query) { items, query -> toUiState(items, query) }
+        combine(observeItemsUseCase(), query) { items, query -> toUiState(items, query) }
             .stateIn(
                 scope = viewModelScope,
                 started = SharingStarted.WhileSubscribed(5_000),
@@ -47,6 +50,10 @@ class SearchViewModel @Inject constructor(
 
     fun onQueryChange(query: String) {
         savedStateHandle[KEY_QUERY] = query
+    }
+
+    fun toggleFavorite(itemId: String) {
+        viewModelScope.launch { toggleFavoriteUseCase(itemId) }
     }
 
     /**

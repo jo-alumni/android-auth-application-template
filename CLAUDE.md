@@ -9,6 +9,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - 認証状態は DataStore に永続化され、すでに認証済みなら認証画面をスキップしてホーム画面から起動する。
 - ログアウトは認証状態のみ解除し、アプリデータ（DataStore 等）は削除しない。
 - 認証後はボトムバーで ホーム / 検索 / お気に入り の3画面を行き来でき、各画面から詳細画面へ遷移できる。
+- お気に入りはホーム/検索/お気に入りの各リストからトグルでき、DataStoreに永続化される（ログアウトしても消えない）。
 - 実装初期のUIは画面遷移が成立する最低限のもの（遷移先が分かるボタンがあれば良い）で構わない。
 
 ## よく使うコマンド
@@ -45,6 +46,8 @@ Gradleモジュールは以下の依存方向を持つ多層構成（`:app` が�
 - `:data` — Repository実装（DataStoreベースの `AuthRepositoryImpl` など）とHiltの `DataStoreModule` / `RepositoryModule`。
 
 Android Library設定・Compose有効化・Hilt設定など、モジュール間で重複しがちなGradle設定は `build-logic`（Convention Plugin。`settings.gradle.kts` の `pluginManagement.includeBuild("build-logic")` で取り込まれるcomposite build）に集約している。各モジュールは `id("authapplication.android.library")` のようなConvention Plugin IDを適用し、`namespace` やモジュール固有の依存関係のみを自身の `build.gradle.kts` に残す。
+
+お気に入り状態は `Preferences DataStore → FavoriteRepository(お気に入りID集合) → ObserveItemsUseCase → 各画面のViewModel` という流れで伝播する。`ObserveItemsUseCase` が `ItemRepository.observeItems()` とお気に入りID集合を `combine` して `Item.isFavorite` を埋めるため、どの画面でトグルしても同じFlowを購読している他画面に即座に反映される。お気に入り画面は `ObserveFavoriteItemsUseCase` で絞り込んだ結果を表示する。
 
 認証状態は `DataStore → AuthRepository → IsAuthenticatedUseCase/SetAuthenticatedUseCase → AppViewModel.authState(StateFlow<AuthUiState>)` という流れで伝播し、`AppNavHost` の startDestination 決定やログアウト時の遷移に使われる。ログアウトなどの単発の画面遷移イベントは `AppViewModel.event`（`SharedFlow<AppEvent>`）で通知される([.claude/rules/viewmodel-event-handling.md](.claude/rules/viewmodel-event-handling.md) 参照)。
 

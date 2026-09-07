@@ -5,11 +5,9 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -18,12 +16,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.example.authapplication.core.ui.ItemCard
 import com.example.authapplication.domain.item.Item
 
 @Composable
 fun HomeScreen(
     uiState: HomeUiState,
     onItemClick: (String) -> Unit,
+    onFavoriteClick: (String) -> Unit,
     modifier: Modifier = Modifier,
     contentPadding: PaddingValues = PaddingValues(),
 ) {
@@ -55,12 +55,12 @@ fun HomeScreen(
                     verticalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
                     items(items = uiState.items, key = { it.id }) { item ->
-                        Card(
+                        ItemCard(
+                            title = item.title,
+                            isFavorite = item.isFavorite,
                             onClick = { onItemClick(item.id) },
-                            modifier = Modifier.fillMaxWidth(),
-                        ) {
-                            Text(text = item.title, modifier = Modifier.padding(16.dp))
-                        }
+                            onFavoriteClick = { onFavoriteClick(item.id) },
+                        )
                     }
                 }
             }
@@ -74,11 +74,24 @@ private fun HomeScreenPreview() {
     HomeScreen(
         uiState = HomeUiState.Success(
             items = listOf(
-                Item(id = "1", title = "アイテム1"),
+                Item(id = "1", title = "アイテム1", isFavorite = true),
                 Item(id = "2", title = "アイテム2"),
                 Item(id = "3", title = "アイテム3"),
             ),
         ),
         onItemClick = {},
+        onFavoriteClick = {},
     )
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun HomeScreenLoadingPreview() {
+    HomeScreen(uiState = HomeUiState.Loading, onItemClick = {}, onFavoriteClick = {})
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun HomeScreenEmptyPreview() {
+    HomeScreen(uiState = HomeUiState.Empty, onItemClick = {}, onFavoriteClick = {})
 }

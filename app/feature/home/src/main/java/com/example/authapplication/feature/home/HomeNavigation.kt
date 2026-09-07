@@ -22,6 +22,11 @@ fun NavGraphBuilder.homeScreen(
     ) {
         val viewModel: HomeViewModel = hiltViewModel()
         val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-        HomeScreen(uiState = uiState, onItemClick = navigateDetail, contentPadding = contentPadding)
+        HomeScreen(
+            uiState = uiState,
+            onItemClick = navigateDetail,
+            onFavoriteClick = viewModel::toggleFavorite,
+            contentPadding = contentPadding,
+        )
     }
 }

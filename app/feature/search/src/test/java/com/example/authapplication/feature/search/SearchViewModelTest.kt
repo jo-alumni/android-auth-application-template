@@ -2,8 +2,11 @@ package com.example.authapplication.feature.search
 
 import androidx.lifecycle.SavedStateHandle
 import app.cash.turbine.test
+import com.example.authapplication.domain.favorite.FakeFavoriteRepository
+import com.example.authapplication.domain.favorite.ToggleFavoriteUseCase
 import com.example.authapplication.domain.item.FakeItemRepository
 import com.example.authapplication.domain.item.Item
+import com.example.authapplication.domain.item.ObserveItemsUseCase
 import com.example.authapplication.domain.testing.MainDispatcherRule
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
@@ -17,8 +20,11 @@ class SearchViewModelTest {
     @get:Rule
     val mainDispatcherRule = MainDispatcherRule()
 
+    private val favoriteRepository = FakeFavoriteRepository()
+
     private fun createViewModel(repository: FakeItemRepository) = SearchViewModel(
-        itemRepository = repository,
+        observeItemsUseCase = ObserveItemsUseCase(repository, favoriteRepository),
+        toggleFavoriteUseCase = ToggleFavoriteUseCase(favoriteRepository),
         savedStateHandle = SavedStateHandle(),
     )
 
@@ -81,6 +87,26 @@ class SearchViewModelTest {
             viewModel.onQueryChange(UNMATCHED_QUERY)
 
             assertEquals(SearchUiState.NoResults(UNMATCHED_QUERY), awaitItem())
+        }
+    }
+
+    @Test
+    fun `toggleFavorite flips isFavorite of the target item`() = runTest {
+        val repository = FakeItemRepository()
+        val viewModel = createViewModel(repository)
+
+        viewModel.uiState.test {
+            assertEquals(SearchUiState.Loading, awaitItem())
+
+            repository.emitItems(ITEMS)
+            assertEquals(SearchUiState.Success(ITEMS), awaitItem())
+
+            viewModel.toggleFavorite("2")
+
+            assertEquals(
+                SearchUiState.Success(listOf(ITEMS[0], ITEMS[1].copy(isFavorite = true), ITEMS[2])),
+                awaitItem(),
+            )
         }
     }
 

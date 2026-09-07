@@ -25,6 +25,7 @@ fun NavGraphBuilder.favoriteScreen(
         FavoriteScreen(
             uiState = uiState,
             onItemClick = navigateDetail,
+            onFavoriteClick = viewModel::toggleFavorite,
             contentPadding = contentPadding,
         )
     }

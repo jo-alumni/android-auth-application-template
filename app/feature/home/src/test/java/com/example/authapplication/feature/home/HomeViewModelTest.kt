@@ -1,8 +1,7 @@
-package com.example.authapplication.feature.favorite
+package com.example.authapplication.feature.home
 
 import app.cash.turbine.test
 import com.example.authapplication.domain.favorite.FakeFavoriteRepository
-import com.example.authapplication.domain.favorite.ObserveFavoriteItemsUseCase
 import com.example.authapplication.domain.favorite.ToggleFavoriteUseCase
 import com.example.authapplication.domain.item.FakeItemRepository
 import com.example.authapplication.domain.item.Item
@@ -15,7 +14,7 @@ import org.junit.Rule
 import org.junit.Test
 
 @OptIn(ExperimentalCoroutinesApi::class)
-class FavoriteViewModelTest {
+class HomeViewModelTest {
 
     @get:Rule
     val mainDispatcherRule = MainDispatcherRule()
@@ -23,61 +22,55 @@ class FavoriteViewModelTest {
     private val itemRepository = FakeItemRepository()
     private val favoriteRepository = FakeFavoriteRepository()
 
-    private fun createViewModel() = FavoriteViewModel(
-        observeFavoriteItemsUseCase = ObserveFavoriteItemsUseCase(
-            ObserveItemsUseCase(itemRepository, favoriteRepository),
-        ),
+    private fun createViewModel() = HomeViewModel(
+        observeItemsUseCase = ObserveItemsUseCase(itemRepository, favoriteRepository),
         toggleFavoriteUseCase = ToggleFavoriteUseCase(favoriteRepository),
     )
 
     @Test
-    fun `uiState is Loading then Empty when no item is favorited`() = runTest {
+    fun `uiState is Loading then Success when repository emits items`() = runTest {
         val viewModel = createViewModel()
 
         viewModel.uiState.test {
-            assertEquals(FavoriteUiState.Loading, awaitItem())
+            assertEquals(HomeUiState.Loading, awaitItem())
 
             itemRepository.emitItems(ITEMS)
 
-            assertEquals(FavoriteUiState.Empty, awaitItem())
-        }
-    }
-
-    /** 他画面(ホーム/検索)でお気に入り登録済みのアイテムだけが並ぶことを確認する。 */
-    @Test
-    fun `uiState is Success with favorited items only`() = runTest {
-        favoriteRepository.toggleFavorite("2")
-        val viewModel = createViewModel()
-
-        viewModel.uiState.test {
-            assertEquals(FavoriteUiState.Loading, awaitItem())
-
-            itemRepository.emitItems(ITEMS)
-
-            assertEquals(
-                FavoriteUiState.Success(listOf(ITEMS[1].copy(isFavorite = true))),
-                awaitItem(),
-            )
+            assertEquals(HomeUiState.Success(ITEMS), awaitItem())
         }
     }
 
     @Test
-    fun `toggleFavorite removes the item from the list`() = runTest {
-        favoriteRepository.toggleFavorite("2")
+    fun `uiState is Empty when repository emits no items`() = runTest {
         val viewModel = createViewModel()
 
         viewModel.uiState.test {
-            assertEquals(FavoriteUiState.Loading, awaitItem())
+            assertEquals(HomeUiState.Loading, awaitItem())
+
+            itemRepository.emitItems(emptyList())
+
+            assertEquals(HomeUiState.Empty, awaitItem())
+        }
+    }
+
+    @Test
+    fun `toggleFavorite flips isFavorite of the target item`() = runTest {
+        val viewModel = createViewModel()
+
+        viewModel.uiState.test {
+            assertEquals(HomeUiState.Loading, awaitItem())
 
             itemRepository.emitItems(ITEMS)
+            assertEquals(HomeUiState.Success(ITEMS), awaitItem())
+
+            viewModel.toggleFavorite("2")
             assertEquals(
-                FavoriteUiState.Success(listOf(ITEMS[1].copy(isFavorite = true))),
+                HomeUiState.Success(listOf(ITEMS[0], ITEMS[1].copy(isFavorite = true), ITEMS[2])),
                 awaitItem(),
             )
 
             viewModel.toggleFavorite("2")
-
-            assertEquals(FavoriteUiState.Empty, awaitItem())
+            assertEquals(HomeUiState.Success(ITEMS), awaitItem())
         }
     }
 

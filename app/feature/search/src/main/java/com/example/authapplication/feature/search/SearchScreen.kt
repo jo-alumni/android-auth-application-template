@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -20,6 +19,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.example.authapplication.core.ui.ItemCard
 import com.example.authapplication.domain.item.Item
 
 @Composable
@@ -28,6 +28,7 @@ fun SearchScreen(
     query: String,
     onQueryChange: (String) -> Unit,
     onItemClick: (String) -> Unit,
+    onFavoriteClick: (String) -> Unit,
     modifier: Modifier = Modifier,
     contentPadding: PaddingValues = PaddingValues(),
 ) {
@@ -76,12 +77,12 @@ fun SearchScreen(
                     verticalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
                     items(items = uiState.items, key = { it.id }) { item ->
-                        Card(
+                        ItemCard(
+                            title = item.title,
+                            isFavorite = item.isFavorite,
                             onClick = { onItemClick(item.id) },
-                            modifier = Modifier.fillMaxWidth(),
-                        ) {
-                            Text(text = item.title, modifier = Modifier.padding(16.dp))
-                        }
+                            onFavoriteClick = { onFavoriteClick(item.id) },
+                        )
                     }
                 }
             }
@@ -95,7 +96,7 @@ private fun SearchScreenPreview() {
     SearchScreen(
         uiState = SearchUiState.Success(
             items = listOf(
-                Item(id = "1", title = "アイテム1"),
+                Item(id = "1", title = "アイテム1", isFavorite = true),
                 Item(id = "2", title = "アイテム2"),
                 Item(id = "3", title = "アイテム3"),
             ),
@@ -103,6 +104,7 @@ private fun SearchScreenPreview() {
         query = "",
         onQueryChange = {},
         onItemClick = {},
+        onFavoriteClick = {},
     )
 }
 
@@ -114,6 +116,7 @@ private fun SearchScreenLoadingPreview() {
         query = "",
         onQueryChange = {},
         onItemClick = {},
+        onFavoriteClick = {},
     )
 }
 
@@ -125,6 +128,7 @@ private fun SearchScreenEmptyPreview() {
         query = "",
         onQueryChange = {},
         onItemClick = {},
+        onFavoriteClick = {},
     )
 }
 
@@ -136,5 +140,6 @@ private fun SearchScreenNoResultsPreview() {
         query = "アイテム9",
         onQueryChange = {},
         onItemClick = {},
+        onFavoriteClick = {},
     )
 }
