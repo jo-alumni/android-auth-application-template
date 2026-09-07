@@ -1,6 +1,7 @@
 package com.example.authapplication.feature.search
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
@@ -9,15 +10,12 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Card
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -25,41 +23,64 @@ import com.example.authapplication.domain.item.Item
 
 @Composable
 fun SearchScreen(
-    items: List<Item>,
+    uiState: SearchUiState,
+    query: String,
+    onQueryChange: (String) -> Unit,
     onItemClick: (String) -> Unit,
     modifier: Modifier = Modifier,
     contentPadding: PaddingValues = PaddingValues(),
 ) {
-    var query by rememberSaveable { mutableStateOf("") }
-    val filteredItems = remember(items, query) {
-        if (query.isBlank()) {
-            items
-        } else {
-            items.filter { it.title.contains(query, ignoreCase = true) }
-        }
-    }
     Column(
         modifier = modifier
             .fillMaxSize()
             .padding(horizontal = 16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
+        // 検索欄はどの状態でも操作できるよう when の外に置く。
         OutlinedTextField(
             value = query,
-            onValueChange = { query = it },
+            onValueChange = onQueryChange,
             label = { Text("検索キーワード") },
             modifier = Modifier.fillMaxWidth(),
         )
-        LazyColumn(
-            contentPadding = contentPadding,
-            verticalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-            items(items = filteredItems, key = { it.id }) { item ->
-                Card(
-                    onClick = { onItemClick(item.id) },
-                    modifier = Modifier.fillMaxWidth(),
+        when (uiState) {
+            SearchUiState.Loading -> {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator()
+                }
+            }
+
+            SearchUiState.Empty -> {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Text(
+                        text = "アイテムがありません",
+                        style = MaterialTheme.typography.bodyLarge,
+                    )
+                }
+            }
+
+            is SearchUiState.NoResults -> {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Text(
+                        text = "「${uiState.query}」に一致するアイテムがありません",
+                        style = MaterialTheme.typography.bodyLarge,
+                    )
+                }
+            }
+
+            is SearchUiState.Success -> {
+                LazyColumn(
+                    contentPadding = contentPadding,
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
-                    Text(text = item.title, modifier = Modifier.padding(16.dp))
+                    items(items = uiState.items, key = { it.id }) { item ->
+                        Card(
+                            onClick = { onItemClick(item.id) },
+                            modifier = Modifier.fillMaxWidth(),
+                        ) {
+                            Text(text = item.title, modifier = Modifier.padding(16.dp))
+                        }
+                    }
                 }
             }
         }
@@ -70,11 +91,48 @@ fun SearchScreen(
 @Composable
 private fun SearchScreenPreview() {
     SearchScreen(
-        items = listOf(
-            Item(id = "1", title = "アイテム1"),
-            Item(id = "2", title = "アイテム2"),
-            Item(id = "3", title = "アイテム3"),
+        uiState = SearchUiState.Success(
+            items = listOf(
+                Item(id = "1", title = "アイテム1"),
+                Item(id = "2", title = "アイテム2"),
+                Item(id = "3", title = "アイテム3"),
+            ),
         ),
+        query = "",
+        onQueryChange = {},
+        onItemClick = {},
+    )
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun SearchScreenLoadingPreview() {
+    SearchScreen(
+        uiState = SearchUiState.Loading,
+        query = "",
+        onQueryChange = {},
+        onItemClick = {},
+    )
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun SearchScreenEmptyPreview() {
+    SearchScreen(
+        uiState = SearchUiState.Empty,
+        query = "",
+        onQueryChange = {},
+        onItemClick = {},
+    )
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun SearchScreenNoResultsPreview() {
+    SearchScreen(
+        uiState = SearchUiState.NoResults(query = "アイテム9"),
+        query = "アイテム9",
+        onQueryChange = {},
         onItemClick = {},
     )
 }

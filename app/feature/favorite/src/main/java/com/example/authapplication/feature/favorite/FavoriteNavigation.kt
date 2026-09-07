@@ -21,7 +21,11 @@ fun NavGraphBuilder.favoriteScreen(
         popExitTransition = AppNavTransitions.fadeExit,
     ) {
         val viewModel: FavoriteViewModel = hiltViewModel()
-        val items by viewModel.items.collectAsStateWithLifecycle()
-        FavoriteScreen(items = items, onItemClick = navigateDetail, contentPadding = contentPadding)
+        val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+        FavoriteScreen(
+            uiState = uiState,
+            onItemClick = navigateDetail,
+            contentPadding = contentPadding,
+        )
     }
 }
