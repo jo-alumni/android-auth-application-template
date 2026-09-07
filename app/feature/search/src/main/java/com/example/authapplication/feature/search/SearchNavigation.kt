@@ -21,7 +21,14 @@ fun NavGraphBuilder.searchScreen(
         popExitTransition = AppNavTransitions.fadeExit,
     ) {
         val viewModel: SearchViewModel = hiltViewModel()
-        val items by viewModel.items.collectAsStateWithLifecycle()
-        SearchScreen(items = items, onItemClick = navigateDetail, contentPadding = contentPadding)
+        val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+        val query by viewModel.query.collectAsStateWithLifecycle()
+        SearchScreen(
+            uiState = uiState,
+            query = query,
+            onQueryChange = viewModel::onQueryChange,
+            onItemClick = navigateDetail,
+            contentPadding = contentPadding,
+        )
     }
 }
