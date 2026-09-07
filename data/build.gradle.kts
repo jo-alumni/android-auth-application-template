@@ -52,6 +52,7 @@ dependencies {
     implementation(projects.domain)
     implementation(libs.findLibrary("androidx-core-ktx").get())
     implementation(libs.findLibrary("androidx-datastore-core").get())
+    implementation(libs.findLibrary("androidx-datastore-preferences").get())
     implementation(libs.findLibrary("kotlinx-coroutines-core").get())
     implementation(libs.findLibrary("tink-android").get())
     implementation(libs.findLibrary("protobuf-kotlin-lite").get())
@@ -59,4 +60,5 @@ dependencies {
 
     testImplementation(libs.findLibrary("junit").get())
     testImplementation(libs.findLibrary("kotlinx-coroutines-core").get())
+    testImplementation(libs.findLibrary("kotlinx-coroutines-test").get())
 }

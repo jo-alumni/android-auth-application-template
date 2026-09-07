@@ -28,6 +28,7 @@ fun NavGraphBuilder.searchScreen(
             query = query,
             onQueryChange = viewModel::onQueryChange,
             onItemClick = navigateDetail,
+            onFavoriteClick = viewModel::toggleFavorite,
             contentPadding = contentPadding,
         )
     }

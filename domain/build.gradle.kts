@@ -21,4 +21,8 @@ dependencies {
     testFixturesApi(libs.findLibrary("junit").get())
     testFixturesApi(libs.findLibrary("kotlinx-coroutines-core").get())
     testFixturesApi(libs.findLibrary("kotlinx-coroutines-test").get())
+
+    testImplementation(libs.findLibrary("junit").get())
+    testImplementation(libs.findLibrary("kotlinx-coroutines-test").get())
+    testImplementation(libs.findLibrary("turbine").get())
 }
