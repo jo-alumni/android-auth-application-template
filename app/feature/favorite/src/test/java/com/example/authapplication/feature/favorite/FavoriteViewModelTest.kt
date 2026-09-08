@@ -1,6 +1,7 @@
 package com.example.authapplication.feature.favorite
 
 import app.cash.turbine.test
+import com.example.authapplication.domain.error.AppDataException
 import com.example.authapplication.domain.favorite.FakeFavoriteRepository
 import com.example.authapplication.domain.favorite.ObserveFavoriteItemsUseCase
 import com.example.authapplication.domain.favorite.ToggleFavoriteUseCase
@@ -81,11 +82,64 @@ class FavoriteViewModelTest {
         }
     }
 
+    @Test
+    fun `uiState is Error when repository throws`() = runTest {
+        val viewModel = createViewModel()
+
+        viewModel.uiState.test {
+            assertEquals(FavoriteUiState.Loading, awaitItem())
+
+            itemRepository.emitError(AppDataException(LOAD_ERROR_MESSAGE))
+
+            assertEquals(FavoriteUiState.Error(LOAD_ERROR_MESSAGE), awaitItem())
+        }
+    }
+
+    @Test
+    fun `retry re-subscribes the flow and recovers from Error to Success`() = runTest {
+        favoriteRepository.toggleFavorite("2")
+        val viewModel = createViewModel()
+
+        viewModel.uiState.test {
+            assertEquals(FavoriteUiState.Loading, awaitItem())
+
+            itemRepository.emitError(AppDataException(LOAD_ERROR_MESSAGE))
+            assertEquals(FavoriteUiState.Error(LOAD_ERROR_MESSAGE), awaitItem())
+
+            // リポジトリ側が回復しても、異常終了したFlowは購読し直すまで新しい値を流さない。
+            itemRepository.emitItems(ITEMS)
+            expectNoEvents()
+
+            viewModel.retry()
+
+            // リトライで購読し直すと一度Loadingへ戻るが、結果がすぐ得られる場合は
+            // StateFlowが値を畳み込むため、最終的な状態だけを確認する。
+            assertEquals(
+                FavoriteUiState.Success(listOf(ITEMS[1].copy(isFavorite = true))),
+                expectMostRecentItem(),
+            )
+        }
+    }
+
+    @Test
+    fun `toggleFavorite emits ShowErrorSnackbar event when it fails`() = runTest {
+        val viewModel = createViewModel()
+        favoriteRepository.toggleError = AppDataException(TOGGLE_ERROR_MESSAGE)
+
+        viewModel.event.test {
+            viewModel.toggleFavorite("2")
+
+            assertEquals(FavoriteEvent.ShowErrorSnackbar(TOGGLE_ERROR_MESSAGE), awaitItem())
+        }
+    }
+
     private companion object {
         val ITEMS = listOf(
             Item(id = "1", title = "アイテム1"),
             Item(id = "2", title = "アイテム2"),
             Item(id = "3", title = "アイテム3"),
         )
+        const val LOAD_ERROR_MESSAGE = "アイテムの取得に失敗しました"
+        const val TOGGLE_ERROR_MESSAGE = "お気に入りの更新に失敗しました"
     }
 }

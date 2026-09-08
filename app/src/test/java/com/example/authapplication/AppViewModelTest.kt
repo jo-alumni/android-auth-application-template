@@ -4,6 +4,9 @@ import app.cash.turbine.test
 import com.example.authapplication.domain.auth.ClearAuthTokenUseCase
 import com.example.authapplication.domain.auth.FakeAuthRepository
 import com.example.authapplication.domain.auth.IsAuthenticatedUseCase
+import com.example.authapplication.domain.debug.FakeErrorInjectionRepository
+import com.example.authapplication.domain.debug.ObserveErrorInjectionUseCase
+import com.example.authapplication.domain.debug.SetErrorInjectionUseCase
 import com.example.authapplication.domain.testing.MainDispatcherRule
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
@@ -18,9 +21,13 @@ class AppViewModelTest {
     @get:Rule
     val mainDispatcherRule = MainDispatcherRule()
 
+    private val errorInjectionRepository = FakeErrorInjectionRepository()
+
     private fun createViewModel(repository: FakeAuthRepository) = AppViewModel(
         isAuthenticatedUseCase = IsAuthenticatedUseCase(repository),
+        observeErrorInjectionUseCase = ObserveErrorInjectionUseCase(errorInjectionRepository),
         clearAuthTokenUseCase = ClearAuthTokenUseCase(repository),
+        setErrorInjectionUseCase = SetErrorInjectionUseCase(errorInjectionRepository),
     )
 
     @Test
@@ -63,5 +70,20 @@ class AppViewModelTest {
             assertEquals(AppEvent.NavigateLogin, awaitItem())
         }
         assertEquals(null, repository.observeAuthToken().first())
+    }
+
+    @Test
+    fun `setErrorInjectionEnabled updates isErrorInjectionEnabled`() = runTest {
+        val viewModel = createViewModel(FakeAuthRepository())
+
+        viewModel.isErrorInjectionEnabled.test {
+            assertEquals(false, awaitItem())
+
+            viewModel.setErrorInjectionEnabled(true)
+            assertEquals(true, awaitItem())
+
+            viewModel.setErrorInjectionEnabled(false)
+            assertEquals(false, awaitItem())
+        }
     }
 }

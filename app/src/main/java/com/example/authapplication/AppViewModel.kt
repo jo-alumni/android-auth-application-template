@@ -4,6 +4,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.authapplication.domain.auth.ClearAuthTokenUseCase
 import com.example.authapplication.domain.auth.IsAuthenticatedUseCase
+import com.example.authapplication.domain.debug.ObserveErrorInjectionUseCase
+import com.example.authapplication.domain.debug.SetErrorInjectionUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -27,7 +29,9 @@ sealed interface AppEvent {
 @HiltViewModel
 class AppViewModel @Inject constructor(
     isAuthenticatedUseCase: IsAuthenticatedUseCase,
+    observeErrorInjectionUseCase: ObserveErrorInjectionUseCase,
     private val clearAuthTokenUseCase: ClearAuthTokenUseCase,
+    private val setErrorInjectionUseCase: SetErrorInjectionUseCase,
 ) : ViewModel() {
 
     val authState: StateFlow<AuthUiState> = isAuthenticatedUseCase()
@@ -36,6 +40,17 @@ class AppViewModel @Inject constructor(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5_000),
             initialValue = AuthUiState.Loading,
+        )
+
+    /**
+     * デバッグメニューのエラー注入スイッチの状態。
+     * 画面をまたいで使う設定なので、画面ごとのViewModelではなく [AppViewModel] が保持する。
+     */
+    val isErrorInjectionEnabled: StateFlow<Boolean> = observeErrorInjectionUseCase()
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5_000),
+            initialValue = false,
         )
 
     private val _event = MutableSharedFlow<AppEvent>()
@@ -47,5 +62,9 @@ class AppViewModel @Inject constructor(
             clearAuthTokenUseCase()
             _event.emit(AppEvent.NavigateLogin)
         }
+    }
+
+    fun setErrorInjectionEnabled(enabled: Boolean) {
+        viewModelScope.launch { setErrorInjectionUseCase(enabled) }
     }
 }

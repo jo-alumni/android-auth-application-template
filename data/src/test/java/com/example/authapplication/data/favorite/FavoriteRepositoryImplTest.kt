@@ -1,6 +1,8 @@
 package com.example.authapplication.data.favorite
 
 import androidx.datastore.preferences.core.PreferenceDataStoreFactory
+import com.example.authapplication.domain.debug.FakeErrorInjectionRepository
+import com.example.authapplication.domain.error.AppDataException
 import java.io.File
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -9,6 +11,7 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
@@ -25,11 +28,16 @@ class FavoriteRepositoryImplTest {
      * DataStoreは同一ファイルに対して同時に複数インスタンスを生成できないため、
      * ブロックを抜けるときにスコープを閉じて次のインスタンスを生成できるようにする。
      */
-    private fun <T> withRepository(file: File, block: suspend (FavoriteRepositoryImpl) -> T): T {
+    private fun <T> withRepository(
+        file: File,
+        errorInjectionEnabled: Boolean = false,
+        block: suspend (FavoriteRepositoryImpl) -> T,
+    ): T {
         val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
         return try {
             val repository = FavoriteRepositoryImpl(
                 dataStore = PreferenceDataStoreFactory.create(scope = scope, produceFile = { file }),
+                errorInjectionRepository = FakeErrorInjectionRepository(errorInjectionEnabled),
             )
             runBlocking { block(repository) }
         } finally {
@@ -55,6 +63,17 @@ class FavoriteRepositoryImplTest {
 
             repository.toggleFavorite("1")
             assertEquals(setOf("2"), repository.observeFavoriteIds().first())
+        }
+    }
+
+    /** デバッグメニューのエラー注入が有効なとき、更新だけが失敗し読み出しは成功する。 */
+    @Test
+    fun `toggleFavorite throws while error injection is enabled`() {
+        withRepository(prefsFile(), errorInjectionEnabled = true) { repository ->
+            val throwable = runCatching { repository.toggleFavorite("1") }.exceptionOrNull()
+
+            assertTrue(throwable is AppDataException)
+            assertEquals(emptySet<String>(), repository.observeFavoriteIds().first())
         }
     }
 

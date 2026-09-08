@@ -26,6 +26,10 @@ fun NavGraphBuilder.detailScreen(navigateBack: () -> Unit) {
     ) {
         val viewModel: DetailViewModel = hiltViewModel()
         val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-        DetailScreen(uiState = uiState, onBackClick = navigateBack)
+        DetailScreen(
+            uiState = uiState,
+            onBackClick = navigateBack,
+            onRetryClick = viewModel::retry,
+        )
     }
 }

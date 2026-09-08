@@ -18,6 +18,10 @@ fun NavGraphBuilder.notificationScreen(navigateBack: () -> Unit) {
     ) {
         val viewModel: NotificationViewModel = hiltViewModel()
         val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-        NotificationScreen(uiState = uiState, onCloseClick = navigateBack)
+        NotificationScreen(
+            uiState = uiState,
+            onCloseClick = navigateBack,
+            onRetryClick = viewModel::retry,
+        )
     }
 }

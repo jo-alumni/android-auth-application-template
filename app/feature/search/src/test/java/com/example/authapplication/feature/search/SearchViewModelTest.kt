@@ -2,6 +2,7 @@ package com.example.authapplication.feature.search
 
 import androidx.lifecycle.SavedStateHandle
 import app.cash.turbine.test
+import com.example.authapplication.domain.error.AppDataException
 import com.example.authapplication.domain.favorite.FakeFavoriteRepository
 import com.example.authapplication.domain.favorite.ToggleFavoriteUseCase
 import com.example.authapplication.domain.item.FakeItemRepository
@@ -124,6 +125,56 @@ class SearchViewModelTest {
         }
     }
 
+    @Test
+    fun `uiState is Error when repository throws`() = runTest {
+        val repository = FakeItemRepository()
+        val viewModel = createViewModel(repository)
+
+        viewModel.uiState.test {
+            assertEquals(SearchUiState.Loading, awaitItem())
+
+            repository.emitError(AppDataException(LOAD_ERROR_MESSAGE))
+
+            assertEquals(SearchUiState.Error(LOAD_ERROR_MESSAGE), awaitItem())
+        }
+    }
+
+    @Test
+    fun `retry re-subscribes the flow and recovers from Error to Success`() = runTest {
+        val repository = FakeItemRepository()
+        val viewModel = createViewModel(repository)
+
+        viewModel.uiState.test {
+            assertEquals(SearchUiState.Loading, awaitItem())
+
+            repository.emitError(AppDataException(LOAD_ERROR_MESSAGE))
+            assertEquals(SearchUiState.Error(LOAD_ERROR_MESSAGE), awaitItem())
+
+            // リポジトリ側が回復しても、異常終了したFlowは購読し直すまで新しい値を流さない。
+            repository.emitItems(ITEMS)
+            expectNoEvents()
+
+            viewModel.retry()
+
+            // リトライで購読し直すと一度Loadingへ戻るが、結果がすぐ得られる場合は
+            // StateFlowが値を畳み込むため、最終的な状態だけを確認する。
+            assertEquals(SearchUiState.Success(ITEMS), expectMostRecentItem())
+        }
+    }
+
+    @Test
+    fun `toggleFavorite emits ShowErrorSnackbar event when it fails`() = runTest {
+        val repository = FakeItemRepository()
+        val viewModel = createViewModel(repository)
+        favoriteRepository.toggleError = AppDataException(TOGGLE_ERROR_MESSAGE)
+
+        viewModel.event.test {
+            viewModel.toggleFavorite("2")
+
+            assertEquals(SearchEvent.ShowErrorSnackbar(TOGGLE_ERROR_MESSAGE), awaitItem())
+        }
+    }
+
     private companion object {
         val ITEMS = listOf(
             Item(id = "1", title = "アイテム1"),
@@ -131,5 +182,7 @@ class SearchViewModelTest {
             Item(id = "3", title = "アイテム3"),
         )
         const val UNMATCHED_QUERY = "該当なし"
+        const val LOAD_ERROR_MESSAGE = "アイテムの取得に失敗しました"
+        const val TOGGLE_ERROR_MESSAGE = "お気に入りの更新に失敗しました"
     }
 }

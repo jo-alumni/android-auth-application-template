@@ -13,12 +13,16 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.example.authapplication.core.ui.ErrorContent
 import com.example.authapplication.core.ui.ItemCard
 import com.example.authapplication.domain.item.Item
 
@@ -29,64 +33,78 @@ fun SearchScreen(
     onQueryChange: (String) -> Unit,
     onItemClick: (String) -> Unit,
     onFavoriteClick: (String) -> Unit,
+    onRetryClick: () -> Unit,
     modifier: Modifier = Modifier,
     contentPadding: PaddingValues = PaddingValues(),
+    // Snackbarの表示はイベントを受け取るNavigation側が制御するため、
+    // ホストの状態を外から渡せるようにする(Previewでは既定値で足りる)。
+    snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
 ) {
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .padding(horizontal = 16.dp)
-            .imePadding(),
-        verticalArrangement = Arrangement.spacedBy(16.dp),
-    ) {
-        // 検索欄はどの状態でも操作できるよう when の外に置く。
-        OutlinedTextField(
-            value = query,
-            onValueChange = onQueryChange,
-            label = { Text("検索キーワード") },
-            modifier = Modifier.fillMaxWidth(),
-        )
-        when (uiState) {
-            SearchUiState.Loading -> {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator()
+    Box(modifier = modifier.fillMaxSize()) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 16.dp)
+                .imePadding(),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+        ) {
+            // 検索欄はどの状態でも操作できるよう when の外に置く。
+            OutlinedTextField(
+                value = query,
+                onValueChange = onQueryChange,
+                label = { Text("検索キーワード") },
+                modifier = Modifier.fillMaxWidth(),
+            )
+            when (uiState) {
+                SearchUiState.Loading -> {
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        CircularProgressIndicator()
+                    }
                 }
-            }
 
-            SearchUiState.Empty -> {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text(
-                        text = "アイテムがありません",
-                        style = MaterialTheme.typography.bodyLarge,
-                    )
-                }
-            }
-
-            is SearchUiState.NoResults -> {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text(
-                        text = "「${uiState.query}」に一致するアイテムがありません",
-                        style = MaterialTheme.typography.bodyLarge,
-                    )
-                }
-            }
-
-            is SearchUiState.Success -> {
-                LazyColumn(
-                    contentPadding = contentPadding,
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
-                ) {
-                    items(items = uiState.items, key = { it.id }) { item ->
-                        ItemCard(
-                            title = item.title,
-                            isFavorite = item.isFavorite,
-                            onClick = { onItemClick(item.id) },
-                            onFavoriteClick = { onFavoriteClick(item.id) },
+                SearchUiState.Empty -> {
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        Text(
+                            text = "アイテムがありません",
+                            style = MaterialTheme.typography.bodyLarge,
                         )
+                    }
+                }
+
+                is SearchUiState.NoResults -> {
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        Text(
+                            text = "「${uiState.query}」に一致するアイテムがありません",
+                            style = MaterialTheme.typography.bodyLarge,
+                        )
+                    }
+                }
+
+                is SearchUiState.Error -> {
+                    ErrorContent(message = uiState.message, onRetryClick = onRetryClick)
+                }
+
+                is SearchUiState.Success -> {
+                    LazyColumn(
+                        contentPadding = contentPadding,
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        items(items = uiState.items, key = { it.id }) { item ->
+                            ItemCard(
+                                title = item.title,
+                                isFavorite = item.isFavorite,
+                                onClick = { onItemClick(item.id) },
+                                onFavoriteClick = { onFavoriteClick(item.id) },
+                            )
+                        }
                     }
                 }
             }
         }
+        SnackbarHost(
+            hostState = snackbarHostState,
+            modifier = Modifier.align(Alignment.BottomCenter),
+        )
     }
 }
 
@@ -105,6 +123,7 @@ private fun SearchScreenPreview() {
         onQueryChange = {},
         onItemClick = {},
         onFavoriteClick = {},
+        onRetryClick = {},
     )
 }
 
@@ -117,6 +136,7 @@ private fun SearchScreenLoadingPreview() {
         onQueryChange = {},
         onItemClick = {},
         onFavoriteClick = {},
+        onRetryClick = {},
     )
 }
 
@@ -129,6 +149,7 @@ private fun SearchScreenEmptyPreview() {
         onQueryChange = {},
         onItemClick = {},
         onFavoriteClick = {},
+        onRetryClick = {},
     )
 }
 
@@ -141,5 +162,19 @@ private fun SearchScreenNoResultsPreview() {
         onQueryChange = {},
         onItemClick = {},
         onFavoriteClick = {},
+        onRetryClick = {},
+    )
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun SearchScreenErrorPreview() {
+    SearchScreen(
+        uiState = SearchUiState.Error(message = "アイテムの取得に失敗しました"),
+        query = "",
+        onQueryChange = {},
+        onItemClick = {},
+        onFavoriteClick = {},
+        onRetryClick = {},
     )
 }
