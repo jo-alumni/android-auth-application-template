@@ -5,6 +5,7 @@ import com.example.authapplication.domain.error.AppDataException
 import com.example.authapplication.domain.error.AppError
 import com.example.authapplication.domain.notification.FakeNotificationRepository
 import com.example.authapplication.domain.notification.Notification
+import com.example.authapplication.domain.notification.ObserveNotificationsUseCase
 import com.example.authapplication.domain.testing.MainDispatcherRule
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
@@ -20,7 +21,8 @@ class NotificationViewModelTest {
 
     private val notificationRepository = FakeNotificationRepository()
 
-    private fun createViewModel() = NotificationViewModel(notificationRepository)
+    private fun createViewModel() =
+        NotificationViewModel(ObserveNotificationsUseCase(notificationRepository))
 
     @Test
     fun `uiState is Loading then Success when repository emits notifications`() = runTest {

@@ -5,6 +5,7 @@ import app.cash.turbine.test
 import com.example.authapplication.domain.error.AppDataException
 import com.example.authapplication.domain.error.AppError
 import com.example.authapplication.domain.item.FakeItemRepository
+import com.example.authapplication.domain.item.GetItemUseCase
 import com.example.authapplication.domain.item.Item
 import com.example.authapplication.domain.testing.MainDispatcherRule
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -31,7 +32,7 @@ class DetailViewModelTest {
     /** `AppRoute.Detail(itemId)` で遷移してきた状態を、遷移引数を詰めた [SavedStateHandle] で再現する。 */
     private fun createViewModel(itemId: String) = DetailViewModel(
         savedStateHandle = SavedStateHandle(mapOf("itemId" to itemId)),
-        itemRepository = itemRepository,
+        getItemUseCase = GetItemUseCase(itemRepository),
     )
 
     @Test

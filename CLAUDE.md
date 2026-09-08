@@ -42,7 +42,7 @@ Gradleモジュールは以下の依存方向を持つ多層構成（`:app` が�
 - `:app` — `MainActivity` / `App`（`@HiltAndroidApp`）/ `AppViewModel`（認証状態の集約）/ `AppNavHost`・`AppBottomBar`（画面統合のNavGraph）/ `AppState`・`BottomBarScrollBehavior`（画面の骨組みが使うState Holder）を持つエントリーポイント。
 - `:app:core` — 全feature共通の汎用機能。`AppRoute`（`@Serializable` sealedなNavigation経路定義）、`TopLevelDestination`（ボトムバー項目）、共通Composable（`AppTopBar`）、テーマを置く。
 - `:app:feature:*`（auth, home, search, favorite, detail） — 画面単位の機能モジュール。各モジュールは `NavGraphBuilder` の拡張関数（例: `homeScreen(navigateDetail = ...)`）を公開し、`:app` の `AppNavHost` から呼び出される。
-- `:domain` — UseCase・Repositoryインターフェース・モデル（Android非依存のKotlinモジュール）。
+- `:domain` — UseCase・Repositoryインターフェース・モデル（Android非依存のKotlinモジュール）。ViewModelからのデータアクセスは必ずUseCaseを経由し、1行の委譲になるUseCaseも省略しない（[.claude/rules/usecase.md](.claude/rules/usecase.md) 参照）。リポジトリインターフェースを直接呼んでよいのは `:domain` のUseCaseだけ。
 - `:data` — Repository実装（DataStoreベースの `AuthRepositoryImpl` など）とHiltの `DataStoreModule` / `RepositoryModule`。
 
 テストは `./gradlew test`（JVM）で完結することを基本にする。ViewModelのユニットテストに加え、Screen Composable単体のUIテストもRobolectric上で `src/test` に置いており、実機/エミュレータが必要な計装テスト（`:app` の `androidTest`）は画面をまたぐナビゲーションの確認だけに絞っている。テスト用のFake（`FakeAuthRepository` など）は `:domain` の `testFixtures` に集約し、計装テストでは `@TestInstallIn` で `RepositoryModule` をFakeへ差し替えるため、実DataStoreの状態には依存しない([.claude/rules/testing.md](.claude/rules/testing.md) 参照)。
@@ -53,7 +53,7 @@ Android Library設定・Compose有効化・Hilt設定・リソース名の接頭
 
 表示文字列は各モジュールの `src/main/res/values/strings.xml` に置き、リソース名は `resourcePrefix`（`:app:core` なら `core_`、`:app:feature:home` なら `feature_home_`）で始める。画面固有の文言はfeatureモジュールが、「戻る」「閉じる」など画面に依存しない文言は `:app:core` が持つ。ViewModelは文言ではなく `@StringRes` のリソースIDを公開し、`stringResource` での解決はUI側で行う([.claude/rules/string-resources.md](.claude/rules/string-resources.md) 参照)。
 
-認証状態は `DataStore → AuthRepository → IsAuthenticatedUseCase/SetAuthenticatedUseCase → AppViewModel.authState(StateFlow<AuthUiState>)` という流れで伝播し、`AppNavHost` の startDestination 決定やログアウト時の遷移に使われる。ログアウトなどの単発の画面遷移イベントは `AppViewModel.event`（`SharedFlow<AppEvent>`）で通知される([.claude/rules/viewmodel-event-handling.md](.claude/rules/viewmodel-event-handling.md) 参照)。
+認証状態は `DataStore → AuthRepository → IsAuthenticatedUseCase/SetAuthTokenUseCase/ClearAuthTokenUseCase → AppViewModel.authState(StateFlow<AuthUiState>)` という流れで伝播し、`AppNavHost` の startDestination 決定やログアウト時の遷移に使われる。ログアウトなどの単発の画面遷移イベントは `AppViewModel.event`（`SharedFlow<AppEvent>`）で通知される([.claude/rules/viewmodel-event-handling.md](.claude/rules/viewmodel-event-handling.md) 参照)。
 
 Edge to Edge（`enableEdgeToEdge()`）で描画するため、WindowInsetsの解決場所は「そのinsetsを隠すUIを描いた側」に固定している。`:app` は自分が描く `AppTopBar` 分の上端insetsだけを `Modifier.padding` + `consumeWindowInsets` で解決し、下端（ナビゲーションバー）とIMEは各Screenが `WindowInsets` から自分で解決する。そのためNavigation層に `PaddingValues` を通さない。ボトムバーがスクロールで隠れる本アプリで下端を `:app` 側に寄せない理由、および `LazyColumn` の `contentPadding` を動的に変えるとremeasureでカクつくという知見は [docs/window-insets.md](docs/window-insets.md) にまとめてある([.claude/rules/window-insets.md](.claude/rules/window-insets.md) 参照)。
 
@@ -76,3 +76,4 @@ Edge to Edge（`enableEdgeToEdge()`）で描画するため、WindowInsetsの解
   - [.claude/rules/window-insets.md](.claude/rules/window-insets.md) — `:app` は上端insetsのみを解決してconsumeし、下端とIMEは各Screenが自分で解決する
   - [.claude/rules/testing.md](.claude/rules/testing.md) — Fakeは `:domain` の testFixtures に集約し、ScreenのUIテストはRobolectricで `src/test` に置く。計装テストは `@TestInstallIn` でリポジトリを差し替える
   - [.claude/rules/string-resources.md](.claude/rules/string-resources.md) — 表示文字列はモジュールごとの `strings.xml` に置き、ViewModelは文言ではなく文字列リソースIDを公開する
+  - [.claude/rules/usecase.md](.claude/rules/usecase.md) — ViewModelはRepositoryを直接注入せず、必ず `:domain` のUseCaseを経由する
