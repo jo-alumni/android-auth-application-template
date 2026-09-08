@@ -1,6 +1,5 @@
 package com.example.authapplication.feature.favorite
 
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -13,10 +12,7 @@ import com.example.authapplication.core.navigation.AppNavTransitions
 import com.example.authapplication.core.navigation.AppRoute
 
 /** お気に入り画面をNavGraphに登録する。NavControllerは公開せずコールバックで通知する。 */
-fun NavGraphBuilder.favoriteScreen(
-    navigateDetail: (String) -> Unit,
-    contentPadding: PaddingValues = PaddingValues(),
-) {
+fun NavGraphBuilder.favoriteScreen(navigateDetail: (String) -> Unit) {
     composable<AppRoute.Favorite>(
         enterTransition = AppNavTransitions.fadeEnter,
         exitTransition = AppNavTransitions.fadeExit,
@@ -40,7 +36,6 @@ fun NavGraphBuilder.favoriteScreen(
             onItemClick = navigateDetail,
             onFavoriteClick = viewModel::toggleFavorite,
             onRetryClick = viewModel::retry,
-            contentPadding = contentPadding,
             snackbarHostState = snackbarHostState,
         )
     }

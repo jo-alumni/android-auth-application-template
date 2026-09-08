@@ -7,7 +7,6 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.navigation
 import androidx.navigation.createGraph
 import androidx.navigation.testing.TestNavHostController
-import androidx.test.core.app.ApplicationProvider
 import com.example.authapplication.core.navigation.AppRoute
 import com.example.authapplication.core.navigation.TopLevelDestination
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -21,6 +20,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.RuntimeEnvironment
 import org.robolectric.annotation.Config
 
 /**
@@ -44,7 +44,7 @@ class AppStateTest {
      * 生成後に [runCurrent] が必要になる。
      */
     private fun TestScope.createAppState(): AppState {
-        val navController = TestNavHostController(ApplicationProvider.getApplicationContext()).apply {
+        val navController = TestNavHostController(RuntimeEnvironment.getApplication()).apply {
             navigatorProvider.addNavigator(ComposeNavigator())
             graph = createGraph(startDestination = AppRoute.MainGraph) {
                 navigation<AppRoute.AuthGraph>(startDestination = AppRoute.Login) {

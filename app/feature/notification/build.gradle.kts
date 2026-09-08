@@ -22,7 +22,6 @@ dependencies {
     implementation(projects.domain)
     implementation(libs.findLibrary("androidx-compose-material-icons-core").get())
 
-    testImplementation(libs.findLibrary("junit").get())
     testImplementation(libs.findLibrary("kotlinx-coroutines-test").get())
     testImplementation(libs.findLibrary("turbine").get())
     testImplementation(testFixtures(projects.domain))

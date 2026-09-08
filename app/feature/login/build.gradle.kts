@@ -21,7 +21,6 @@ dependencies {
     implementation(projects.app.core)
     implementation(projects.domain)
 
-    testImplementation(libs.findLibrary("junit").get())
     testImplementation(libs.findLibrary("kotlinx-coroutines-test").get())
     testImplementation(libs.findLibrary("turbine").get())
     testImplementation(testFixtures(projects.domain))

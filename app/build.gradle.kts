@@ -19,14 +19,6 @@ android {
         testInstrumentationRunner = "com.example.authapplication.HiltTestRunner"
     }
 
-    testOptions {
-        // RobolectricでAndroid実装(Context/NavControllerなど)を使うユニットテストを動かすため、
-        // ユニットテストのクラスパスにAndroidリソースを含める。
-        unitTests {
-            isIncludeAndroidResources = true
-        }
-    }
-
     buildTypes {
         release {
             optimization {
@@ -56,12 +48,11 @@ dependencies {
     implementation(libs.findLibrary("androidx-core-ktx").get())
     implementation(libs.findLibrary("androidx-lifecycle-runtime-ktx").get())
 
-    testImplementation(libs.findLibrary("junit").get())
     testImplementation(libs.findLibrary("kotlinx-coroutines-test").get())
     testImplementation(libs.findLibrary("turbine").get())
     testImplementation(testFixtures(projects.domain))
-    testImplementation(libs.findLibrary("robolectric").get())
-    testImplementation(libs.findLibrary("androidx-test-core").get())
+    // AppStateTestが実際のNavController(TestNavHostController)を組み立てるために使う。
+    // Robolectric本体はauthapplication.android.compose Convention Pluginが追加している。
     testImplementation(libs.findLibrary("androidx-navigation-testing").get())
     androidTestImplementation(platform(libs.findLibrary("androidx-compose-bom").get()))
     androidTestImplementation(libs.findLibrary("androidx-compose-ui-test-junit4").get())
@@ -69,7 +60,8 @@ dependencies {
     androidTestImplementation(libs.findLibrary("androidx-junit").get())
     androidTestImplementation(libs.findLibrary("hilt-android-testing").get())
     androidTestImplementation(libs.findLibrary("androidx-navigation-testing").get())
+    // @TestInstallIn でリポジトリ実装を差し替えるためのFake群。
+    androidTestImplementation(testFixtures(projects.domain))
     kspAndroidTest(libs.findLibrary("hilt-compiler").get())
-    debugImplementation(libs.findLibrary("androidx-compose-ui-test-manifest").get())
     debugImplementation(libs.findLibrary("androidx-compose-ui-tooling").get())
 }
