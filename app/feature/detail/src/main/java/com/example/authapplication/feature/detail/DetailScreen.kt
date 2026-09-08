@@ -26,8 +26,8 @@ fun DetailScreen(
         modifier = modifier
             .fillMaxSize()
             .padding(16.dp)
-            // 親のAppNavHostはリスト画面のためにシステムナビゲーションバー領域まで広げているため、
-            // この画面では自前でナビゲーションバー分の余白を確保する
+            // 下端のinsetsは各画面が自分で解決する（docs/window-insets.md 参照）。
+            // スクロールしない画面なので、レイアウト領域そのものをナビゲーションバー手前で止める。
             .navigationBarsPadding(),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {

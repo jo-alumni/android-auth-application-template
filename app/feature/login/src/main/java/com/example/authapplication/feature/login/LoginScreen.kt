@@ -4,6 +4,8 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -43,6 +45,10 @@ fun LoginScreen(
     Column(
         modifier = modifier
             .fillMaxSize()
+            // 下端のinsetsは各画面が自分で解決する（docs/window-insets.md 参照）。
+            // ナビゲーションバー分を消費してから、残りのIME分だけを追加で確保する。
+            .navigationBarsPadding()
+            .imePadding()
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
