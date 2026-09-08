@@ -1,6 +1,5 @@
 package com.example.authapplication.feature.home
 
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -13,10 +12,7 @@ import com.example.authapplication.core.navigation.AppNavTransitions
 import com.example.authapplication.core.navigation.AppRoute
 
 /** ホーム画面をNavGraphに登録する。NavControllerは公開せずコールバックで通知する。 */
-fun NavGraphBuilder.homeScreen(
-    navigateDetail: (String) -> Unit,
-    contentPadding: PaddingValues = PaddingValues(),
-) {
+fun NavGraphBuilder.homeScreen(navigateDetail: (String) -> Unit) {
     composable<AppRoute.Home>(
         enterTransition = AppNavTransitions.fadeEnter,
         exitTransition = AppNavTransitions.fadeExit,
@@ -41,7 +37,6 @@ fun NavGraphBuilder.homeScreen(
             onItemClick = navigateDetail,
             onFavoriteClick = viewModel::toggleFavorite,
             onRetryClick = viewModel::retry,
-            contentPadding = contentPadding,
             snackbarHostState = snackbarHostState,
         )
     }

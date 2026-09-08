@@ -1,6 +1,5 @@
 package com.example.authapplication.feature.search
 
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -13,10 +12,7 @@ import com.example.authapplication.core.navigation.AppNavTransitions
 import com.example.authapplication.core.navigation.AppRoute
 
 /** 検索画面をNavGraphに登録する。NavControllerは公開せずコールバックで通知する。 */
-fun NavGraphBuilder.searchScreen(
-    navigateDetail: (String) -> Unit,
-    contentPadding: PaddingValues = PaddingValues(),
-) {
+fun NavGraphBuilder.searchScreen(navigateDetail: (String) -> Unit) {
     composable<AppRoute.Search>(
         enterTransition = AppNavTransitions.fadeEnter,
         exitTransition = AppNavTransitions.fadeExit,
@@ -43,7 +39,6 @@ fun NavGraphBuilder.searchScreen(
             onItemClick = navigateDetail,
             onFavoriteClick = viewModel::toggleFavorite,
             onRetryClick = viewModel::retry,
-            contentPadding = contentPadding,
             snackbarHostState = snackbarHostState,
         )
     }

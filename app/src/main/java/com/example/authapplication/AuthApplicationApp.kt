@@ -2,10 +2,8 @@ package com.example.authapplication
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.CircularProgressIndicator
@@ -112,21 +110,19 @@ fun AuthApplicationApp(
                     }
                 },
             ) { innerPadding ->
-                // リストの表示領域(レイアウトサイズ)自体はシステムナビゲーションバー領域まで広げる。
-                // ボトムバーのスクロール連動オフセット(bottomBarOffsetHeightPx)にリアルタイム/準
-                // リアルタイムに追従させてLazyColumnのcontentPaddingを動かすと、contentPaddingは
-                // レイアウト計算に直接使われる測定入力のため、フレームごとにremeasureが発生して
-                // カクつく(離散化+animateDpAsStateで緩和を試みても、アニメーション中は結局毎フレーム
-                // 値が変わり続けるため解消しなかった)。
-                // そこで動的な追従はやめ、contentPaddingはシステムナビゲーションバー分の固定値にする。
-                // ボトムバー表示中はリスト末尾がボトムバーの背後に隠れることがあるが、ボトムバーが
-                // 隠れればナビゲーションバー手前まで完全に表示される。
-                val navigationBarPadding = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
+                // insetsの責務分担は docs/window-insets.md を参照。
+                // :app は「上端(ステータスバー / TopAppBar)」だけを解決して consume し、
+                // 下端(ナビゲーションバー)は各画面が自分で解決する。
+                // ボトムバーはスクロールに追従して隠れるため、その分の余白を :app 側で
+                // 一律に確保してしまうと、バーが隠れたときに空白が残ってしまう。
+                val topPadding = PaddingValues(top = innerPadding.calculateTopPadding())
                 AppNavHost(
                     navController = navController,
                     startDestination = if (state.isAuthenticated) AppRoute.MainGraph else AppRoute.AuthGraph,
-                    modifier = Modifier.padding(top = innerPadding.calculateTopPadding()),
-                    listContentPadding = PaddingValues(bottom = navigationBarPadding),
+                    modifier = Modifier
+                        .padding(topPadding)
+                        // 適用済みの余白を下流のWindowInsetsから差し引き、各画面での二重適用を防ぐ。
+                        .consumeWindowInsets(topPadding),
                 )
             }
         }
