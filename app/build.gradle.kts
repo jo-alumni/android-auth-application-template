@@ -51,6 +51,9 @@ dependencies {
     testImplementation(libs.findLibrary("kotlinx-coroutines-test").get())
     testImplementation(libs.findLibrary("turbine").get())
     testImplementation(testFixtures(projects.domain))
+    // AppStateTestが実際のNavController(TestNavHostController)を組み立てるために使う。
+    // Robolectric本体はauthapplication.android.compose Convention Pluginが追加している。
+    testImplementation(libs.findLibrary("androidx-navigation-testing").get())
     androidTestImplementation(platform(libs.findLibrary("androidx-compose-bom").get()))
     androidTestImplementation(libs.findLibrary("androidx-compose-ui-test-junit4").get())
     androidTestImplementation(libs.findLibrary("androidx-espresso-core").get())

@@ -21,7 +21,7 @@ Jetpack Compose / Navigation / Hilt / DataStore を使い、マルチモジュ�
 多層のマルチモジュール構成になっており、`:app` が全 feature / domain / data に依存します。feature モジュール同士の直接依存はありません。
 
 ```
-:app                    アプリのエントリーポイント（MainActivity, App, AppViewModel, AppNavHost など）
+:app                    アプリのエントリーポイント（MainActivity, App, AppViewModel, AppNavHost, AppState など）
 :app:core               feature 共通の汎用機能（AppRoute, TopLevelDestination, 共通Composable, テーマ）
 :app:feature:login      認証（ログイン）画面
 :app:feature:home       ホーム画面
@@ -35,6 +35,8 @@ Jetpack Compose / Navigation / Hilt / DataStore を使い、マルチモジュ�
 各 feature モジュールは `NavGraphBuilder` の拡張関数（例: `homeScreen(navigateDetail = ...)`）を公開し、`:app` の `AppNavHost` から呼び出されます。
 
 認証状態は `DataStore → AuthRepository → IsAuthenticatedUseCase/SetAuthenticatedUseCase → AppViewModel.authState(StateFlow<AuthUiState>)` という流れで伝播し、`AppNavHost` の startDestination 決定やログアウト時の遷移に使われます。ログアウトなど単発の画面遷移イベントは `AppViewModel.event`（`SharedFlow<AppEvent>`）で通知されます。
+
+アプリ全体の骨組みを組む `AuthApplicationApp` は状態を読んでUIを組み立てるだけにし、「今どのタブにいるか」「ボトムバーを表示するか」といったナビゲーションの判定は State Holder の `AppState`（`rememberAppState()`）が、スクロールに追従したボトムバーの隠蔽は `BottomBarScrollBehavior`（`rememberBottomBarScrollBehavior()`）が持ちます。
 
 ## 技術スタック
 

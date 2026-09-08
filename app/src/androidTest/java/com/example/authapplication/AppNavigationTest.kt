@@ -22,6 +22,7 @@ import com.example.authapplication.domain.auth.FakeAuthRepository
 import com.example.authapplication.domain.item.FakeItemRepository
 import com.example.authapplication.domain.item.Item
 import com.example.authapplication.feature.login.R as LoginR
+import com.example.authapplication.navigation.rememberAppState
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
 import javax.inject.Inject
@@ -85,7 +86,7 @@ class AppNavigationTest {
                 navigatorProvider.addNavigator(ComposeNavigator())
             }
             AuthApplicationTheme {
-                AuthApplicationApp(navController = navController)
+                AuthApplicationApp(appState = rememberAppState(navController = navController))
             }
         }
     }

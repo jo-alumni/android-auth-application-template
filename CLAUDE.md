@@ -39,7 +39,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Gradleモジュールは以下の依存方向を持つ多層構成（`:app` が全feature/domain/dataに依存し、feature間の直接依存はない）。
 
-- `:app` — `MainActivity` / `App`（`@HiltAndroidApp`）/ `AppViewModel`（認証状態の集約）/ `AppNavHost`・`AppBottomBar`（画面統合のNavGraph）を持つエントリーポイント。
+- `:app` — `MainActivity` / `App`（`@HiltAndroidApp`）/ `AppViewModel`（認証状態の集約）/ `AppNavHost`・`AppBottomBar`（画面統合のNavGraph）/ `AppState`・`BottomBarScrollBehavior`（画面の骨組みが使うState Holder）を持つエントリーポイント。
 - `:app:core` — 全feature共通の汎用機能。`AppRoute`（`@Serializable` sealedなNavigation経路定義）、`TopLevelDestination`（ボトムバー項目）、共通Composable（`AppTopBar`）、テーマを置く。
 - `:app:feature:*`（auth, home, search, favorite, detail） — 画面単位の機能モジュール。各モジュールは `NavGraphBuilder` の拡張関数（例: `homeScreen(navigateDetail = ...)`）を公開し、`:app` の `AppNavHost` から呼び出される。
 - `:domain` — UseCase・Repositoryインターフェース・モデル（Android非依存のKotlinモジュール）。
@@ -56,6 +56,8 @@ Android Library設定・Compose有効化・Hilt設定・リソース名の接頭
 認証状態は `DataStore → AuthRepository → IsAuthenticatedUseCase/SetAuthenticatedUseCase → AppViewModel.authState(StateFlow<AuthUiState>)` という流れで伝播し、`AppNavHost` の startDestination 決定やログアウト時の遷移に使われる。ログアウトなどの単発の画面遷移イベントは `AppViewModel.event`（`SharedFlow<AppEvent>`）で通知される([.claude/rules/viewmodel-event-handling.md](.claude/rules/viewmodel-event-handling.md) 参照)。
 
 Edge to Edge（`enableEdgeToEdge()`）で描画するため、WindowInsetsの解決場所は「そのinsetsを隠すUIを描いた側」に固定している。`:app` は自分が描く `AppTopBar` 分の上端insetsだけを `Modifier.padding` + `consumeWindowInsets` で解決し、下端（ナビゲーションバー）とIMEは各Screenが `WindowInsets` から自分で解決する。そのためNavigation層に `PaddingValues` を通さない。ボトムバーがスクロールで隠れる本アプリで下端を `:app` 側に寄せない理由、および `LazyColumn` の `contentPadding` を動的に変えるとremeasureでカクつくという知見は [docs/window-insets.md](docs/window-insets.md) にまとめてある([.claude/rules/window-insets.md](.claude/rules/window-insets.md) 参照)。
+
+アプリ全体の骨組みを組む `AuthApplicationApp` は「状態を読んでUIを組む」だけにし、ナビゲーションの判定は State Holder の `AppState`（`rememberAppState()` で生成）へ切り出している。`AppState` は `NavHostController.currentBackStackEntryFlow` を購読して現在地をSnapshot Stateとして保持し、`currentTopLevelDestination` / `shouldShowBottomBar` の判定と、タブ切り替え（`navigateToTopLevelDestination()`）・通知画面・ログアウト後の遷移を担う。そのため `AppBottomBar` は `NavHostController` を受け取らず、選択中のタブと `onDestinationSelected` だけを受け取る。スクロールに追従してボトムバーを隠す処理は `BottomBarScrollBehavior`（`rememberBottomBarScrollBehavior()`）に分けている。どちらもコンポジション無しで状態を確認できるため、`AppStateTest` / `BottomBarScrollBehaviorTest` でユニットテストする（`AppStateTest` は NavController が Context を必要とするため Robolectric 上で実行する）。
 
 失敗系は `:data` のリポジトリ実装が `AppDataException`（`:domain` の `domain/error`）を投げ、各ViewModelが `Flow.catch` で `XxxUiState.Error` に変換する。`:domain` はAndroidに依存せず文言を持てないため、例外が運ぶのはメッセージではなく `AppError`（失敗の種別）で、文言（文字列リソースID）への変換は各featureモジュールが行う。リトライは `MutableSharedFlow<Unit>` のトリガーを `flatMapLatest` の上流に置き、購読をやり直すことで実現している。一覧の表示を保ったまま伝えたい失敗（お気に入りトグルの失敗）は状態ではなく `SharedFlow<XxxEvent>` のSnackbarイベントとして通知する。実際に失敗する通信処理が無いため、TopAppBarのデバッグメニューの「エラーを発生させる」スイッチ（`ErrorInjectionRepository`）でリポジトリ層に例外を注入して動作確認できる([.claude/rules/error-handling.md](.claude/rules/error-handling.md) 参照)。
 
