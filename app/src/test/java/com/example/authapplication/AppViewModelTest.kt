@@ -52,22 +52,46 @@ class AppViewModelTest {
         viewModel.authState.test {
             assertEquals(AuthUiState.Loading, awaitItem())
 
-            repository.setAuthToken("dummy_token")
+            repository.setAuthToken(TOKEN)
 
             assertEquals(AuthUiState.Ready(isAuthenticated = true), awaitItem())
         }
     }
 
+    /**
+     * ログアウトは「トークンを破棄する」だけで、遷移イベントは発行しない。
+     * ログイン画面へ戻す判断は authState の変化を見る `AuthApplicationApp` 側が行う
+     * （docs/auth-navigation.md 参照）。
+     */
     @Test
-    fun `logout clears auth token and emits NavigateLogin event`() = runTest {
+    fun `logout clears auth token and authState becomes Ready(false)`() = runTest {
         val repository = FakeAuthRepository()
-        repository.setAuthToken("dummy_token")
+        repository.setAuthToken(TOKEN)
         val viewModel = createViewModel(repository)
 
-        viewModel.event.test {
+        viewModel.authState.test {
+            assertEquals(AuthUiState.Ready(isAuthenticated = true), awaitItem())
+
             viewModel.logout()
 
-            assertEquals(AppEvent.NavigateLogin, awaitItem())
+            assertEquals(AuthUiState.Ready(isAuthenticated = false), awaitItem())
+        }
+        assertEquals(null, repository.observeAuthToken().first())
+    }
+
+    /** トークン失効もログアウトと同じく authState の変化として現れる。 */
+    @Test
+    fun `expireAuthToken clears auth token and authState becomes Ready(false)`() = runTest {
+        val repository = FakeAuthRepository()
+        repository.setAuthToken(TOKEN)
+        val viewModel = createViewModel(repository)
+
+        viewModel.authState.test {
+            assertEquals(AuthUiState.Ready(isAuthenticated = true), awaitItem())
+
+            viewModel.expireAuthToken()
+
+            assertEquals(AuthUiState.Ready(isAuthenticated = false), awaitItem())
         }
         assertEquals(null, repository.observeAuthToken().first())
     }
@@ -85,5 +109,9 @@ class AppViewModelTest {
             viewModel.setErrorInjectionEnabled(false)
             assertEquals(false, awaitItem())
         }
+    }
+
+    private companion object {
+        const val TOKEN = "dummy_token"
     }
 }

@@ -21,6 +21,12 @@ import com.example.authapplication.feature.search.searchScreen
  *
  * WindowInsetsはこの層では扱わない。各画面が必要なinsetsを自分で解決する
  * （docs/window-insets.md 参照）。
+ *
+ * @param startDestination 起動時に最初に表示するグラフ。認証状態から決まるが、
+ *   **一度決まった後は変化させない**。[NavHost] は `startDestination` が変わるとグラフを
+ *   作り直すため、変化させると認証状態の変化がナビゲーションへ効く経路が2本になってしまう
+ *   （docs/auth-navigation.md 参照）。起動後の認証解除は `AuthApplicationApp` が
+ *   [AppState.navigateLogin] を呼んで扱う。
  */
 @Composable
 fun AppNavHost(

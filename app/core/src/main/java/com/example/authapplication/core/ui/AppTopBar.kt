@@ -29,7 +29,7 @@ import com.example.authapplication.core.R
 
 /**
  * ボトムバー配下の画面(ホーム/検索/お気に入り)で共通利用するTopAppBar。
- * 通知画面への遷移とログアウト操作、および失敗系の動作確認用のデバッグメニューを提供する。
+ * 通知画面への遷移とログアウト操作、および失敗系・トークン失効の動作確認用のデバッグメニューを提供する。
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -37,6 +37,7 @@ fun AppTopBar(
     title: String,
     isErrorInjectionEnabled: Boolean,
     onErrorInjectionChange: (Boolean) -> Unit,
+    onExpireTokenClick: () -> Unit,
     onNotificationClick: () -> Unit,
     onLogoutClick: () -> Unit,
     modifier: Modifier = Modifier,
@@ -68,6 +69,15 @@ fun AppTopBar(
                         }
                     },
                     onClick = { onErrorInjectionChange(!isErrorInjectionEnabled) },
+                )
+                // ユーザーのログアウト操作以外（サーバ側での失効・期限切れ）でも認証は解除され得る。
+                // その場合に自動でログイン画面へ戻ることを手元で確認するための項目。
+                DropdownMenuItem(
+                    text = { Text(stringResource(R.string.core_expire_token)) },
+                    onClick = {
+                        showDebugMenu = false
+                        onExpireTokenClick()
+                    },
                 )
             }
             IconButton(onClick = onNotificationClick) {
@@ -114,6 +124,7 @@ private fun AppTopBarPreview() {
         title = stringResource(R.string.core_destination_home),
         isErrorInjectionEnabled = false,
         onErrorInjectionChange = {},
+        onExpireTokenClick = {},
         onNotificationClick = {},
         onLogoutClick = {},
     )

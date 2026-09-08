@@ -123,6 +123,58 @@ class AppStateTest {
         assertFalse(appState.shouldShowBottomBar)
     }
 
+    /**
+     * タブ切り替えは `saveState` / `restoreState` を使うため、タブごとのバックスタックが保存される。
+     * ログアウト後にこの保存が残っていないことを確かめる前に、まず保存・復元が実際に効くことを確認する。
+     */
+    @Test
+    fun `tab back stack is saved and restored while staying authenticated`() = runTest {
+        val appState = createAppState()
+        runCurrent()
+        appState.navigateToTopLevelDestination(TopLevelDestination.SEARCH)
+        appState.navController.navigate(AppRoute.Detail(itemId = "item1"))
+        appState.navigateToTopLevelDestination(TopLevelDestination.HOME)
+        runCurrent()
+
+        appState.navigateToTopLevelDestination(TopLevelDestination.SEARCH)
+        runCurrent()
+
+        // 検索タブで開いていた詳細画面まで含めて復元される。
+        assertTrue(appState.currentDestination?.hasRoute(AppRoute.Detail::class) == true)
+    }
+
+    /**
+     * ログアウト後に再ログインしても、ログアウト前のタブのバックスタックが復元されないこと。
+     * `popUpTo` で現在のバックスタックを消すだけでは、タブ切り替え時に保存された状態が残り得るため、
+     * [AppState.navigateLogin] は保存済みの状態も破棄する（docs/auth-navigation.md 参照）。
+     */
+    @Test
+    fun `navigateLogin discards the saved back stack of the tabs`() = runTest {
+        val appState = createAppState()
+        runCurrent()
+        appState.navigateToTopLevelDestination(TopLevelDestination.SEARCH)
+        appState.navController.navigate(AppRoute.Detail(itemId = "item1"))
+        appState.navigateToTopLevelDestination(TopLevelDestination.HOME)
+        runCurrent()
+
+        appState.navigateLogin()
+        runCurrent()
+        // 再ログイン。AppNavHostのloginScreen(navigateHome = ...)と同じ遷移を行う。
+        appState.navController.navigate(AppRoute.MainGraph) {
+            popUpTo(AppRoute.AuthGraph) { inclusive = true }
+        }
+        appState.navigateToTopLevelDestination(TopLevelDestination.SEARCH)
+        runCurrent()
+
+        // 保存されていた詳細画面は復元されず、検索画面から始まる。
+        assertTrue(appState.currentDestination?.hasRoute(AppRoute.Search::class) == true)
+        assertTrue(
+            appState.navController.currentBackStack.value.none { entry ->
+                entry.destination.hasRoute(AppRoute.Detail::class)
+            },
+        )
+    }
+
     @Test
     fun `navigateLogin clears the authenticated screens from the back stack`() = runTest {
         val appState = createAppState()
