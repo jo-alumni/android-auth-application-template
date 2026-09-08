@@ -1,6 +1,5 @@
 package com.example.authapplication.navigation
 
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
@@ -20,16 +19,14 @@ import com.example.authapplication.feature.search.searchScreen
  * グラフ間の遷移では `popUpTo` もグラフ単位（[AppRoute.AuthGraph] / [AppRoute.MainGraph]）で指定し、
  * 遷移元グラフの画面をまとめてバックスタックから取り除く。
  *
- * [listContentPadding] はホーム/検索/お気に入りのリストにのみ渡すスクロール余白で、これらの画面の
- * レイアウト領域自体（[modifier]）はシステムナビゲーションバー領域まで広げつつ、リストの末尾に
- * 必要な余白だけを持たせる用途に使う。
+ * WindowInsetsはこの層では扱わない。各画面が必要なinsetsを自分で解決する
+ * （docs/window-insets.md 参照）。
  */
 @Composable
 fun AppNavHost(
     navController: NavHostController,
     startDestination: AppRoute,
     modifier: Modifier = Modifier,
-    listContentPadding: PaddingValues = PaddingValues(),
 ) {
     NavHost(
         navController = navController,
@@ -44,18 +41,9 @@ fun AppNavHost(
             })
         }
         navigation<AppRoute.MainGraph>(startDestination = AppRoute.Home) {
-            homeScreen(
-                navigateDetail = { itemId -> navController.navigate(AppRoute.Detail(itemId)) },
-                contentPadding = listContentPadding,
-            )
-            searchScreen(
-                navigateDetail = { itemId -> navController.navigate(AppRoute.Detail(itemId)) },
-                contentPadding = listContentPadding,
-            )
-            favoriteScreen(
-                navigateDetail = { itemId -> navController.navigate(AppRoute.Detail(itemId)) },
-                contentPadding = listContentPadding,
-            )
+            homeScreen(navigateDetail = { itemId -> navController.navigate(AppRoute.Detail(itemId)) })
+            searchScreen(navigateDetail = { itemId -> navController.navigate(AppRoute.Detail(itemId)) })
+            favoriteScreen(navigateDetail = { itemId -> navController.navigate(AppRoute.Detail(itemId)) })
             detailScreen(navigateBack = { navController.popBackStack() })
             notificationScreen(navigateBack = { navController.popBackStack() })
         }
