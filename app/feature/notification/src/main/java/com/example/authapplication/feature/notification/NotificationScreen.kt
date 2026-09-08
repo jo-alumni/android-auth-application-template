@@ -30,6 +30,10 @@ import com.example.authapplication.core.R as CoreR
 import com.example.authapplication.core.ui.ErrorContent
 import com.example.authapplication.domain.notification.Notification
 
+/**
+ * 通知画面。全画面ダイアログ（= :app のScaffoldとは別ウィンドウ）として表示されるため、
+ * 上端・下端いずれのinsetsもこの画面が持つ [Scaffold] で解決する（docs/window-insets.md 参照）。
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NotificationScreen(

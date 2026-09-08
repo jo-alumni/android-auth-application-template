@@ -3,8 +3,10 @@ package com.example.authapplication.feature.home
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -31,7 +33,6 @@ fun HomeScreen(
     onFavoriteClick: (String) -> Unit,
     onRetryClick: () -> Unit,
     modifier: Modifier = Modifier,
-    contentPadding: PaddingValues = PaddingValues(),
     // Snackbarの表示はイベントを受け取るNavigation側が制御するため、
     // ホストの状態を外から渡せるようにする(Previewでは既定値で足りる)。
     snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
@@ -68,7 +69,9 @@ fun HomeScreen(
 
                 is HomeUiState.Success -> {
                     LazyColumn(
-                        contentPadding = contentPadding,
+                        // レイアウト領域はナビゲーションバーの裏まで広げたまま、スクロール余白
+                        // (contentPadding)だけを確保して末尾までスクロールできるようにする。
+                        contentPadding = WindowInsets.navigationBars.asPaddingValues(),
                         verticalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
                         items(items = uiState.items, key = { it.id }) { item ->
