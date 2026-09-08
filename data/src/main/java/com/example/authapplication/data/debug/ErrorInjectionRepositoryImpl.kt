@@ -2,6 +2,7 @@ package com.example.authapplication.data.debug
 
 import com.example.authapplication.domain.debug.ErrorInjectionRepository
 import com.example.authapplication.domain.error.AppDataException
+import com.example.authapplication.domain.error.AppError
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlinx.coroutines.flow.Flow
@@ -26,10 +27,10 @@ class ErrorInjectionRepositoryImpl @Inject constructor() : ErrorInjectionReposit
 
 /**
  * エラー注入が有効なら [AppDataException] を投げる。
- * 各リポジトリ実装が「失敗し得る処理」の先頭で呼び出し、[userMessage] にその処理固有の文言を渡す。
+ * 各リポジトリ実装が「失敗し得る処理」の先頭で呼び出し、[error] にその処理固有の失敗の種別を渡す。
  */
-internal suspend fun ErrorInjectionRepository.throwIfErrorInjected(userMessage: String) {
+internal suspend fun ErrorInjectionRepository.throwIfErrorInjected(error: AppError) {
     if (observeErrorInjectionEnabled().first()) {
-        throw AppDataException(userMessage)
+        throw AppDataException(error)
     }
 }

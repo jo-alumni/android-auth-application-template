@@ -2,6 +2,7 @@ package com.example.authapplication.feature.notification
 
 import app.cash.turbine.test
 import com.example.authapplication.domain.error.AppDataException
+import com.example.authapplication.domain.error.AppError
 import com.example.authapplication.domain.notification.FakeNotificationRepository
 import com.example.authapplication.domain.notification.Notification
 import com.example.authapplication.domain.testing.MainDispatcherRule
@@ -54,9 +55,9 @@ class NotificationViewModelTest {
         viewModel.uiState.test {
             assertEquals(NotificationUiState.Loading, awaitItem())
 
-            notificationRepository.emitError(AppDataException(LOAD_ERROR_MESSAGE))
+            notificationRepository.emitError(AppDataException(AppError.NOTIFICATION_LOAD))
 
-            assertEquals(NotificationUiState.Error(LOAD_ERROR_MESSAGE), awaitItem())
+            assertEquals(NotificationUiState.Error(LOAD_ERROR_MESSAGE_RES_ID), awaitItem())
         }
     }
 
@@ -67,8 +68,8 @@ class NotificationViewModelTest {
         viewModel.uiState.test {
             assertEquals(NotificationUiState.Loading, awaitItem())
 
-            notificationRepository.emitError(AppDataException(LOAD_ERROR_MESSAGE))
-            assertEquals(NotificationUiState.Error(LOAD_ERROR_MESSAGE), awaitItem())
+            notificationRepository.emitError(AppDataException(AppError.NOTIFICATION_LOAD))
+            assertEquals(NotificationUiState.Error(LOAD_ERROR_MESSAGE_RES_ID), awaitItem())
 
             // リポジトリ側が回復しても、異常終了したFlowは購読し直すまで新しい値を流さない。
             notificationRepository.emitNotifications(NOTIFICATIONS)
@@ -87,6 +88,6 @@ class NotificationViewModelTest {
             Notification(id = "1", title = "お知らせ1", message = "サンプル通知メッセージです。"),
             Notification(id = "2", title = "お知らせ2", message = "サンプル通知メッセージです。"),
         )
-        const val LOAD_ERROR_MESSAGE = "通知の取得に失敗しました"
+        val LOAD_ERROR_MESSAGE_RES_ID = R.string.feature_notification_error_load
     }
 }

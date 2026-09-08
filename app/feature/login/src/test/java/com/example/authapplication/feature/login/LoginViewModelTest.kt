@@ -40,7 +40,7 @@ class LoginViewModelTest {
 
             expectNoEvents()
         }
-        assertEquals(LoginUiState.Error(BLANK_INPUT_MESSAGE), viewModel.uiState.value)
+        assertEquals(LoginUiState.Error(BLANK_INPUT_MESSAGE_RES_ID), viewModel.uiState.value)
     }
 
     @Test
@@ -50,7 +50,7 @@ class LoginViewModelTest {
 
         viewModel.login(id = "user", password = "")
 
-        assertEquals(LoginUiState.Error(BLANK_INPUT_MESSAGE), viewModel.uiState.value)
+        assertEquals(LoginUiState.Error(BLANK_INPUT_MESSAGE_RES_ID), viewModel.uiState.value)
     }
 
     @Test
@@ -60,10 +60,10 @@ class LoginViewModelTest {
 
         viewModel.login(id = "", password = "")
 
-        assertEquals(LoginUiState.Error(BLANK_INPUT_MESSAGE), viewModel.uiState.value)
+        assertEquals(LoginUiState.Error(BLANK_INPUT_MESSAGE_RES_ID), viewModel.uiState.value)
     }
 
     private companion object {
-        const val BLANK_INPUT_MESSAGE = "IDとパスワードを入力してください"
+        val BLANK_INPUT_MESSAGE_RES_ID = R.string.feature_login_error_blank_input
     }
 }

@@ -13,8 +13,10 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.example.authapplication.core.R
 
 /**
  * ホーム/検索/お気に入りの一覧で共通利用するアイテム行。
@@ -42,7 +44,9 @@ fun ItemCard(
             IconButton(onClick = onFavoriteClick) {
                 Icon(
                     imageVector = if (isFavorite) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder,
-                    contentDescription = if (isFavorite) "お気に入りから削除" else "お気に入りに追加",
+                    contentDescription = stringResource(
+                        if (isFavorite) R.string.core_favorite_remove else R.string.core_favorite_add,
+                    ),
                 )
             }
         }

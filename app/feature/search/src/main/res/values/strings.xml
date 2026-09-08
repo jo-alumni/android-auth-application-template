@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 検索画面固有の文言。リソース名は resourcePrefix（feature_search_）で始める。 -->
+<resources>
+    <string name="feature_search_query_label">検索キーワード</string>
+    <string name="feature_search_empty">アイテムがありません</string>
+    <!-- %1$s は検索キーワード -->
+    <string name="feature_search_no_results">「%1$s」に一致するアイテムがありません</string>
+    <string name="feature_search_error_item_load">アイテムの取得に失敗しました</string>
+    <string name="feature_search_error_favorite_toggle">お気に入りの更新に失敗しました</string>
+</resources>

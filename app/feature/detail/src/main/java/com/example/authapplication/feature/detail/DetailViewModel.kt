@@ -1,11 +1,14 @@
 package com.example.authapplication.feature.detail
 
+import androidx.annotation.StringRes
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
+import com.example.authapplication.core.R as CoreR
 import com.example.authapplication.core.navigation.AppRoute
-import com.example.authapplication.domain.error.toUserMessage
+import com.example.authapplication.domain.error.AppError
+import com.example.authapplication.domain.error.toAppError
 import com.example.authapplication.domain.item.Item
 import com.example.authapplication.domain.item.ItemRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -30,10 +33,11 @@ sealed interface DetailUiState {
     data object NotFound : DetailUiState
 
     /**
-     * アイテムの取得自体に失敗した状態。[message] を表示し、再読み込みを促す。
+     * アイテムの取得自体に失敗した状態。[messageResId] の文言を表示し、再読み込みを促す。
      * 「取得できたが存在しない」[NotFound] とはユーザーへの説明が変わるため、別の状態として区別する。
+     * 文言そのものではなく文字列リソースIDを持ち、解決はComposable側の `stringResource` に任せる。
      */
-    data class Error(val message: String) : DetailUiState
+    data class Error(@param:StringRes val messageResId: Int) : DetailUiState
 }
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -59,7 +63,7 @@ class DetailViewModel @Inject constructor(
                 emit(if (item != null) DetailUiState.Success(item) else DetailUiState.NotFound)
             }
                 .onStart { emit(DetailUiState.Loading) }
-                .catch { throwable -> emit(DetailUiState.Error(throwable.toUserMessage())) }
+                .catch { throwable -> emit(DetailUiState.Error(throwable.toMessageResId())) }
         }
         .stateIn(
             scope = viewModelScope,
@@ -70,4 +74,12 @@ class DetailViewModel @Inject constructor(
     fun retry() {
         retryTrigger.tryEmit(Unit)
     }
+}
+
+/** 失敗の種別([AppError])をこの画面で表示する文言のリソースIDへ変換する。詳しくは `HomeViewModel` を参照。 */
+@StringRes
+private fun Throwable.toMessageResId(): Int = when (toAppError()) {
+    AppError.ITEM_LOAD -> R.string.feature_detail_error_item_load
+    AppError.NOTIFICATION_LOAD, AppError.FAVORITE_TOGGLE, AppError.UNEXPECTED ->
+        CoreR.string.core_error_unexpected
 }

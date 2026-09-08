@@ -2,6 +2,7 @@ package com.example.authapplication.data.item
 
 import com.example.authapplication.data.debug.throwIfErrorInjected
 import com.example.authapplication.domain.debug.ErrorInjectionRepository
+import com.example.authapplication.domain.error.AppError
 import com.example.authapplication.domain.item.Item
 import com.example.authapplication.domain.item.ItemRepository
 import javax.inject.Inject
@@ -26,16 +27,12 @@ class ItemRepositoryImpl @Inject constructor(
      * 「エラー表示 → スイッチを戻す → 再読み込み → 成功」という流れを手元で再現できる。
      */
     override fun observeItems(): Flow<List<Item>> = flow {
-        errorInjectionRepository.throwIfErrorInjected(LOAD_ERROR_MESSAGE)
+        errorInjectionRepository.throwIfErrorInjected(AppError.ITEM_LOAD)
         emit(mockItems)
     }
 
     override suspend fun getItemById(id: String): Item? {
-        errorInjectionRepository.throwIfErrorInjected(LOAD_ERROR_MESSAGE)
+        errorInjectionRepository.throwIfErrorInjected(AppError.ITEM_LOAD)
         return mockItems.find { it.id == id }
-    }
-
-    private companion object {
-        const val LOAD_ERROR_MESSAGE = "アイテムの取得に失敗しました"
     }
 }

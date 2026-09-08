@@ -6,6 +6,7 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringSetPreferencesKey
 import com.example.authapplication.data.debug.throwIfErrorInjected
 import com.example.authapplication.domain.debug.ErrorInjectionRepository
+import com.example.authapplication.domain.error.AppError
 import com.example.authapplication.domain.favorite.FavoriteRepository
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -32,7 +33,7 @@ class FavoriteRepositoryImpl @Inject constructor(
 
     /** [DataStore.edit] は読み出しから書き込みまでをアトミックに行うため、トグルの更新が失われない。 */
     override suspend fun toggleFavorite(itemId: String) {
-        errorInjectionRepository.throwIfErrorInjected(TOGGLE_ERROR_MESSAGE)
+        errorInjectionRepository.throwIfErrorInjected(AppError.FAVORITE_TOGGLE)
         dataStore.edit { preferences ->
             val favoriteIds = preferences[KEY_FAVORITE_ITEM_IDS].orEmpty()
             preferences[KEY_FAVORITE_ITEM_IDS] = if (itemId in favoriteIds) {
@@ -45,6 +46,5 @@ class FavoriteRepositoryImpl @Inject constructor(
 
     private companion object {
         val KEY_FAVORITE_ITEM_IDS = stringSetPreferencesKey("favorite_item_ids")
-        const val TOGGLE_ERROR_MESSAGE = "お気に入りの更新に失敗しました"
     }
 }

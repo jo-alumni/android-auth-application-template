@@ -2,6 +2,7 @@ package com.example.authapplication.data.notification
 
 import com.example.authapplication.data.debug.throwIfErrorInjected
 import com.example.authapplication.domain.debug.ErrorInjectionRepository
+import com.example.authapplication.domain.error.AppError
 import com.example.authapplication.domain.notification.Notification
 import com.example.authapplication.domain.notification.NotificationRepository
 import javax.inject.Inject
@@ -25,11 +26,7 @@ class NotificationRepositoryImpl @Inject constructor(
 
     /** [ItemRepositoryImpl][com.example.authapplication.data.item.ItemRepositoryImpl] と同じく購読開始時にだけ失敗判定を行う。 */
     override fun observeNotifications(): Flow<List<Notification>> = flow {
-        errorInjectionRepository.throwIfErrorInjected(LOAD_ERROR_MESSAGE)
+        errorInjectionRepository.throwIfErrorInjected(AppError.NOTIFICATION_LOAD)
         emit(mockNotifications)
-    }
-
-    private companion object {
-        const val LOAD_ERROR_MESSAGE = "通知の取得に失敗しました"
     }
 }

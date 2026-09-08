@@ -2,6 +2,7 @@ package com.example.authapplication.feature.home
 
 import app.cash.turbine.test
 import com.example.authapplication.domain.error.AppDataException
+import com.example.authapplication.domain.error.AppError
 import com.example.authapplication.domain.favorite.FakeFavoriteRepository
 import com.example.authapplication.domain.favorite.ToggleFavoriteUseCase
 import com.example.authapplication.domain.item.FakeItemRepository
@@ -61,9 +62,9 @@ class HomeViewModelTest {
         viewModel.uiState.test {
             assertEquals(HomeUiState.Loading, awaitItem())
 
-            itemRepository.emitError(AppDataException(LOAD_ERROR_MESSAGE))
+            itemRepository.emitError(AppDataException(AppError.ITEM_LOAD))
 
-            assertEquals(HomeUiState.Error(LOAD_ERROR_MESSAGE), awaitItem())
+            assertEquals(HomeUiState.Error(LOAD_ERROR_MESSAGE_RES_ID), awaitItem())
         }
     }
 
@@ -75,8 +76,8 @@ class HomeViewModelTest {
         viewModel.uiState.test {
             assertEquals(HomeUiState.Loading, awaitItem())
 
-            itemRepository.emitError(AppDataException(LOAD_ERROR_MESSAGE))
-            assertEquals(HomeUiState.Error(LOAD_ERROR_MESSAGE), awaitItem())
+            itemRepository.emitError(AppDataException(AppError.ITEM_LOAD))
+            assertEquals(HomeUiState.Error(LOAD_ERROR_MESSAGE_RES_ID), awaitItem())
 
             // リポジトリ側が回復しても、異常終了したFlowは購読し直すまで新しい値を流さない。
             itemRepository.emitItems(ITEMS)
@@ -97,13 +98,13 @@ class HomeViewModelTest {
         viewModel.uiState.test {
             assertEquals(HomeUiState.Loading, awaitItem())
 
-            itemRepository.emitError(AppDataException(LOAD_ERROR_MESSAGE))
-            assertEquals(HomeUiState.Error(LOAD_ERROR_MESSAGE), awaitItem())
+            itemRepository.emitError(AppDataException(AppError.ITEM_LOAD))
+            assertEquals(HomeUiState.Error(LOAD_ERROR_MESSAGE_RES_ID), awaitItem())
 
             viewModel.retry()
 
             // 購読をやり直しても失敗し続けるため、最終的な状態はErrorのまま。
-            assertEquals(HomeUiState.Error(LOAD_ERROR_MESSAGE), viewModel.uiState.value)
+            assertEquals(HomeUiState.Error(LOAD_ERROR_MESSAGE_RES_ID), viewModel.uiState.value)
             cancelAndIgnoreRemainingEvents()
         }
     }
@@ -133,7 +134,7 @@ class HomeViewModelTest {
     @Test
     fun `toggleFavorite emits ShowErrorSnackbar event and keeps uiState when it fails`() = runTest {
         val viewModel = createViewModel()
-        favoriteRepository.toggleError = AppDataException(TOGGLE_ERROR_MESSAGE)
+        favoriteRepository.toggleError = AppDataException(AppError.FAVORITE_TOGGLE)
 
         viewModel.uiState.test {
             assertEquals(HomeUiState.Loading, awaitItem())
@@ -144,7 +145,7 @@ class HomeViewModelTest {
             viewModel.event.test {
                 viewModel.toggleFavorite("2")
 
-                assertEquals(HomeEvent.ShowErrorSnackbar(TOGGLE_ERROR_MESSAGE), awaitItem())
+                assertEquals(HomeEvent.ShowErrorSnackbar(TOGGLE_ERROR_MESSAGE_RES_ID), awaitItem())
             }
 
             // 失敗しても一覧の表示状態は変わらない。
@@ -158,7 +159,7 @@ class HomeViewModelTest {
             Item(id = "2", title = "アイテム2"),
             Item(id = "3", title = "アイテム3"),
         )
-        const val LOAD_ERROR_MESSAGE = "アイテムの取得に失敗しました"
-        const val TOGGLE_ERROR_MESSAGE = "お気に入りの更新に失敗しました"
+        val LOAD_ERROR_MESSAGE_RES_ID = R.string.feature_home_error_item_load
+        val TOGGLE_ERROR_MESSAGE_RES_ID = R.string.feature_home_error_favorite_toggle
     }
 }

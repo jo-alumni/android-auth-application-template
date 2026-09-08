@@ -17,6 +17,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.authapplication.core.ui.ErrorContent
@@ -52,14 +53,17 @@ fun FavoriteScreen(
                 FavoriteUiState.Empty -> {
                     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                         Text(
-                            text = "お気に入りがありません",
+                            text = stringResource(R.string.feature_favorite_empty),
                             style = MaterialTheme.typography.bodyLarge,
                         )
                     }
                 }
 
                 is FavoriteUiState.Error -> {
-                    ErrorContent(message = uiState.message, onRetryClick = onRetryClick)
+                    ErrorContent(
+                        message = stringResource(uiState.messageResId),
+                        onRetryClick = onRetryClick,
+                    )
                 }
 
                 is FavoriteUiState.Success -> {
@@ -129,7 +133,7 @@ private fun FavoriteScreenEmptyPreview() {
 @Composable
 private fun FavoriteScreenErrorPreview() {
     FavoriteScreen(
-        uiState = FavoriteUiState.Error(message = "アイテムの取得に失敗しました"),
+        uiState = FavoriteUiState.Error(messageResId = R.string.feature_favorite_error_item_load),
         onItemClick = {},
         onFavoriteClick = {},
         onRetryClick = {},

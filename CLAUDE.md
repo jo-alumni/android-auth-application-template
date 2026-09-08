@@ -45,13 +45,15 @@ Gradleモジュールは以下の依存方向を持つ多層構成（`:app` が�
 - `:domain` — UseCase・Repositoryインターフェース・モデル（Android非依存のKotlinモジュール）。
 - `:data` — Repository実装（DataStoreベースの `AuthRepositoryImpl` など）とHiltの `DataStoreModule` / `RepositoryModule`。
 
-Android Library設定・Compose有効化・Hilt設定など、モジュール間で重複しがちなGradle設定は `build-logic`（Convention Plugin。`settings.gradle.kts` の `pluginManagement.includeBuild("build-logic")` で取り込まれるcomposite build）に集約している。各モジュールは `id("authapplication.android.library")` のようなConvention Plugin IDを適用し、`namespace` やモジュール固有の依存関係のみを自身の `build.gradle.kts` に残す。
+Android Library設定・Compose有効化・Hilt設定・リソース名の接頭辞(`resourcePrefix`)など、モジュール間で重複しがちなGradle設定は `build-logic`（Convention Plugin。`settings.gradle.kts` の `pluginManagement.includeBuild("build-logic")` で取り込まれるcomposite build）に集約している。各モジュールは `id("authapplication.android.library")` のようなConvention Plugin IDを適用し、`namespace` やモジュール固有の依存関係のみを自身の `build.gradle.kts` に残す。
 
 お気に入り状態は `Preferences DataStore → FavoriteRepository(お気に入りID集合) → ObserveItemsUseCase → 各画面のViewModel` という流れで伝播する。`ObserveItemsUseCase` が `ItemRepository.observeItems()` とお気に入りID集合を `combine` して `Item.isFavorite` を埋めるため、どの画面でトグルしても同じFlowを購読している他画面に即座に反映される。お気に入り画面は `ObserveFavoriteItemsUseCase` で絞り込んだ結果を表示する。
 
+表示文字列は各モジュールの `src/main/res/values/strings.xml` に置き、リソース名は `resourcePrefix`（`:app:core` なら `core_`、`:app:feature:home` なら `feature_home_`）で始める。画面固有の文言はfeatureモジュールが、「戻る」「閉じる」など画面に依存しない文言は `:app:core` が持つ。ViewModelは文言ではなく `@StringRes` のリソースIDを公開し、`stringResource` での解決はUI側で行う([.claude/rules/string-resources.md](.claude/rules/string-resources.md) 参照)。
+
 認証状態は `DataStore → AuthRepository → IsAuthenticatedUseCase/SetAuthenticatedUseCase → AppViewModel.authState(StateFlow<AuthUiState>)` という流れで伝播し、`AppNavHost` の startDestination 決定やログアウト時の遷移に使われる。ログアウトなどの単発の画面遷移イベントは `AppViewModel.event`（`SharedFlow<AppEvent>`）で通知される([.claude/rules/viewmodel-event-handling.md](.claude/rules/viewmodel-event-handling.md) 参照)。
 
-失敗系は `:data` のリポジトリ実装が `AppDataException`（`:domain` の `domain/error`）を投げ、各ViewModelが `Flow.catch` で `XxxUiState.Error` に変換する。リトライは `MutableSharedFlow<Unit>` のトリガーを `flatMapLatest` の上流に置き、購読をやり直すことで実現している。一覧の表示を保ったまま伝えたい失敗（お気に入りトグルの失敗）は状態ではなく `SharedFlow<XxxEvent>` のSnackbarイベントとして通知する。実際に失敗する通信処理が無いため、TopAppBarのデバッグメニューの「エラーを発生させる」スイッチ（`ErrorInjectionRepository`）でリポジトリ層に例外を注入して動作確認できる([.claude/rules/error-handling.md](.claude/rules/error-handling.md) 参照)。
+失敗系は `:data` のリポジトリ実装が `AppDataException`（`:domain` の `domain/error`）を投げ、各ViewModelが `Flow.catch` で `XxxUiState.Error` に変換する。`:domain` はAndroidに依存せず文言を持てないため、例外が運ぶのはメッセージではなく `AppError`（失敗の種別）で、文言（文字列リソースID）への変換は各featureモジュールが行う。リトライは `MutableSharedFlow<Unit>` のトリガーを `flatMapLatest` の上流に置き、購読をやり直すことで実現している。一覧の表示を保ったまま伝えたい失敗（お気に入りトグルの失敗）は状態ではなく `SharedFlow<XxxEvent>` のSnackbarイベントとして通知する。実際に失敗する通信処理が無いため、TopAppBarのデバッグメニューの「エラーを発生させる」スイッチ（`ErrorInjectionRepository`）でリポジトリ層に例外を注入して動作確認できる([.claude/rules/error-handling.md](.claude/rules/error-handling.md) 参照)。
 
 ## 規約
 
@@ -65,3 +67,4 @@ Android Library設定・Compose有効化・Hilt設定など、モジュール間
   - [.claude/rules/compose-preview.md](.claude/rules/compose-preview.md) — publicなComposable関数には同名+`Preview`の `@Preview` 関数を必ず用意する
   - [.claude/rules/viewmodel-uistate.md](.claude/rules/viewmodel-uistate.md) — ViewModelが公開する画面状態は `sealed interface XxxUiState`(Loading/Empty/Success/Error)で表現する
   - [.claude/rules/error-handling.md](.claude/rules/error-handling.md) — リポジトリ層の例外は `Flow.catch` で `UiState.Error` に変換し、リトライは購読のやり直しで実現する
+  - [.claude/rules/string-resources.md](.claude/rules/string-resources.md) — 表示文字列はモジュールごとの `strings.xml` に置き、ViewModelは文言ではなく文字列リソースIDを公開する

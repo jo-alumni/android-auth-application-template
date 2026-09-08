@@ -5,17 +5,15 @@ package com.example.authapplication.domain.error
  *
  * :data 層の実装がこの例外を投げ、ViewModelが `Flow.catch` や `runCatching` で捕捉して
  * `XxxUiState.Error` やSnackbarイベントへ変換する。
- * [userMessage] はそのまま画面に表示できる日本語のメッセージとする。
+ * 表示する文言そのものではなく [AppError]（失敗の種別）を持つのがポイントで、
+ * 文言の解決は文字列リソースを持つUI層に寄せている。
  */
-class AppDataException(val userMessage: String) : Exception(userMessage)
+class AppDataException(val error: AppError) : Exception(error.name)
 
 /**
- * 例外をユーザー向けのメッセージへ変換する。
+ * 例外を [AppError] へ変換する。
  *
- * 想定外の例外もここで必ず何らかの文言にフォールバックさせることで、
- * UI側は「例外の種類」ではなく「表示する文字列」だけを扱えばよくなる。
+ * 想定外の例外もここで必ず [AppError.UNEXPECTED] にフォールバックさせることで、
+ * ViewModel側は「例外の種類」ではなく「失敗の種別」だけを扱えばよくなる。
  */
-fun Throwable.toUserMessage(): String =
-    (this as? AppDataException)?.userMessage ?: UNEXPECTED_ERROR_MESSAGE
-
-private const val UNEXPECTED_ERROR_MESSAGE = "予期しないエラーが発生しました"
+fun Throwable.toAppError(): AppError = (this as? AppDataException)?.error ?: AppError.UNEXPECTED

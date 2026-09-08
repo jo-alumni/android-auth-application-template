@@ -1,9 +1,12 @@
 package com.example.authapplication.feature.search
 
+import androidx.annotation.StringRes
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.authapplication.domain.error.toUserMessage
+import com.example.authapplication.core.R as CoreR
+import com.example.authapplication.domain.error.AppError
+import com.example.authapplication.domain.error.toAppError
 import com.example.authapplication.domain.favorite.ToggleFavoriteUseCase
 import com.example.authapplication.domain.item.Item
 import com.example.authapplication.domain.item.ObserveItemsUseCase
@@ -35,14 +38,17 @@ sealed interface SearchUiState {
 
     data class Success(val items: List<Item>) : SearchUiState
 
-    /** アイテムの取得に失敗した状態。[message] を表示し、再読み込みを促す。 */
-    data class Error(val message: String) : SearchUiState
+    /**
+     * アイテムの取得に失敗した状態。[messageResId] の文言を表示し、再読み込みを促す。
+     * 文言そのものではなく文字列リソースIDを持ち、解決はComposable側の `stringResource` に任せる。
+     */
+    data class Error(@param:StringRes val messageResId: Int) : SearchUiState
 }
 
 /** 検索画面へ一度きり通知するイベント。 */
 sealed interface SearchEvent {
     /** お気に入りの更新に失敗したことをSnackbarで知らせる。 */
-    data class ShowErrorSnackbar(val message: String) : SearchEvent
+    data class ShowErrorSnackbar(@param:StringRes val messageResId: Int) : SearchEvent
 }
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -74,7 +80,7 @@ class SearchViewModel @Inject constructor(
         .flatMapLatest {
             combine(observeItemsUseCase(), query) { items, query -> toUiState(items, query) }
                 .onStart { emit(SearchUiState.Loading) }
-                .catch { throwable -> emit(SearchUiState.Error(throwable.toUserMessage())) }
+                .catch { throwable -> emit(SearchUiState.Error(throwable.toMessageResId())) }
         }
         .stateIn(
             scope = viewModelScope,
@@ -95,7 +101,7 @@ class SearchViewModel @Inject constructor(
         viewModelScope.launch {
             runCatching { toggleFavoriteUseCase(itemId) }
                 .onFailure { throwable ->
-                    _event.emit(SearchEvent.ShowErrorSnackbar(throwable.toUserMessage()))
+                    _event.emit(SearchEvent.ShowErrorSnackbar(throwable.toMessageResId()))
                 }
         }
     }
@@ -121,4 +127,12 @@ class SearchViewModel @Inject constructor(
     private companion object {
         const val KEY_QUERY = "query"
     }
+}
+
+/** 失敗の種別([AppError])をこの画面で表示する文言のリソースIDへ変換する。詳しくは `HomeViewModel` を参照。 */
+@StringRes
+private fun Throwable.toMessageResId(): Int = when (toAppError()) {
+    AppError.ITEM_LOAD -> R.string.feature_search_error_item_load
+    AppError.FAVORITE_TOGGLE -> R.string.feature_search_error_favorite_toggle
+    AppError.NOTIFICATION_LOAD, AppError.UNEXPECTED -> CoreR.string.core_error_unexpected
 }

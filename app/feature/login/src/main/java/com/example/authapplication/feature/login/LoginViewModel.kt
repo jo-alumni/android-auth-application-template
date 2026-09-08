@@ -1,5 +1,6 @@
 package com.example.authapplication.feature.login
 
+import androidx.annotation.StringRes
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.authapplication.domain.auth.SetAuthTokenUseCase
@@ -13,10 +14,16 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
+/** ログイン画面の表示状態。 */
 sealed interface LoginUiState {
     data object Idle : LoginUiState
     data object Loading : LoginUiState
-    data class Error(val message: String) : LoginUiState
+
+    /**
+     * ログインに失敗した状態。
+     * 文言そのものではなく文字列リソースIDを持ち、解決はComposable側の `stringResource` に任せる。
+     */
+    data class Error(@param:StringRes val messageResId: Int) : LoginUiState
 }
 
 sealed interface LoginEvent {
@@ -37,7 +44,7 @@ class LoginViewModel @Inject constructor(
     fun login(id: String, password: String) {
         // ダミーバリデーション: ID/パスワードが空の場合は失敗扱いにする。
         if (id.isBlank() || password.isBlank()) {
-            _uiState.value = LoginUiState.Error(BLANK_INPUT_MESSAGE)
+            _uiState.value = LoginUiState.Error(R.string.feature_login_error_blank_input)
             return
         }
         viewModelScope.launch {
@@ -50,6 +57,5 @@ class LoginViewModel @Inject constructor(
 
     private companion object {
         const val DUMMY_TOKEN = "dummy_token"
-        const val BLANK_INPUT_MESSAGE = "IDとパスワードを入力してください"
     }
 }
