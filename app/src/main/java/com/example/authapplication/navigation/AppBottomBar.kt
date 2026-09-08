@@ -6,6 +6,7 @@ import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import com.example.authapplication.core.navigation.TopLevelDestination
 
@@ -23,11 +24,13 @@ fun AppBottomBar(
 ) {
     NavigationBar(modifier = modifier) {
         TopLevelDestination.entries.forEach { destination ->
+            // ラベルはenumが文字列リソースIDで持つため、文言の解決はComposable側で行う。
+            val label = stringResource(destination.labelResId)
             NavigationBarItem(
                 selected = destination == currentDestination,
                 onClick = { onDestinationSelected(destination) },
-                icon = { Icon(imageVector = destination.icon, contentDescription = destination.label) },
-                label = { Text(destination.label) },
+                icon = { Icon(imageVector = destination.icon, contentDescription = label) },
+                label = { Text(label) },
             )
         }
     }

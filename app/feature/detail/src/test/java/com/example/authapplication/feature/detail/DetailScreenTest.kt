@@ -4,12 +4,14 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import com.example.authapplication.core.R as CoreR
 import com.example.authapplication.domain.item.Item
 import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.RuntimeEnvironment
 
 /** [DetailScreen] 単体のUIテスト。 */
 @RunWith(RobolectricTestRunner::class)
@@ -17,6 +19,10 @@ class DetailScreenTest {
 
     @get:Rule
     val composeTestRule = createComposeRule()
+
+    /** 表示文字列は文字列リソース化されているため、テストからもリソース経由で参照する。 */
+    private fun string(resId: Int, vararg formatArgs: Any): String =
+        RuntimeEnvironment.getApplication().getString(resId, *formatArgs)
 
     @Test
     fun showsItemTitle_whenSuccess() {
@@ -30,17 +36,18 @@ class DetailScreenTest {
     fun showsNotFoundMessage_whenNotFound() {
         setContent(uiState = DetailUiState.NotFound)
 
-        composeTestRule.onNodeWithText("アイテムが見つかりませんでした").assertIsDisplayed()
+        composeTestRule.onNodeWithText(string(R.string.feature_detail_not_found)).assertIsDisplayed()
     }
 
     /** エラー表示でも「戻る」ボタンが押し出されずに残ることを確認する。 */
     @Test
     fun showsErrorMessageAndKeepsBackButton_whenError() {
-        setContent(uiState = DetailUiState.Error(LOAD_ERROR_MESSAGE))
+        setContent(uiState = DetailUiState.Error(R.string.feature_detail_error_item_load))
 
-        composeTestRule.onNodeWithText(LOAD_ERROR_MESSAGE).assertIsDisplayed()
-        composeTestRule.onNodeWithText("再読み込み").assertIsDisplayed()
-        composeTestRule.onNodeWithText("戻る").assertIsDisplayed()
+        composeTestRule.onNodeWithText(string(R.string.feature_detail_error_item_load))
+            .assertIsDisplayed()
+        composeTestRule.onNodeWithText(string(CoreR.string.core_retry)).assertIsDisplayed()
+        composeTestRule.onNodeWithText(string(CoreR.string.core_back)).assertIsDisplayed()
     }
 
     @Test
@@ -51,7 +58,7 @@ class DetailScreenTest {
             onBackClick = { backClickCount++ },
         )
 
-        composeTestRule.onNodeWithText("戻る").performClick()
+        composeTestRule.onNodeWithText(string(CoreR.string.core_back)).performClick()
 
         assertEquals(1, backClickCount)
     }
@@ -63,9 +70,5 @@ class DetailScreenTest {
         composeTestRule.setContent {
             DetailScreen(uiState = uiState, onBackClick = onBackClick, onRetryClick = {})
         }
-    }
-
-    private companion object {
-        const val LOAD_ERROR_MESSAGE = "アイテムの取得に失敗しました"
     }
 }

@@ -19,6 +19,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.authapplication.core.ui.ErrorContent
@@ -53,14 +54,17 @@ fun HomeScreen(
                 HomeUiState.Empty -> {
                     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                         Text(
-                            text = "アイテムがありません",
+                            text = stringResource(R.string.feature_home_empty),
                             style = MaterialTheme.typography.bodyLarge,
                         )
                     }
                 }
 
                 is HomeUiState.Error -> {
-                    ErrorContent(message = uiState.message, onRetryClick = onRetryClick)
+                    ErrorContent(
+                        message = stringResource(uiState.messageResId),
+                        onRetryClick = onRetryClick,
+                    )
                 }
 
                 is HomeUiState.Success -> {
@@ -132,7 +136,7 @@ private fun HomeScreenEmptyPreview() {
 @Composable
 private fun HomeScreenErrorPreview() {
     HomeScreen(
-        uiState = HomeUiState.Error(message = "アイテムの取得に失敗しました"),
+        uiState = HomeUiState.Error(messageResId = R.string.feature_home_error_item_load),
         onItemClick = {},
         onFavoriteClick = {},
         onRetryClick = {},

@@ -22,6 +22,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.authapplication.core.ui.ErrorContent
@@ -53,7 +54,7 @@ fun SearchScreen(
             OutlinedTextField(
                 value = query,
                 onValueChange = onQueryChange,
-                label = { Text("検索キーワード") },
+                label = { Text(stringResource(R.string.feature_search_query_label)) },
                 modifier = Modifier.fillMaxWidth(),
             )
             when (uiState) {
@@ -66,7 +67,7 @@ fun SearchScreen(
                 SearchUiState.Empty -> {
                     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                         Text(
-                            text = "アイテムがありません",
+                            text = stringResource(R.string.feature_search_empty),
                             style = MaterialTheme.typography.bodyLarge,
                         )
                     }
@@ -75,14 +76,17 @@ fun SearchScreen(
                 is SearchUiState.NoResults -> {
                     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                         Text(
-                            text = "「${uiState.query}」に一致するアイテムがありません",
+                            text = stringResource(R.string.feature_search_no_results, uiState.query),
                             style = MaterialTheme.typography.bodyLarge,
                         )
                     }
                 }
 
                 is SearchUiState.Error -> {
-                    ErrorContent(message = uiState.message, onRetryClick = onRetryClick)
+                    ErrorContent(
+                        message = stringResource(uiState.messageResId),
+                        onRetryClick = onRetryClick,
+                    )
                 }
 
                 is SearchUiState.Success -> {
@@ -173,7 +177,7 @@ private fun SearchScreenNoResultsPreview() {
 @Composable
 private fun SearchScreenErrorPreview() {
     SearchScreen(
-        uiState = SearchUiState.Error(message = "アイテムの取得に失敗しました"),
+        uiState = SearchUiState.Error(messageResId = R.string.feature_search_error_item_load),
         query = "",
         onQueryChange = {},
         onItemClick = {},

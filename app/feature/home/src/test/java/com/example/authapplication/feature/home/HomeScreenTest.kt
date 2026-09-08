@@ -5,12 +5,14 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import com.example.authapplication.core.R as CoreR
 import com.example.authapplication.domain.item.Item
 import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.RuntimeEnvironment
 
 /**
  * [HomeScreen] 単体のUIテスト。ViewModelやNavigationを介さず `uiState` を直接渡し、
@@ -22,6 +24,10 @@ class HomeScreenTest {
 
     @get:Rule
     val composeTestRule = createComposeRule()
+
+    /** 表示文字列は文字列リソース化されているため、テストからもリソース経由で参照する。 */
+    private fun string(resId: Int, vararg formatArgs: Any): String =
+        RuntimeEnvironment.getApplication().getString(resId, *formatArgs)
 
     @Test
     fun showsItemTitles_whenSuccess() {
@@ -49,7 +55,7 @@ class HomeScreenTest {
             )
         }
 
-        composeTestRule.onNodeWithText("アイテムがありません").assertIsDisplayed()
+        composeTestRule.onNodeWithText(string(R.string.feature_home_empty)).assertIsDisplayed()
     }
 
     @Test
@@ -57,15 +63,16 @@ class HomeScreenTest {
         var retryCount = 0
         composeTestRule.setContent {
             HomeScreen(
-                uiState = HomeUiState.Error(LOAD_ERROR_MESSAGE),
+                uiState = HomeUiState.Error(R.string.feature_home_error_item_load),
                 onItemClick = {},
                 onFavoriteClick = {},
                 onRetryClick = { retryCount++ },
             )
         }
 
-        composeTestRule.onNodeWithText(LOAD_ERROR_MESSAGE).assertIsDisplayed()
-        composeTestRule.onNodeWithText("再読み込み").performClick()
+        composeTestRule.onNodeWithText(string(R.string.feature_home_error_item_load))
+            .assertIsDisplayed()
+        composeTestRule.onNodeWithText(string(CoreR.string.core_retry)).performClick()
 
         assertEquals(1, retryCount)
     }
@@ -100,7 +107,8 @@ class HomeScreenTest {
             )
         }
 
-        composeTestRule.onNodeWithContentDescription("お気に入りに追加").performClick()
+        composeTestRule.onNodeWithContentDescription(string(CoreR.string.core_favorite_add))
+            .performClick()
 
         assertEquals("2", toggledItemId)
     }
@@ -110,6 +118,5 @@ class HomeScreenTest {
             Item(id = "1", title = "アイテム1"),
             Item(id = "2", title = "アイテム2"),
         )
-        const val LOAD_ERROR_MESSAGE = "アイテムの取得に失敗しました"
     }
 }

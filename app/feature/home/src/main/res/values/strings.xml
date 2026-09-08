@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- ホーム画面固有の文言。リソース名は resourcePrefix（feature_home_）で始める。 -->
+<resources>
+    <string name="feature_home_empty">アイテムがありません</string>
+    <string name="feature_home_error_item_load">アイテムの取得に失敗しました</string>
+    <string name="feature_home_error_favorite_toggle">お気に入りの更新に失敗しました</string>
+</resources>

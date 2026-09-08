@@ -12,6 +12,7 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.RuntimeEnvironment
 
 /** [LoginScreen] 単体のUIテスト。入力値がそのままコールバックへ渡ることを確認する。 */
 @RunWith(RobolectricTestRunner::class)
@@ -19,6 +20,10 @@ class LoginScreenTest {
 
     @get:Rule
     val composeTestRule = createComposeRule()
+
+    /** 表示文字列は文字列リソース化されているため、テストからもリソース経由で参照する。 */
+    private fun string(resId: Int, vararg formatArgs: Any): String =
+        RuntimeEnvironment.getApplication().getString(resId, *formatArgs)
 
     @Test
     fun passesTypedIdAndPasswordToCallback_whenLoginButtonClicked() {
@@ -30,9 +35,11 @@ class LoginScreenTest {
             )
         }
 
-        composeTestRule.onNodeWithText("ID").performTextInput("user")
-        composeTestRule.onNodeWithText("パスワード").performTextInput("password")
-        composeTestRule.onNodeWithText("ログイン").performClick()
+        composeTestRule.onNodeWithText(string(R.string.feature_login_id_label))
+            .performTextInput("user")
+        composeTestRule.onNodeWithText(string(R.string.feature_login_password_label))
+            .performTextInput("password")
+        composeTestRule.onNodeWithText(string(R.string.feature_login_submit)).performClick()
 
         assertEquals("user" to "password", loggedIn)
     }
@@ -41,13 +48,14 @@ class LoginScreenTest {
     fun showsErrorMessage_whenError() {
         composeTestRule.setContent {
             LoginScreen(
-                uiState = LoginUiState.Error("IDとパスワードを入力してください"),
+                uiState = LoginUiState.Error(R.string.feature_login_error_blank_input),
                 onLoginClick = { _, _ -> },
             )
         }
 
-        composeTestRule.onNodeWithText("IDとパスワードを入力してください").assertIsDisplayed()
-        composeTestRule.onNodeWithText("ログイン").assertIsEnabled()
+        composeTestRule.onNodeWithText(string(R.string.feature_login_error_blank_input))
+            .assertIsDisplayed()
+        composeTestRule.onNodeWithText(string(R.string.feature_login_submit)).assertIsEnabled()
     }
 
     /** 二重送信を防ぐため、ログイン処理中はボタンを押せない。 */
@@ -57,6 +65,6 @@ class LoginScreenTest {
             LoginScreen(uiState = LoginUiState.Loading, onLoginClick = { _, _ -> })
         }
 
-        composeTestRule.onNodeWithText("ログイン中...").assertIsNotEnabled()
+        composeTestRule.onNodeWithText(string(R.string.feature_login_submitting)).assertIsNotEnabled()
     }
 }

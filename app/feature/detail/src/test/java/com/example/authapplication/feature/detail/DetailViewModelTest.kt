@@ -3,6 +3,7 @@ package com.example.authapplication.feature.detail
 import androidx.lifecycle.SavedStateHandle
 import app.cash.turbine.test
 import com.example.authapplication.domain.error.AppDataException
+import com.example.authapplication.domain.error.AppError
 import com.example.authapplication.domain.item.FakeItemRepository
 import com.example.authapplication.domain.item.Item
 import com.example.authapplication.domain.testing.MainDispatcherRule
@@ -60,22 +61,22 @@ class DetailViewModelTest {
 
     @Test
     fun `uiState is Error when the repository throws`() = runTest {
-        itemRepository.emitError(AppDataException(LOAD_ERROR_MESSAGE))
+        itemRepository.emitError(AppDataException(AppError.ITEM_LOAD))
         val viewModel = createViewModel(itemId = "2")
 
         viewModel.uiState.test {
-            assertEquals(DetailUiState.Error(LOAD_ERROR_MESSAGE), expectMostRecentItem())
+            assertEquals(DetailUiState.Error(LOAD_ERROR_MESSAGE_RES_ID), expectMostRecentItem())
         }
     }
 
     /** 「エラー表示 → リトライ → 成功」の一連の流れ。 */
     @Test
     fun `retry re-subscribes the flow and recovers from Error to Success`() = runTest {
-        itemRepository.emitError(AppDataException(LOAD_ERROR_MESSAGE))
+        itemRepository.emitError(AppDataException(AppError.ITEM_LOAD))
         val viewModel = createViewModel(itemId = "2")
 
         viewModel.uiState.test {
-            assertEquals(DetailUiState.Error(LOAD_ERROR_MESSAGE), expectMostRecentItem())
+            assertEquals(DetailUiState.Error(LOAD_ERROR_MESSAGE_RES_ID), expectMostRecentItem())
 
             // リポジトリ側が回復しても、異常終了したFlowは購読し直すまで新しい値を流さない。
             itemRepository.emitItems(ITEMS)
@@ -93,6 +94,6 @@ class DetailViewModelTest {
             Item(id = "2", title = "アイテム2"),
             Item(id = "3", title = "アイテム3"),
         )
-        const val LOAD_ERROR_MESSAGE = "アイテムの取得に失敗しました"
+        val LOAD_ERROR_MESSAGE_RES_ID = R.string.feature_detail_error_item_load
     }
 }

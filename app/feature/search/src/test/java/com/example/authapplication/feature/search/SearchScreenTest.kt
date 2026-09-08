@@ -10,6 +10,7 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.RuntimeEnvironment
 
 /**
  * [SearchScreen] 単体のUIテスト。
@@ -22,18 +23,23 @@ class SearchScreenTest {
     @get:Rule
     val composeTestRule = createComposeRule()
 
+    /** 表示文字列は文字列リソース化されているため、テストからもリソース経由で参照する。 */
+    private fun string(resId: Int, vararg formatArgs: Any): String =
+        RuntimeEnvironment.getApplication().getString(resId, *formatArgs)
+
     @Test
     fun showsEmptyMessage_whenEmpty() {
         setContent(uiState = SearchUiState.Empty)
 
-        composeTestRule.onNodeWithText("アイテムがありません").assertIsDisplayed()
+        composeTestRule.onNodeWithText(string(R.string.feature_search_empty)).assertIsDisplayed()
     }
 
     @Test
     fun showsNoResultsMessageWithQuery_whenNoResults() {
         setContent(uiState = SearchUiState.NoResults(query = "アイテム9"), query = "アイテム9")
 
-        composeTestRule.onNodeWithText("「アイテム9」に一致するアイテムがありません").assertIsDisplayed()
+        composeTestRule.onNodeWithText(string(R.string.feature_search_no_results, "アイテム9"))
+            .assertIsDisplayed()
     }
 
     /** 検索欄はどの状態でも操作でき、入力はコールバックでViewModelへ渡される。 */
@@ -42,7 +48,8 @@ class SearchScreenTest {
         var changedQuery: String? = null
         setContent(uiState = SearchUiState.Empty, onQueryChange = { changedQuery = it })
 
-        composeTestRule.onNodeWithText("検索キーワード").performTextInput("アイテム1")
+        composeTestRule.onNodeWithText(string(R.string.feature_search_query_label))
+            .performTextInput("アイテム1")
 
         assertEquals("アイテム1", changedQuery)
     }

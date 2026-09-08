@@ -2,6 +2,7 @@ package com.example.authapplication.feature.favorite
 
 import app.cash.turbine.test
 import com.example.authapplication.domain.error.AppDataException
+import com.example.authapplication.domain.error.AppError
 import com.example.authapplication.domain.favorite.FakeFavoriteRepository
 import com.example.authapplication.domain.favorite.ObserveFavoriteItemsUseCase
 import com.example.authapplication.domain.favorite.ToggleFavoriteUseCase
@@ -89,9 +90,9 @@ class FavoriteViewModelTest {
         viewModel.uiState.test {
             assertEquals(FavoriteUiState.Loading, awaitItem())
 
-            itemRepository.emitError(AppDataException(LOAD_ERROR_MESSAGE))
+            itemRepository.emitError(AppDataException(AppError.ITEM_LOAD))
 
-            assertEquals(FavoriteUiState.Error(LOAD_ERROR_MESSAGE), awaitItem())
+            assertEquals(FavoriteUiState.Error(LOAD_ERROR_MESSAGE_RES_ID), awaitItem())
         }
     }
 
@@ -103,8 +104,8 @@ class FavoriteViewModelTest {
         viewModel.uiState.test {
             assertEquals(FavoriteUiState.Loading, awaitItem())
 
-            itemRepository.emitError(AppDataException(LOAD_ERROR_MESSAGE))
-            assertEquals(FavoriteUiState.Error(LOAD_ERROR_MESSAGE), awaitItem())
+            itemRepository.emitError(AppDataException(AppError.ITEM_LOAD))
+            assertEquals(FavoriteUiState.Error(LOAD_ERROR_MESSAGE_RES_ID), awaitItem())
 
             // リポジトリ側が回復しても、異常終了したFlowは購読し直すまで新しい値を流さない。
             itemRepository.emitItems(ITEMS)
@@ -124,12 +125,12 @@ class FavoriteViewModelTest {
     @Test
     fun `toggleFavorite emits ShowErrorSnackbar event when it fails`() = runTest {
         val viewModel = createViewModel()
-        favoriteRepository.toggleError = AppDataException(TOGGLE_ERROR_MESSAGE)
+        favoriteRepository.toggleError = AppDataException(AppError.FAVORITE_TOGGLE)
 
         viewModel.event.test {
             viewModel.toggleFavorite("2")
 
-            assertEquals(FavoriteEvent.ShowErrorSnackbar(TOGGLE_ERROR_MESSAGE), awaitItem())
+            assertEquals(FavoriteEvent.ShowErrorSnackbar(TOGGLE_ERROR_MESSAGE_RES_ID), awaitItem())
         }
     }
 
@@ -139,7 +140,7 @@ class FavoriteViewModelTest {
             Item(id = "2", title = "アイテム2"),
             Item(id = "3", title = "アイテム3"),
         )
-        const val LOAD_ERROR_MESSAGE = "アイテムの取得に失敗しました"
-        const val TOGGLE_ERROR_MESSAGE = "お気に入りの更新に失敗しました"
+        val LOAD_ERROR_MESSAGE_RES_ID = R.string.feature_favorite_error_item_load
+        val TOGGLE_ERROR_MESSAGE_RES_ID = R.string.feature_favorite_error_favorite_toggle
     }
 }

@@ -1,8 +1,11 @@
 package com.example.authapplication.feature.favorite
 
+import androidx.annotation.StringRes
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.authapplication.domain.error.toUserMessage
+import com.example.authapplication.core.R as CoreR
+import com.example.authapplication.domain.error.AppError
+import com.example.authapplication.domain.error.toAppError
 import com.example.authapplication.domain.favorite.ObserveFavoriteItemsUseCase
 import com.example.authapplication.domain.favorite.ToggleFavoriteUseCase
 import com.example.authapplication.domain.item.Item
@@ -28,14 +31,17 @@ sealed interface FavoriteUiState {
     data object Empty : FavoriteUiState
     data class Success(val items: List<Item>) : FavoriteUiState
 
-    /** アイテムの取得に失敗した状態。[message] を表示し、再読み込みを促す。 */
-    data class Error(val message: String) : FavoriteUiState
+    /**
+     * アイテムの取得に失敗した状態。[messageResId] の文言を表示し、再読み込みを促す。
+     * 文言そのものではなく文字列リソースIDを持ち、解決はComposable側の `stringResource` に任せる。
+     */
+    data class Error(@param:StringRes val messageResId: Int) : FavoriteUiState
 }
 
 /** お気に入り画面へ一度きり通知するイベント。 */
 sealed interface FavoriteEvent {
     /** お気に入りの更新に失敗したことをSnackbarで知らせる。 */
-    data class ShowErrorSnackbar(val message: String) : FavoriteEvent
+    data class ShowErrorSnackbar(@param:StringRes val messageResId: Int) : FavoriteEvent
 }
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -63,7 +69,7 @@ class FavoriteViewModel @Inject constructor(
                     if (items.isEmpty()) FavoriteUiState.Empty else FavoriteUiState.Success(items)
                 }
                 .onStart { emit(FavoriteUiState.Loading) }
-                .catch { throwable -> emit(FavoriteUiState.Error(throwable.toUserMessage())) }
+                .catch { throwable -> emit(FavoriteUiState.Error(throwable.toMessageResId())) }
         }
         .stateIn(
             scope = viewModelScope,
@@ -80,8 +86,16 @@ class FavoriteViewModel @Inject constructor(
         viewModelScope.launch {
             runCatching { toggleFavoriteUseCase(itemId) }
                 .onFailure { throwable ->
-                    _event.emit(FavoriteEvent.ShowErrorSnackbar(throwable.toUserMessage()))
+                    _event.emit(FavoriteEvent.ShowErrorSnackbar(throwable.toMessageResId()))
                 }
         }
     }
+}
+
+/** 失敗の種別([AppError])をこの画面で表示する文言のリソースIDへ変換する。詳しくは `HomeViewModel` を参照。 */
+@StringRes
+private fun Throwable.toMessageResId(): Int = when (toAppError()) {
+    AppError.ITEM_LOAD -> R.string.feature_favorite_error_item_load
+    AppError.FAVORITE_TOGGLE -> R.string.feature_favorite_error_favorite_toggle
+    AppError.NOTIFICATION_LOAD, AppError.UNEXPECTED -> CoreR.string.core_error_unexpected
 }

@@ -24,6 +24,7 @@ import androidx.compose.ui.autofill.ContentType
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentType
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.ImeAction
@@ -52,11 +53,14 @@ fun LoginScreen(
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
-        Text(text = "ログイン画面", style = MaterialTheme.typography.headlineSmall)
+        Text(
+            text = stringResource(R.string.feature_login_title),
+            style = MaterialTheme.typography.headlineSmall,
+        )
         OutlinedTextField(
             value = id,
             onValueChange = { id = it },
-            label = { Text("ID") },
+            label = { Text(stringResource(R.string.feature_login_id_label)) },
             singleLine = true,
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
             keyboardActions = KeyboardActions(
@@ -69,7 +73,7 @@ fun LoginScreen(
         OutlinedTextField(
             value = password,
             onValueChange = { password = it },
-            label = { Text("パスワード") },
+            label = { Text(stringResource(R.string.feature_login_password_label)) },
             singleLine = true,
             visualTransformation = PasswordVisualTransformation(),
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
@@ -82,14 +86,25 @@ fun LoginScreen(
                 .semantics { contentType = ContentType.Password },
         )
         if (uiState is LoginUiState.Error) {
-            Text(text = uiState.message, color = MaterialTheme.colorScheme.error)
+            Text(
+                text = stringResource(uiState.messageResId),
+                color = MaterialTheme.colorScheme.error,
+            )
         }
         Button(
             onClick = { onLoginClick(id, password) },
             enabled = uiState !is LoginUiState.Loading,
             modifier = Modifier.fillMaxWidth(),
         ) {
-            Text(if (uiState is LoginUiState.Loading) "ログイン中..." else "ログイン")
+            Text(
+                stringResource(
+                    if (uiState is LoginUiState.Loading) {
+                        R.string.feature_login_submitting
+                    } else {
+                        R.string.feature_login_submit
+                    },
+                ),
+            )
         }
     }
 }

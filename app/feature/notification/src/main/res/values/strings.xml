@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 通知画面固有の文言。リソース名は resourcePrefix（feature_notification_）で始める。 -->
+<resources>
+    <string name="feature_notification_title">通知</string>
+    <string name="feature_notification_empty">通知はありません</string>
+    <string name="feature_notification_error_load">通知の取得に失敗しました</string>
+</resources>

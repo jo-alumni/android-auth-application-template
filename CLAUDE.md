@@ -47,9 +47,11 @@ Gradleモジュールは以下の依存方向を持つ多層構成（`:app` が�
 
 テストは `./gradlew test`（JVM）で完結することを基本にする。ViewModelのユニットテストに加え、Screen Composable単体のUIテストもRobolectric上で `src/test` に置いており、実機/エミュレータが必要な計装テスト（`:app` の `androidTest`）は画面をまたぐナビゲーションの確認だけに絞っている。テスト用のFake（`FakeAuthRepository` など）は `:domain` の `testFixtures` に集約し、計装テストでは `@TestInstallIn` で `RepositoryModule` をFakeへ差し替えるため、実DataStoreの状態には依存しない([.claude/rules/testing.md](.claude/rules/testing.md) 参照)。
 
-Android Library設定・Compose有効化・Hilt設定など、モジュール間で重複しがちなGradle設定は `build-logic`（Convention Plugin。`settings.gradle.kts` の `pluginManagement.includeBuild("build-logic")` で取り込まれるcomposite build）に集約している。各モジュールは `id("authapplication.android.library")` のようなConvention Plugin IDを適用し、`namespace` やモジュール固有の依存関係のみを自身の `build.gradle.kts` に残す。
+Android Library設定・Compose有効化・Hilt設定・リソース名の接頭辞(`resourcePrefix`)など、モジュール間で重複しがちなGradle設定は `build-logic`（Convention Plugin。`settings.gradle.kts` の `pluginManagement.includeBuild("build-logic")` で取り込まれるcomposite build）に集約している。各モジュールは `id("authapplication.android.library")` のようなConvention Plugin IDを適用し、`namespace` やモジュール固有の依存関係のみを自身の `build.gradle.kts` に残す。
 
 お気に入り状態は `Preferences DataStore → FavoriteRepository(お気に入りID集合) → ObserveItemsUseCase → 各画面のViewModel` という流れで伝播する。`ObserveItemsUseCase` が `ItemRepository.observeItems()` とお気に入りID集合を `combine` して `Item.isFavorite` を埋めるため、どの画面でトグルしても同じFlowを購読している他画面に即座に反映される。お気に入り画面は `ObserveFavoriteItemsUseCase` で絞り込んだ結果を表示する。
+
+表示文字列は各モジュールの `src/main/res/values/strings.xml` に置き、リソース名は `resourcePrefix`（`:app:core` なら `core_`、`:app:feature:home` なら `feature_home_`）で始める。画面固有の文言はfeatureモジュールが、「戻る」「閉じる」など画面に依存しない文言は `:app:core` が持つ。ViewModelは文言ではなく `@StringRes` のリソースIDを公開し、`stringResource` での解決はUI側で行う([.claude/rules/string-resources.md](.claude/rules/string-resources.md) 参照)。
 
 認証状態は `DataStore → AuthRepository → IsAuthenticatedUseCase/SetAuthenticatedUseCase → AppViewModel.authState(StateFlow<AuthUiState>)` という流れで伝播し、`AppNavHost` の startDestination 決定やログアウト時の遷移に使われる。ログアウトなどの単発の画面遷移イベントは `AppViewModel.event`（`SharedFlow<AppEvent>`）で通知される([.claude/rules/viewmodel-event-handling.md](.claude/rules/viewmodel-event-handling.md) 参照)。
 
@@ -57,7 +59,7 @@ Edge to Edge（`enableEdgeToEdge()`）で描画するため、WindowInsetsの解
 
 アプリ全体の骨組みを組む `AuthApplicationApp` は「状態を読んでUIを組む」だけにし、ナビゲーションの判定は State Holder の `AppState`（`rememberAppState()` で生成）へ切り出している。`AppState` は `NavHostController.currentBackStackEntryFlow` を購読して現在地をSnapshot Stateとして保持し、`currentTopLevelDestination` / `shouldShowBottomBar` の判定と、タブ切り替え（`navigateToTopLevelDestination()`）・通知画面・ログアウト後の遷移を担う。そのため `AppBottomBar` は `NavHostController` を受け取らず、選択中のタブと `onDestinationSelected` だけを受け取る。スクロールに追従してボトムバーを隠す処理は `BottomBarScrollBehavior`（`rememberBottomBarScrollBehavior()`）に分けている。どちらもコンポジション無しで状態を確認できるため、`AppStateTest` / `BottomBarScrollBehaviorTest` でユニットテストする（`AppStateTest` は NavController が Context を必要とするため Robolectric 上で実行する）。
 
-失敗系は `:data` のリポジトリ実装が `AppDataException`（`:domain` の `domain/error`）を投げ、各ViewModelが `Flow.catch` で `XxxUiState.Error` に変換する。リトライは `MutableSharedFlow<Unit>` のトリガーを `flatMapLatest` の上流に置き、購読をやり直すことで実現している。一覧の表示を保ったまま伝えたい失敗（お気に入りトグルの失敗）は状態ではなく `SharedFlow<XxxEvent>` のSnackbarイベントとして通知する。実際に失敗する通信処理が無いため、TopAppBarのデバッグメニューの「エラーを発生させる」スイッチ（`ErrorInjectionRepository`）でリポジトリ層に例外を注入して動作確認できる([.claude/rules/error-handling.md](.claude/rules/error-handling.md) 参照)。
+失敗系は `:data` のリポジトリ実装が `AppDataException`（`:domain` の `domain/error`）を投げ、各ViewModelが `Flow.catch` で `XxxUiState.Error` に変換する。`:domain` はAndroidに依存せず文言を持てないため、例外が運ぶのはメッセージではなく `AppError`（失敗の種別）で、文言（文字列リソースID）への変換は各featureモジュールが行う。リトライは `MutableSharedFlow<Unit>` のトリガーを `flatMapLatest` の上流に置き、購読をやり直すことで実現している。一覧の表示を保ったまま伝えたい失敗（お気に入りトグルの失敗）は状態ではなく `SharedFlow<XxxEvent>` のSnackbarイベントとして通知する。実際に失敗する通信処理が無いため、TopAppBarのデバッグメニューの「エラーを発生させる」スイッチ（`ErrorInjectionRepository`）でリポジトリ層に例外を注入して動作確認できる([.claude/rules/error-handling.md](.claude/rules/error-handling.md) 参照)。
 
 ## 規約
 
@@ -73,3 +75,4 @@ Edge to Edge（`enableEdgeToEdge()`）で描画するため、WindowInsetsの解
   - [.claude/rules/error-handling.md](.claude/rules/error-handling.md) — リポジトリ層の例外は `Flow.catch` で `UiState.Error` に変換し、リトライは購読のやり直しで実現する
   - [.claude/rules/window-insets.md](.claude/rules/window-insets.md) — `:app` は上端insetsのみを解決してconsumeし、下端とIMEは各Screenが自分で解決する
   - [.claude/rules/testing.md](.claude/rules/testing.md) — Fakeは `:domain` の testFixtures に集約し、ScreenのUIテストはRobolectricで `src/test` に置く。計装テストは `@TestInstallIn` でリポジトリを差し替える
+  - [.claude/rules/string-resources.md](.claude/rules/string-resources.md) — 表示文字列はモジュールごとの `strings.xml` に置き、ViewModelは文言ではなく文字列リソースIDを公開する

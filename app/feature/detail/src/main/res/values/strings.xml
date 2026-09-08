@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 詳細画面固有の文言。リソース名は resourcePrefix（feature_detail_）で始める。 -->
+<resources>
+    <string name="feature_detail_not_found">アイテムが見つかりませんでした</string>
+    <string name="feature_detail_error_item_load">アイテムの取得に失敗しました</string>
+</resources>

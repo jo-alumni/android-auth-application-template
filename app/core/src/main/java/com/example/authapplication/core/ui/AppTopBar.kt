@@ -22,8 +22,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.example.authapplication.core.R
 
 /**
  * ボトムバー配下の画面(ホーム/検索/お気に入り)で共通利用するTopAppBar。
@@ -48,13 +50,16 @@ fun AppTopBar(
             // このアプリには実際に失敗する通信処理が無いため、エラー表示とリトライを手元で
             // 確認できるようにデバッグメニューからエラーを注入できるようにしている。
             IconButton(onClick = { showDebugMenu = true }) {
-                Icon(imageVector = Icons.Filled.Build, contentDescription = "デバッグメニュー")
+                Icon(
+                    imageVector = Icons.Filled.Build,
+                    contentDescription = stringResource(R.string.core_debug_menu),
+                )
             }
             DropdownMenu(expanded = showDebugMenu, onDismissRequest = { showDebugMenu = false }) {
                 DropdownMenuItem(
                     text = {
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text("エラーを発生させる")
+                            Text(stringResource(R.string.core_inject_error))
                             Switch(
                                 checked = isErrorInjectionEnabled,
                                 onCheckedChange = onErrorInjectionChange,
@@ -66,10 +71,13 @@ fun AppTopBar(
                 )
             }
             IconButton(onClick = onNotificationClick) {
-                Icon(imageVector = Icons.Filled.Notifications, contentDescription = "通知")
+                Icon(
+                    imageVector = Icons.Filled.Notifications,
+                    contentDescription = stringResource(R.string.core_notification),
+                )
             }
             TextButton(onClick = { showLogoutDialog = true }) {
-                Text("ログアウト")
+                Text(stringResource(R.string.core_logout))
             }
         },
         modifier = modifier,
@@ -78,8 +86,8 @@ fun AppTopBar(
     if (showLogoutDialog) {
         AlertDialog(
             onDismissRequest = { showLogoutDialog = false },
-            title = { Text("ログアウト") },
-            text = { Text("ログアウトしますか?") },
+            title = { Text(stringResource(R.string.core_logout)) },
+            text = { Text(stringResource(R.string.core_logout_confirm_message)) },
             confirmButton = {
                 TextButton(
                     onClick = {
@@ -87,12 +95,12 @@ fun AppTopBar(
                         onLogoutClick()
                     },
                 ) {
-                    Text("ログアウト")
+                    Text(stringResource(R.string.core_logout))
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showLogoutDialog = false }) {
-                    Text("キャンセル")
+                    Text(stringResource(R.string.core_cancel))
                 }
             },
         )
@@ -103,7 +111,7 @@ fun AppTopBar(
 @Composable
 private fun AppTopBarPreview() {
     AppTopBar(
-        title = "ホーム",
+        title = stringResource(R.string.core_destination_home),
         isErrorInjectionEnabled = false,
         onErrorInjectionChange = {},
         onNotificationClick = {},

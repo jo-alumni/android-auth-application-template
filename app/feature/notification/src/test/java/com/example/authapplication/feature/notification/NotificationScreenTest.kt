@@ -5,12 +5,14 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import com.example.authapplication.core.R as CoreR
 import com.example.authapplication.domain.notification.Notification
 import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.RuntimeEnvironment
 
 /** [NotificationScreen] 単体のUIテスト。 */
 @RunWith(RobolectricTestRunner::class)
@@ -18,6 +20,10 @@ class NotificationScreenTest {
 
     @get:Rule
     val composeTestRule = createComposeRule()
+
+    /** 表示文字列は文字列リソース化されているため、テストからもリソース経由で参照する。 */
+    private fun string(resId: Int, vararg formatArgs: Any): String =
+        RuntimeEnvironment.getApplication().getString(resId, *formatArgs)
 
     @Test
     fun showsTitleAndMessage_whenSuccess() {
@@ -35,18 +41,18 @@ class NotificationScreenTest {
     fun showsEmptyMessage_whenEmpty() {
         setContent(uiState = NotificationUiState.Empty)
 
-        composeTestRule.onNodeWithText("通知はありません").assertIsDisplayed()
+        composeTestRule.onNodeWithText(string(R.string.feature_notification_empty)).assertIsDisplayed()
     }
 
     @Test
     fun notifiesRetryClick_whenRetryButtonClicked() {
         var retryCount = 0
         setContent(
-            uiState = NotificationUiState.Error("通知の取得に失敗しました"),
+            uiState = NotificationUiState.Error(R.string.feature_notification_error_load),
             onRetryClick = { retryCount++ },
         )
 
-        composeTestRule.onNodeWithText("再読み込み").performClick()
+        composeTestRule.onNodeWithText(string(CoreR.string.core_retry)).performClick()
 
         assertEquals(1, retryCount)
     }
@@ -56,7 +62,7 @@ class NotificationScreenTest {
         var closeCount = 0
         setContent(uiState = NotificationUiState.Empty, onCloseClick = { closeCount++ })
 
-        composeTestRule.onNodeWithContentDescription("閉じる").performClick()
+        composeTestRule.onNodeWithContentDescription(string(CoreR.string.core_close)).performClick()
 
         assertEquals(1, closeCount)
     }

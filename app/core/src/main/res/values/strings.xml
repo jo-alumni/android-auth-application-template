@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  全feature共通で使う文言。「戻る」「閉じる」のように画面固有ではない文言だけをここに置き、
+  画面固有の文言は各featureモジュールのstrings.xmlに置く。
+  リソース名は resourcePrefix（core_）で始める必要がある（AndroidLibraryConventionPlugin参照）。
+-->
+<resources>
+    <!-- 共通の操作 -->
+    <string name="core_back">戻る</string>
+    <string name="core_close">閉じる</string>
+    <string name="core_cancel">キャンセル</string>
+    <string name="core_retry">再読み込み</string>
+    <string name="core_loading">読み込み中...</string>
+
+    <!-- ボトムバーのトップレベル画面（TopAppBarのタイトルにも使う） -->
+    <string name="core_destination_home">ホーム</string>
+    <string name="core_destination_search">検索</string>
+    <string name="core_destination_favorite">お気に入り</string>
+
+    <!-- AppTopBar -->
+    <string name="core_logout">ログアウト</string>
+    <string name="core_logout_confirm_message">ログアウトしますか?</string>
+    <string name="core_notification">通知</string>
+    <string name="core_debug_menu">デバッグメニュー</string>
+    <string name="core_inject_error">エラーを発生させる</string>
+
+    <!-- ItemCard -->
+    <string name="core_favorite_add">お気に入りに追加</string>
+    <string name="core_favorite_remove">お気に入りから削除</string>
+
+    <!-- 失敗の種別を解決できなかった場合の共通の文言（AppError.UNEXPECTED） -->
+    <string name="core_error_unexpected">予期しないエラーが発生しました</string>
+</resources>

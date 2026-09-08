@@ -23,8 +23,10 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.example.authapplication.core.R as CoreR
 import com.example.authapplication.core.ui.ErrorContent
 import com.example.authapplication.domain.notification.Notification
 
@@ -44,10 +46,13 @@ fun NotificationScreen(
         Scaffold(
             topBar = {
                 TopAppBar(
-                    title = { Text("通知") },
+                    title = { Text(stringResource(R.string.feature_notification_title)) },
                     navigationIcon = {
                         IconButton(onClick = onCloseClick) {
-                            Icon(imageVector = Icons.Filled.Close, contentDescription = "閉じる")
+                            Icon(
+                                imageVector = Icons.Filled.Close,
+                                contentDescription = stringResource(CoreR.string.core_close),
+                            )
                         }
                     },
                 )
@@ -70,14 +75,17 @@ fun NotificationScreen(
                     NotificationUiState.Empty -> {
                         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                             Text(
-                                text = "通知はありません",
+                                text = stringResource(R.string.feature_notification_empty),
                                 style = MaterialTheme.typography.bodyLarge,
                             )
                         }
                     }
 
                     is NotificationUiState.Error -> {
-                        ErrorContent(message = uiState.message, onRetryClick = onRetryClick)
+                        ErrorContent(
+                            message = stringResource(uiState.messageResId),
+                            onRetryClick = onRetryClick,
+                        )
                     }
 
                     is NotificationUiState.Success -> {
@@ -117,7 +125,7 @@ private fun NotificationScreenPreview() {
 @Composable
 private fun NotificationScreenErrorPreview() {
     NotificationScreen(
-        uiState = NotificationUiState.Error(message = "通知の取得に失敗しました"),
+        uiState = NotificationUiState.Error(messageResId = R.string.feature_notification_error_load),
         onCloseClick = {},
         onRetryClick = {},
     )

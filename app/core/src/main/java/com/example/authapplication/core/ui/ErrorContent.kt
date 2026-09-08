@@ -13,9 +13,11 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.example.authapplication.core.R
 
 /**
  * データの取得に失敗したときに表示する共通のエラー表示。
@@ -45,7 +47,7 @@ fun ErrorContent(
         )
         Button(onClick = onRetryClick) {
             Icon(imageVector = Icons.Filled.Refresh, contentDescription = null)
-            Text(text = "再読み込み", modifier = Modifier.padding(start = 8.dp))
+            Text(text = stringResource(R.string.core_retry), modifier = Modifier.padding(start = 8.dp))
         }
     }
 }
@@ -53,5 +55,5 @@ fun ErrorContent(
 @Preview(showBackground = true)
 @Composable
 private fun ErrorContentPreview() {
-    ErrorContent(message = "アイテムの取得に失敗しました", onRetryClick = {})
+    ErrorContent(message = stringResource(R.string.core_error_unexpected), onRetryClick = {})
 }

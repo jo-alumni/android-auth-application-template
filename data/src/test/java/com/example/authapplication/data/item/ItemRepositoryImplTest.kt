@@ -2,6 +2,7 @@ package com.example.authapplication.data.item
 
 import com.example.authapplication.domain.debug.FakeErrorInjectionRepository
 import com.example.authapplication.domain.error.AppDataException
+import com.example.authapplication.domain.error.AppError
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
@@ -26,6 +27,7 @@ class ItemRepositoryImplTest {
         val throwable = runCatching { repository.observeItems().toList() }.exceptionOrNull()
 
         assertTrue(throwable is AppDataException)
+        assertEquals(AppError.ITEM_LOAD, (throwable as AppDataException).error)
     }
 
     /**
@@ -49,5 +51,6 @@ class ItemRepositoryImplTest {
         val throwable = runCatching { repository.getItemById("1") }.exceptionOrNull()
 
         assertTrue(throwable is AppDataException)
+        assertEquals(AppError.ITEM_LOAD, (throwable as AppDataException).error)
     }
 }

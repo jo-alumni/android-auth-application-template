@@ -14,11 +14,14 @@ import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.compose.ComposeNavigator
 import androidx.navigation.testing.TestNavHostController
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.test.platform.app.InstrumentationRegistry
+import com.example.authapplication.core.R as CoreR
 import com.example.authapplication.core.navigation.AppRoute
 import com.example.authapplication.core.theme.AuthApplicationTheme
 import com.example.authapplication.domain.auth.FakeAuthRepository
 import com.example.authapplication.domain.item.FakeItemRepository
 import com.example.authapplication.domain.item.Item
+import com.example.authapplication.feature.login.R as LoginR
 import com.example.authapplication.navigation.rememberAppState
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
@@ -58,6 +61,10 @@ class AppNavigationTest {
 
     private lateinit var navController: TestNavHostController
 
+    /** 表示文字列は文字列リソース化されているため、テストからもリソース経由で参照する。 */
+    private fun string(resId: Int): String =
+        InstrumentationRegistry.getInstrumentation().targetContext.getString(resId)
+
     @Before
     fun setUp() {
         hiltRule.inject()
@@ -91,9 +98,11 @@ class AppNavigationTest {
     }
 
     private fun login() {
-        composeTestRule.onNodeWithText("ID").performTextInput("user")
-        composeTestRule.onNodeWithText("パスワード").performTextInput("password")
-        composeTestRule.onNodeWithText("ログイン").performClick()
+        composeTestRule.onNodeWithText(string(LoginR.string.feature_login_id_label))
+            .performTextInput("user")
+        composeTestRule.onNodeWithText(string(LoginR.string.feature_login_password_label))
+            .performTextInput("password")
+        composeTestRule.onNodeWithText(string(LoginR.string.feature_login_submit)).performClick()
     }
 
     @Test
@@ -103,7 +112,7 @@ class AppNavigationTest {
         launchApp()
 
         waitUntilRoute(AppRoute.Login::class)
-        composeTestRule.onNodeWithText("ログイン画面").assertIsDisplayed()
+        composeTestRule.onNodeWithText(string(LoginR.string.feature_login_title)).assertIsDisplayed()
         assertTrue(navController.currentDestination?.hasRoute(AppRoute.Login::class) == true)
     }
 
@@ -115,7 +124,7 @@ class AppNavigationTest {
         launchApp()
 
         waitUntilRoute(AppRoute.Home::class)
-        composeTestRule.onNodeWithText("アイテム1").assertIsDisplayed()
+        composeTestRule.onNodeWithText(ITEMS.first().title).assertIsDisplayed()
         assertTrue(
             navController.currentBackStack.value.none { entry ->
                 entry.destination.hasRoute(AppRoute.Login::class)
@@ -134,7 +143,7 @@ class AppNavigationTest {
         // ログインは認証状態の書き込みを伴う非同期処理のため、Homeへの到達を明示的に待つ。
         waitUntilRoute(AppRoute.Home::class)
 
-        composeTestRule.onNodeWithText("アイテム1").assertIsDisplayed()
+        composeTestRule.onNodeWithText(ITEMS.first().title).assertIsDisplayed()
         assertTrue(navController.currentDestination?.hasRoute(AppRoute.Home::class) == true)
         assertTrue(
             navController.currentBackStack.value.none { entry ->
@@ -151,19 +160,23 @@ class AppNavigationTest {
         waitUntilRoute(AppRoute.Home::class)
 
         // AppTopBarの「ログアウト」ボタン。この時点では同テキストのノードは1つだけ。
-        composeTestRule.onNodeWithText("ログアウト").performClick()
+        composeTestRule.onNodeWithText(string(CoreR.string.core_logout)).performClick()
 
         // 確認ダイアログが開くと"ログアウト"というexact textのノードが複数
         // (TopAppBarのボタン/ダイアログタイトル/ダイアログ確認ボタン)存在するため、
         // ダイアログ配下かつクリック可能なノードに絞り込む。
         composeTestRule
-            .onNode(hasText("ログアウト") and hasAnyAncestor(isDialog()) and hasClickAction())
+            .onNode(
+                hasText(string(CoreR.string.core_logout)) and
+                    hasAnyAncestor(isDialog()) and
+                    hasClickAction(),
+            )
             .performClick()
 
         // ログアウトは認証状態のクリアを伴う非同期処理のため、Loginへの到達を明示的に待つ。
         waitUntilRoute(AppRoute.Login::class)
 
-        composeTestRule.onNodeWithText("ログイン画面").assertIsDisplayed()
+        composeTestRule.onNodeWithText(string(LoginR.string.feature_login_title)).assertIsDisplayed()
         assertTrue(navController.currentDestination?.hasRoute(AppRoute.Login::class) == true)
         assertTrue(
             navController.currentBackStack.value.none { entry ->

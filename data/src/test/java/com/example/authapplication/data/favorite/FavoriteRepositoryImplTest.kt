@@ -3,6 +3,7 @@ package com.example.authapplication.data.favorite
 import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import com.example.authapplication.domain.debug.FakeErrorInjectionRepository
 import com.example.authapplication.domain.error.AppDataException
+import com.example.authapplication.domain.error.AppError
 import java.io.File
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -73,6 +74,7 @@ class FavoriteRepositoryImplTest {
             val throwable = runCatching { repository.toggleFavorite("1") }.exceptionOrNull()
 
             assertTrue(throwable is AppDataException)
+            assertEquals(AppError.FAVORITE_TOGGLE, (throwable as AppDataException).error)
             assertEquals(emptySet<String>(), repository.observeFavoriteIds().first())
         }
     }

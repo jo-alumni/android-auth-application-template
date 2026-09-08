@@ -1,8 +1,11 @@
 package com.example.authapplication.feature.home
 
+import androidx.annotation.StringRes
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.authapplication.domain.error.toUserMessage
+import com.example.authapplication.core.R as CoreR
+import com.example.authapplication.domain.error.AppError
+import com.example.authapplication.domain.error.toAppError
 import com.example.authapplication.domain.favorite.ToggleFavoriteUseCase
 import com.example.authapplication.domain.item.Item
 import com.example.authapplication.domain.item.ObserveItemsUseCase
@@ -28,14 +31,17 @@ sealed interface HomeUiState {
     data object Empty : HomeUiState
     data class Success(val items: List<Item>) : HomeUiState
 
-    /** アイテムの取得に失敗した状態。[message] を表示し、再読み込みを促す。 */
-    data class Error(val message: String) : HomeUiState
+    /**
+     * アイテムの取得に失敗した状態。[messageResId] の文言を表示し、再読み込みを促す。
+     * 文言そのものではなく文字列リソースIDを持ち、解決はComposable側の `stringResource` に任せる。
+     */
+    data class Error(@param:StringRes val messageResId: Int) : HomeUiState
 }
 
 /** ホーム画面へ一度きり通知するイベント。 */
 sealed interface HomeEvent {
     /** お気に入りの更新に失敗したことをSnackbarで知らせる。 */
-    data class ShowErrorSnackbar(val message: String) : HomeEvent
+    data class ShowErrorSnackbar(@param:StringRes val messageResId: Int) : HomeEvent
 }
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -69,7 +75,7 @@ class HomeViewModel @Inject constructor(
                 // リトライ直後は前回の結果ではなくローディングから始める。
                 .onStart { emit(HomeUiState.Loading) }
                 // リポジトリ層の例外はここでUiStateへ変換し、UIまで例外を伝播させない。
-                .catch { throwable -> emit(HomeUiState.Error(throwable.toUserMessage())) }
+                .catch { throwable -> emit(HomeUiState.Error(throwable.toMessageResId())) }
         }
         .stateIn(
             scope = viewModelScope,
@@ -89,8 +95,21 @@ class HomeViewModel @Inject constructor(
         viewModelScope.launch {
             runCatching { toggleFavoriteUseCase(itemId) }
                 .onFailure { throwable ->
-                    _event.emit(HomeEvent.ShowErrorSnackbar(throwable.toUserMessage()))
+                    _event.emit(HomeEvent.ShowErrorSnackbar(throwable.toMessageResId()))
                 }
         }
     }
+}
+
+/**
+ * 失敗の種別([AppError])をこの画面で表示する文言のリソースIDへ変換する。
+ *
+ * 文言はfeatureモジュールが自分のstrings.xmlで持ち、:domain は種別しか知らない。
+ * この画面で起こり得ない種別は共通の文言（:app:core）にフォールバックさせる。
+ */
+@StringRes
+private fun Throwable.toMessageResId(): Int = when (toAppError()) {
+    AppError.ITEM_LOAD -> R.string.feature_home_error_item_load
+    AppError.FAVORITE_TOGGLE -> R.string.feature_home_error_favorite_toggle
+    AppError.NOTIFICATION_LOAD, AppError.UNEXPECTED -> CoreR.string.core_error_unexpected
 }

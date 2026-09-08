@@ -15,6 +15,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.IntOffset
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -71,7 +72,7 @@ fun AuthApplicationApp(
                 topBar = {
                     if (currentTopLevelDestination != null) {
                         AppTopBar(
-                            title = currentTopLevelDestination.label,
+                            title = stringResource(currentTopLevelDestination.labelResId),
                             isErrorInjectionEnabled = isErrorInjectionEnabled,
                             onErrorInjectionChange = appViewModel::setErrorInjectionEnabled,
                             onNotificationClick = appState::navigateNotification,

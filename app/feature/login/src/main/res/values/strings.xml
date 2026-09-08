@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- ログイン画面固有の文言。リソース名は resourcePrefix（feature_login_）で始める。 -->
+<resources>
+    <string name="feature_login_title">ログイン画面</string>
+    <string name="feature_login_id_label">ID</string>
+    <string name="feature_login_password_label">パスワード</string>
+    <string name="feature_login_submit">ログイン</string>
+    <string name="feature_login_submitting">ログイン中...</string>
+    <string name="feature_login_error_blank_input">IDとパスワードを入力してください</string>
+</resources>
