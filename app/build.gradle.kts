@@ -19,6 +19,14 @@ android {
         testInstrumentationRunner = "com.example.authapplication.HiltTestRunner"
     }
 
+    testOptions {
+        // RobolectricでAndroid実装(Context/NavControllerなど)を使うユニットテストを動かすため、
+        // ユニットテストのクラスパスにAndroidリソースを含める。
+        unitTests {
+            isIncludeAndroidResources = true
+        }
+    }
+
     buildTypes {
         release {
             optimization {
@@ -52,6 +60,9 @@ dependencies {
     testImplementation(libs.findLibrary("kotlinx-coroutines-test").get())
     testImplementation(libs.findLibrary("turbine").get())
     testImplementation(testFixtures(projects.domain))
+    testImplementation(libs.findLibrary("robolectric").get())
+    testImplementation(libs.findLibrary("androidx-test-core").get())
+    testImplementation(libs.findLibrary("androidx-navigation-testing").get())
     androidTestImplementation(platform(libs.findLibrary("androidx-compose-bom").get()))
     androidTestImplementation(libs.findLibrary("androidx-compose-ui-test-junit4").get())
     androidTestImplementation(libs.findLibrary("androidx-espresso-core").get())

@@ -7,33 +7,25 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.navigation.NavDestination
-import androidx.navigation.NavDestination.Companion.hasRoute
-import androidx.navigation.NavGraph.Companion.findStartDestination
-import androidx.navigation.NavHostController
-import androidx.navigation.compose.rememberNavController
 import com.example.authapplication.core.navigation.TopLevelDestination
 
+/**
+ * ホーム/検索/お気に入りを切り替えるボトムバー。
+ *
+ * NavControllerは受け取らず、「今どのタブか」([currentDestination]) と
+ * 「タブが選ばれた」([onDestinationSelected]) だけを扱う。遷移の実処理は [AppState] が持つ。
+ */
 @Composable
 fun AppBottomBar(
-    navController: NavHostController,
-    currentDestination: NavDestination?,
+    currentDestination: TopLevelDestination?,
+    onDestinationSelected: (TopLevelDestination) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     NavigationBar(modifier = modifier) {
         TopLevelDestination.entries.forEach { destination ->
-            val selected = currentDestination?.hasRoute(destination.route::class) == true
             NavigationBarItem(
-                selected = selected,
-                onClick = {
-                    navController.navigate(destination.route) {
-                        popUpTo(navController.graph.findStartDestination().id) {
-                            saveState = true
-                        }
-                        launchSingleTop = true
-                        restoreState = true
-                    }
-                },
+                selected = destination == currentDestination,
+                onClick = { onDestinationSelected(destination) },
                 icon = { Icon(imageVector = destination.icon, contentDescription = destination.label) },
                 label = { Text(destination.label) },
             )
@@ -45,7 +37,7 @@ fun AppBottomBar(
 @Composable
 private fun AppBottomBarPreview() {
     AppBottomBar(
-        navController = rememberNavController(),
-        currentDestination = null,
+        currentDestination = TopLevelDestination.HOME,
+        onDestinationSelected = {},
     )
 }

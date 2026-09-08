@@ -13,34 +13,35 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
-import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.unit.IntOffset
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.navigation.NavDestination.Companion.hasRoute
-import androidx.navigation.NavHostController
-import androidx.navigation.compose.currentBackStackEntryAsState
-import androidx.navigation.compose.rememberNavController
 import com.example.authapplication.core.navigation.AppRoute
-import com.example.authapplication.core.navigation.TopLevelDestination
 import com.example.authapplication.core.ui.AppTopBar
 import com.example.authapplication.navigation.AppBottomBar
 import com.example.authapplication.navigation.AppNavHost
+import com.example.authapplication.navigation.AppState
+import com.example.authapplication.navigation.BottomBarScrollBehavior
+import com.example.authapplication.navigation.rememberAppState
+import com.example.authapplication.navigation.rememberBottomBarScrollBehavior
 import kotlin.math.roundToInt
 
+/**
+ * アプリ全体の骨組み（TopAppBar / ボトムバー / NavHost）を組み立てるComposable。
+ *
+ * 「今どの画面にいるか」「ボトムバーを出すか」といったナビゲーションの判定は [AppState] が、
+ * スクロールに追従したボトムバーの隠蔽は [BottomBarScrollBehavior] が持つ。
+ * このComposableはそれらの状態を読んでUIを組み立てるだけにする。
+ */
 @Composable
 fun AuthApplicationApp(
     appViewModel: AppViewModel = hiltViewModel(),
-    navController: NavHostController = rememberNavController(),
+    appState: AppState = rememberAppState(),
+    bottomBarScrollBehavior: BottomBarScrollBehavior = rememberBottomBarScrollBehavior(),
 ) {
     val authState by appViewModel.authState.collectAsStateWithLifecycle()
     val isErrorInjectionEnabled by appViewModel.isErrorInjectionEnabled.collectAsStateWithLifecycle()
@@ -52,78 +53,58 @@ fun AuthApplicationApp(
         }
 
         is AuthUiState.Ready -> {
-            val currentDestination = navController.currentBackStackEntryAsState().value?.destination
-            val currentTopLevelDestination = TopLevelDestination.entries.firstOrNull { destination ->
-                currentDestination?.hasRoute(destination.route::class) == true
-            }
-            val showBottomBar = currentTopLevelDestination != null
-
-            var bottomBarHeightPx by remember { mutableFloatStateOf(0f) }
-            var bottomBarOffsetHeightPx by remember { mutableFloatStateOf(0f) }
-            val bottomBarNestedScrollConnection = remember {
-                object : NestedScrollConnection {
-                    override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
-                        val newOffset = bottomBarOffsetHeightPx + available.y
-                        bottomBarOffsetHeightPx = newOffset.coerceIn(-bottomBarHeightPx, 0f)
-                        return Offset.Zero
-                    }
-                }
-            }
+            val currentTopLevelDestination = appState.currentTopLevelDestination
 
             // タブ切り替え時は常にボトムバーを表示状態から始める
             LaunchedEffect(currentTopLevelDestination) {
-                bottomBarOffsetHeightPx = 0f
+                bottomBarScrollBehavior.reset()
             }
 
-            LaunchedEffect(navController) {
+            LaunchedEffect(appState) {
                 appViewModel.event.collect { event ->
                     when (event) {
-                        AppEvent.NavigateLogin -> {
-                            navController.navigate(AppRoute.AuthGraph) {
-                                popUpTo(AppRoute.MainGraph) { inclusive = true }
-                            }
-                        }
+                        AppEvent.NavigateLogin -> appState.navigateLogin()
                     }
                 }
             }
 
             Scaffold(
-                modifier = Modifier.nestedScroll(bottomBarNestedScrollConnection),
+                modifier = Modifier.nestedScroll(bottomBarScrollBehavior.nestedScrollConnection),
                 topBar = {
                     if (currentTopLevelDestination != null) {
                         AppTopBar(
                             title = currentTopLevelDestination.label,
                             isErrorInjectionEnabled = isErrorInjectionEnabled,
                             onErrorInjectionChange = appViewModel::setErrorInjectionEnabled,
-                            onNotificationClick = { navController.navigate(AppRoute.Notification) },
+                            onNotificationClick = appState::navigateNotification,
                             onLogoutClick = { appViewModel.logout() },
                         )
                     }
                 },
                 bottomBar = {
-                    if (showBottomBar) {
+                    if (appState.shouldShowBottomBar) {
                         AppBottomBar(
-                            navController = navController,
-                            currentDestination = currentDestination,
+                            currentDestination = currentTopLevelDestination,
+                            onDestinationSelected = appState::navigateToTopLevelDestination,
                             modifier = Modifier
-                                .onSizeChanged { bottomBarHeightPx = it.height.toFloat() }
-                                .offset { IntOffset(x = 0, y = -bottomBarOffsetHeightPx.roundToInt()) },
+                                .onSizeChanged { bottomBarScrollBehavior.onBarHeightChanged(it.height.toFloat()) }
+                                .offset { IntOffset(x = 0, y = bottomBarScrollBehavior.hiddenHeightPx.roundToInt()) },
                         )
                     }
                 },
             ) { innerPadding ->
                 // リストの表示領域(レイアウトサイズ)自体はシステムナビゲーションバー領域まで広げる。
-                // ボトムバーのスクロール連動オフセット(bottomBarOffsetHeightPx)にリアルタイム/準
-                // リアルタイムに追従させてLazyColumnのcontentPaddingを動かすと、contentPaddingは
-                // レイアウト計算に直接使われる測定入力のため、フレームごとにremeasureが発生して
-                // カクつく(離散化+animateDpAsStateで緩和を試みても、アニメーション中は結局毎フレーム
-                // 値が変わり続けるため解消しなかった)。
+                // ボトムバーのスクロール連動オフセット(BottomBarScrollBehavior.hiddenHeightPx)に
+                // リアルタイム/準リアルタイムに追従させてLazyColumnのcontentPaddingを動かすと、
+                // contentPaddingはレイアウト計算に直接使われる測定入力のため、フレームごとに
+                // remeasureが発生してカクつく(離散化+animateDpAsStateで緩和を試みても、
+                // アニメーション中は結局毎フレーム値が変わり続けるため解消しなかった)。
                 // そこで動的な追従はやめ、contentPaddingはシステムナビゲーションバー分の固定値にする。
                 // ボトムバー表示中はリスト末尾がボトムバーの背後に隠れることがあるが、ボトムバーが
                 // 隠れればナビゲーションバー手前まで完全に表示される。
                 val navigationBarPadding = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
                 AppNavHost(
-                    navController = navController,
+                    navController = appState.navController,
                     startDestination = if (state.isAuthenticated) AppRoute.MainGraph else AppRoute.AuthGraph,
                     modifier = Modifier.padding(top = innerPadding.calculateTopPadding()),
                     listContentPadding = PaddingValues(bottom = navigationBarPadding),
