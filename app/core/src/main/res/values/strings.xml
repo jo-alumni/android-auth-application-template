@@ -23,6 +23,7 @@
     <string name="core_notification">通知</string>
     <string name="core_debug_menu">デバッグメニュー</string>
     <string name="core_inject_error">エラーを発生させる</string>
+    <string name="core_expire_token">トークンを失効させる</string>
 
     <!-- ItemCard -->
     <string name="core_favorite_add">お気に入りに追加</string>

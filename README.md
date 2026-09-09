@@ -37,7 +37,7 @@ Jetpack Compose / Navigation / Hilt / DataStore を使い、マルチモジュ�
 
 ViewModel からのデータアクセスは必ず `:domain` の UseCase を経由します。リポジトリの1メソッドを呼ぶだけで1行の委譲になる UseCase（`GetItemUseCase` など）も省略せず、リポジトリインターフェースを直接呼んでよいのは `:domain` の UseCase だけ、という基準に統一しています（[.claude/rules/usecase.md](.claude/rules/usecase.md) 参照）。
 
-認証状態は `DataStore → AuthRepository → IsAuthenticatedUseCase/SetAuthTokenUseCase/ClearAuthTokenUseCase → AppViewModel.authState(StateFlow<AuthUiState>)` という流れで伝播し、`AppNavHost` の startDestination 決定やログアウト時の遷移に使われます。ログアウトなど単発の画面遷移イベントは `AppViewModel.event`（`SharedFlow<AppEvent>`）で通知されます。
+認証状態は `DataStore → AuthRepository → IsAuthenticatedUseCase/SetAuthTokenUseCase/ClearAuthTokenUseCase → AppViewModel.authState(StateFlow<AuthUiState>)` という流れで伝播します。認証状態とナビゲーションの結び方は状態駆動に一本化しており、起動時の入り口だけを `AppNavHost` の `startDestination` が決め、起動後に未認証へ変わったときの遷移は `AuthApplicationApp` が `authState` を購読して行います。そのためログアウト操作でもトークン失効でも同じ経路でログイン画面へ戻ります（詳しくは [docs/auth-navigation.md](docs/auth-navigation.md)）。
 
 アプリ全体の骨組みを組む `AuthApplicationApp` は状態を読んでUIを組み立てるだけにし、「今どのタブにいるか」「ボトムバーを表示するか」といったナビゲーションの判定は State Holder の `AppState`（`rememberAppState()`）が、スクロールに追従したボトムバーの隠蔽は `BottomBarScrollBehavior`（`rememberBottomBarScrollBehavior()`）が持ちます。
 
