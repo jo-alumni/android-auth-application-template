@@ -7,6 +7,8 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.navigation
 import androidx.navigation.createGraph
 import androidx.navigation.testing.TestNavHostController
+import androidx.window.core.layout.WindowSizeClass
+import androidx.window.core.layout.computeWindowSizeClass
 import com.example.authapplication.core.navigation.AppRoute
 import com.example.authapplication.core.navigation.TopLevelDestination
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -14,7 +16,6 @@ import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -43,7 +44,7 @@ class AppStateTest {
      * [AppState] は現在地の購読をコンストラクタで開始するため、購読を動かすには
      * 生成後に [runCurrent] が必要になる。
      */
-    private fun TestScope.createAppState(): AppState {
+    private fun TestScope.createAppState(windowSizeClass: WindowSizeClass = COMPACT_WIDTH): AppState {
         val navController = TestNavHostController(RuntimeEnvironment.getApplication()).apply {
             navigatorProvider.addNavigator(ComposeNavigator())
             graph = createGraph(startDestination = AppRoute.MainGraph) {
@@ -59,16 +60,20 @@ class AppStateTest {
                 }
             }
         }
-        return AppState(navController = navController, coroutineScope = backgroundScope)
+        return AppState(
+            navController = navController,
+            coroutineScope = backgroundScope,
+            windowSizeClass = windowSizeClass,
+        )
     }
 
     @Test
-    fun `currentTopLevelDestination is the start destination and the bottom bar is shown`() = runTest {
+    fun `currentTopLevelDestination is the start destination and the bottom bar is used`() = runTest {
         val appState = createAppState()
         runCurrent()
 
         assertEquals(TopLevelDestination.HOME, appState.currentTopLevelDestination)
-        assertTrue(appState.shouldShowBottomBar)
+        assertEquals(AppNavigationType.BOTTOM_BAR, appState.navigationType)
     }
 
     @Test
@@ -80,7 +85,7 @@ class AppStateTest {
         runCurrent()
 
         assertEquals(TopLevelDestination.SEARCH, appState.currentTopLevelDestination)
-        assertTrue(appState.shouldShowBottomBar)
+        assertEquals(AppNavigationType.BOTTOM_BAR, appState.navigationType)
     }
 
     @Test
@@ -100,7 +105,7 @@ class AppStateTest {
     }
 
     @Test
-    fun `bottom bar is hidden on a screen outside the tabs`() = runTest {
+    fun `navigationType is NONE on a screen outside the tabs`() = runTest {
         val appState = createAppState()
         runCurrent()
 
@@ -108,11 +113,11 @@ class AppStateTest {
         runCurrent()
 
         assertNull(appState.currentTopLevelDestination)
-        assertFalse(appState.shouldShowBottomBar)
+        assertEquals(AppNavigationType.NONE, appState.navigationType)
     }
 
     @Test
-    fun `navigateNotification moves to the notification screen and hides the bottom bar`() = runTest {
+    fun `navigateNotification moves to the notification screen and hides the navigation UI`() = runTest {
         val appState = createAppState()
         runCurrent()
 
@@ -120,7 +125,7 @@ class AppStateTest {
         runCurrent()
 
         assertTrue(appState.currentDestination?.hasRoute(AppRoute.Notification::class) == true)
-        assertFalse(appState.shouldShowBottomBar)
+        assertEquals(AppNavigationType.NONE, appState.navigationType)
     }
 
     /**
@@ -186,11 +191,67 @@ class AppStateTest {
         runCurrent()
 
         assertTrue(appState.currentDestination?.hasRoute(AppRoute.Login::class) == true)
-        assertFalse(appState.shouldShowBottomBar)
+        assertEquals(AppNavigationType.NONE, appState.navigationType)
         assertTrue(
             appState.navController.currentBackStack.value.none { entry ->
                 entry.destination.hasRoute(AppRoute.MainGraph::class)
             },
         )
+    }
+
+    @Test
+    fun `navigationType is NAVIGATION_RAIL on a medium width window`() = runTest {
+        val appState = createAppState(windowSizeClass = MEDIUM_WIDTH)
+        runCurrent()
+
+        assertEquals(AppNavigationType.NAVIGATION_RAIL, appState.navigationType)
+    }
+
+    @Test
+    fun `navigationType is PERMANENT_DRAWER on an expanded width window`() = runTest {
+        val appState = createAppState(windowSizeClass = EXPANDED_WIDTH)
+        runCurrent()
+
+        assertEquals(AppNavigationType.PERMANENT_DRAWER, appState.navigationType)
+    }
+
+    /** 画面回転やウィンドウのリサイズは、インスタンスを作り直さずプロパティの更新として扱う。 */
+    @Test
+    fun `navigationType follows the window size class change`() = runTest {
+        val appState = createAppState(windowSizeClass = COMPACT_WIDTH)
+        runCurrent()
+        assertEquals(AppNavigationType.BOTTOM_BAR, appState.navigationType)
+
+        appState.windowSizeClass = EXPANDED_WIDTH
+
+        assertEquals(AppNavigationType.PERMANENT_DRAWER, appState.navigationType)
+        // 現在地（＝タブの選択状態）はサイズが変わっても保たれる。
+        assertEquals(TopLevelDestination.HOME, appState.currentTopLevelDestination)
+    }
+
+    /** ナビゲーションUIを出さない画面では、ウィンドウ幅にかかわらず [AppNavigationType.NONE]。 */
+    @Test
+    fun `navigationType is NONE outside the tabs even on an expanded width window`() = runTest {
+        val appState = createAppState(windowSizeClass = EXPANDED_WIDTH)
+        runCurrent()
+
+        appState.navController.navigate(AppRoute.Detail(itemId = "item1"))
+        runCurrent()
+
+        assertEquals(AppNavigationType.NONE, appState.navigationType)
+    }
+
+    private companion object {
+        /** 一般的なスマートフォンの縦持ち相当。 */
+        val COMPACT_WIDTH = windowSizeClass(widthDp = 400, heightDp = 800)
+
+        /** 小型タブレットやスマートフォンの横持ち相当。 */
+        val MEDIUM_WIDTH = windowSizeClass(widthDp = 700, heightDp = 800)
+
+        /** タブレット相当。 */
+        val EXPANDED_WIDTH = windowSizeClass(widthDp = 1000, heightDp = 800)
+
+        fun windowSizeClass(widthDp: Int, heightDp: Int): WindowSizeClass =
+            WindowSizeClass.BREAKPOINTS_V2.computeWindowSizeClass(widthDp = widthDp, heightDp = heightDp)
     }
 }

@@ -9,9 +9,14 @@ alwaysApply: false
 # WindowInsets は「それを隠す UI を描いた側」が解決する
 
 ## 方針
-- `:app`(`AuthApplicationApp`)は、自分が描く `AppTopBar` 分の**上端 insets だけ**を解決する。
+- `:app`(`AppNavigationScaffold`)は、自分が描く `AppTopBar` 分の**上端 insets だけ**を解決する。
   `Modifier.padding(topPadding)` に加えて `Modifier.consumeWindowInsets(topPadding)` を必ず併用し、
   適用済みの余白を下流の `WindowInsets` から差し引く。
+- 画面幅がMedium以上のときに `:app` が描く `AppNavigationRail` / `AppNavigationDrawerSheet` も同じ扱いで、
+  **左端の insets は描いた側**(`AppNavigationScaffold`)が解決する。レール/ドロワー自身の既定の
+  `windowInsets` が余白を確保するので、本文側の `Scaffold` には
+  `Modifier.consumeWindowInsets(WindowInsets.safeDrawing.only(WindowInsetsSides.Start))` を付けて
+  覆われた分を下流から差し引く。
 - **下端(ナビゲーションバー)と IME は各 Screen が自分で解決する**。`:app` からは解決しないし、
   `PaddingValues` を Navigation 層経由で feature に渡さない。
   - スクロールする画面: `LazyColumn(contentPadding = WindowInsets.navigationBars.asPaddingValues())`
@@ -56,7 +61,7 @@ fun HomeScreen(uiState: HomeUiState, contentPadding: PaddingValues = PaddingValu
 
 ```kotlin
 // Good: :app は上端だけを解決して consume し、下端は画面が自分で解決する
-// AuthApplicationApp.kt
+// AppNavigationScaffold.kt
 val topPadding = PaddingValues(top = innerPadding.calculateTopPadding())
 AppNavHost(
     modifier = Modifier
