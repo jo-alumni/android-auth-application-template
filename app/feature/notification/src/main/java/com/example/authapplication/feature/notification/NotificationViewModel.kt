@@ -7,7 +7,7 @@ import com.example.authapplication.core.R as CoreR
 import com.example.authapplication.domain.error.AppError
 import com.example.authapplication.domain.error.toAppError
 import com.example.authapplication.domain.notification.Notification
-import com.example.authapplication.domain.notification.NotificationRepository
+import com.example.authapplication.domain.notification.ObserveNotificationsUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -37,7 +37,7 @@ sealed interface NotificationUiState {
 @OptIn(ExperimentalCoroutinesApi::class)
 @HiltViewModel
 class NotificationViewModel @Inject constructor(
-    private val notificationRepository: NotificationRepository,
+    private val observeNotificationsUseCase: ObserveNotificationsUseCase,
 ) : ViewModel() {
 
     /** 再読み込みのトリガー。詳しくは `HomeViewModel.retryTrigger` のコメントを参照。 */
@@ -50,7 +50,7 @@ class NotificationViewModel @Inject constructor(
         // 購読開始時にも一度流し、初回の読み込みとリトライを同じ経路に乗せる。
         .onStart { emit(Unit) }
         .flatMapLatest {
-            notificationRepository.observeNotifications()
+            observeNotificationsUseCase()
                 .map { notifications ->
                     if (notifications.isEmpty()) {
                         NotificationUiState.Empty

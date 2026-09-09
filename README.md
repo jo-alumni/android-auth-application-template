@@ -21,20 +21,23 @@ Jetpack Compose / Navigation / Hilt / DataStore を使い、マルチモジュ�
 多層のマルチモジュール構成になっており、`:app` が全 feature / domain / data に依存します。feature モジュール同士の直接依存はありません。
 
 ```
-:app                    アプリのエントリーポイント（MainActivity, App, AppViewModel, AppNavHost, AppState など）
-:app:core               feature 共通の汎用機能（AppRoute, TopLevelDestination, 共通Composable, テーマ）
-:app:feature:login      認証（ログイン）画面
-:app:feature:home       ホーム画面
-:app:feature:search     検索画面
-:app:feature:favorite   お気に入り画面
-:app:feature:detail     詳細画面
-:domain                 UseCase・Repositoryインターフェース・モデル（Android非依存）
-:data                   Repository実装（DataStoreベースの AuthRepositoryImpl など）・Hiltモジュール
+:app                       アプリのエントリーポイント（MainActivity, App, AppViewModel, AppNavHost, AppState など）
+:app:core                  feature 共通の汎用機能（AppRoute, TopLevelDestination, 共通Composable, テーマ）
+:app:feature:login         認証（ログイン）画面
+:app:feature:home          ホーム画面
+:app:feature:search        検索画面
+:app:feature:favorite      お気に入り画面
+:app:feature:detail        詳細画面
+:app:feature:notification  通知画面
+:domain                    UseCase・Repositoryインターフェース・モデル（Android非依存）
+:data                      Repository実装（DataStoreベースの AuthRepositoryImpl など）・Hiltモジュール
 ```
 
 各 feature モジュールは `NavGraphBuilder` の拡張関数（例: `homeScreen(navigateDetail = ...)`）を公開し、`:app` の `AppNavHost` から呼び出されます。
 
-認証状態は `DataStore → AuthRepository → IsAuthenticatedUseCase/ClearAuthTokenUseCase → AppViewModel.authState(StateFlow<AuthUiState>)` という流れで伝播します。認証状態とナビゲーションの結び方は状態駆動に一本化しており、起動時の入り口だけを `AppNavHost` の `startDestination` が決め、起動後に未認証へ変わったときの遷移は `AuthApplicationApp` が `authState` を購読して行います。そのためログアウト操作でもトークン失効でも同じ経路でログイン画面へ戻ります（詳しくは [docs/auth-navigation.md](docs/auth-navigation.md)）。
+ViewModel からのデータアクセスは必ず `:domain` の UseCase を経由します。リポジトリの1メソッドを呼ぶだけで1行の委譲になる UseCase（`GetItemUseCase` など）も省略せず、リポジトリインターフェースを直接呼んでよいのは `:domain` の UseCase だけ、という基準に統一しています（[.claude/rules/usecase.md](.claude/rules/usecase.md) 参照）。
+
+認証状態は `DataStore → AuthRepository → IsAuthenticatedUseCase/SetAuthTokenUseCase/ClearAuthTokenUseCase → AppViewModel.authState(StateFlow<AuthUiState>)` という流れで伝播します。認証状態とナビゲーションの結び方は状態駆動に一本化しており、起動時の入り口だけを `AppNavHost` の `startDestination` が決め、起動後に未認証へ変わったときの遷移は `AuthApplicationApp` が `authState` を購読して行います。そのためログアウト操作でもトークン失効でも同じ経路でログイン画面へ戻ります（詳しくは [docs/auth-navigation.md](docs/auth-navigation.md)）。
 
 アプリ全体の骨組みを組む `AuthApplicationApp` は状態を読んでUIを組み立てるだけにし、「今どのタブにいるか」「ボトムバーを表示するか」といったナビゲーションの判定は State Holder の `AppState`（`rememberAppState()`）が、スクロールに追従したボトムバーの隠蔽は `BottomBarScrollBehavior`（`rememberBottomBarScrollBehavior()`）が持ちます。
 
@@ -91,5 +94,11 @@ Jetpack Compose / Navigation / Hilt / DataStore を使い、マルチモジュ�
 - [.claude/rules/viewmodel-event-handling.md](.claude/rules/viewmodel-event-handling.md) — ViewModel→UIの単発イベントはコールバック引数ではなくSharedFlowで配信する
 - [.claude/rules/compose-navigation.md](.claude/rules/compose-navigation.md) — Navigationファイルのコールバックは `navigateXxx` のように遷移視点で命名する
 - [.claude/rules/compose-preview.md](.claude/rules/compose-preview.md) — publicなComposable関数には同名+`Preview`の `@Preview` 関数を必ず用意する
+- [.claude/rules/viewmodel-uistate.md](.claude/rules/viewmodel-uistate.md) — ViewModelが公開する画面状態は `sealed interface XxxUiState`（Loading/Empty/Success/Error）で表現する
+- [.claude/rules/error-handling.md](.claude/rules/error-handling.md) — リポジトリ層の例外は `Flow.catch` で `UiState.Error` に変換し、リトライは購読のやり直しで実現する
+- [.claude/rules/window-insets.md](.claude/rules/window-insets.md) — `:app` は上端insetsのみを解決してconsumeし、下端とIMEは各Screenが自分で解決する
+- [.claude/rules/testing.md](.claude/rules/testing.md) — Fakeは `:domain` の testFixtures に集約し、ScreenのUIテストはRobolectricで `src/test` に置く
+- [.claude/rules/string-resources.md](.claude/rules/string-resources.md) — 表示文字列はモジュールごとの `strings.xml` に置き、ViewModelは文言ではなく文字列リソースIDを公開する
+- [.claude/rules/usecase.md](.claude/rules/usecase.md) — ViewModelはRepositoryを直接注入せず、必ず `:domain` のUseCaseを経由する
 
 Claude Code 向けの詳細な開発ガイドは [CLAUDE.md](CLAUDE.md) を参照してください。
