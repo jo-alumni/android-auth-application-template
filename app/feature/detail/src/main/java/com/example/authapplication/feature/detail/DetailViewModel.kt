@@ -9,8 +9,8 @@ import com.example.authapplication.core.R as CoreR
 import com.example.authapplication.core.navigation.AppRoute
 import com.example.authapplication.domain.error.AppError
 import com.example.authapplication.domain.error.toAppError
+import com.example.authapplication.domain.item.GetItemUseCase
 import com.example.authapplication.domain.item.Item
-import com.example.authapplication.domain.item.ItemRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -44,7 +44,7 @@ sealed interface DetailUiState {
 @HiltViewModel
 class DetailViewModel @Inject constructor(
     private val savedStateHandle: SavedStateHandle,
-    private val itemRepository: ItemRepository,
+    private val getItemUseCase: GetItemUseCase,
 ) : ViewModel() {
 
     /** 再読み込みのトリガー。詳しくは `HomeViewModel.retryTrigger` のコメントを参照。 */
@@ -59,7 +59,7 @@ class DetailViewModel @Inject constructor(
         .flatMapLatest {
             flow {
                 val itemId = savedStateHandle.toRoute<AppRoute.Detail>().itemId
-                val item = itemRepository.getItemById(itemId)
+                val item = getItemUseCase(itemId)
                 emit(if (item != null) DetailUiState.Success(item) else DetailUiState.NotFound)
             }
                 .onStart { emit(DetailUiState.Loading) }
