@@ -14,7 +14,8 @@ Android 15 以降ではアプリが常に edge-to-edge で描画される。本�
 
 | 対象 | 解決する場所 | 方法 |
 | --- | --- | --- |
-| 上端（ステータスバー / `AppTopBar`） | `:app`（`AuthApplicationApp` の `Scaffold`） | `Modifier.padding(top)` + `Modifier.consumeWindowInsets(top)` |
+| 上端（ステータスバー / `AppTopBar`） | `:app`（`AppNavigationScaffold` の `Scaffold`） | `Modifier.padding(top)` + `Modifier.consumeWindowInsets(top)` |
+| 左端（`AppNavigationRail` / `AppNavigationDrawerSheet` が覆う分） | `:app`（`AppNavigationScaffold`） | レール/ドロワー自身の既定の `windowInsets` が余白を確保し、その分を本文側で `Modifier.consumeWindowInsets(safeDrawing.only(Start))` |
 | 下端（ナビゲーションバー） | 各 feature の Screen | スクロールする画面は `LazyColumn(contentPadding = WindowInsets.navigationBars.asPaddingValues())`、しない画面は `Modifier.navigationBarsPadding()` |
 | IME（ソフトキーボード） | 入力欄を持つ Screen | `Modifier.imePadding()` |
 | 全画面ダイアログ（通知画面） | その画面自身 | 別ウィンドウなので自前の `Scaffold` で上下とも解決する |
@@ -25,17 +26,27 @@ Android 15 以降ではアプリが常に edge-to-edge で描画される。本�
 起きない。
 
 ```kotlin
-// AuthApplicationApp.kt
+// AppNavigationScaffold.kt
 Scaffold(topBar = { ... }, bottomBar = { ... }) { innerPadding ->
     val topPadding = PaddingValues(top = innerPadding.calculateTopPadding())
-    AppNavHost(
+    Box(
         modifier = Modifier
             .padding(topPadding)
             .consumeWindowInsets(topPadding),
-        // ...
-    )
+    ) {
+        content() // AppNavHost
+    }
 }
 ```
+
+## 左端（NavigationRail / 常設ドロワー）
+
+画面幅がMedium以上のときはボトムバーの代わりに `AppNavigationRail` / `AppNavigationDrawerSheet`
+を画面左端に描く（[docs/app.md](app.md) の「画面サイズへの対応」）。左端の insets は
+Material3 のコンポーネントが既定の `windowInsets` で自分の中に確保するため、`:app` 側では
+本文の `Scaffold` に `Modifier.consumeWindowInsets(WindowInsets.safeDrawing.only(WindowInsetsSides.Start))`
+を付けて、覆われた分を下流から差し引くだけでよい。ここでも「それを隠す UI を描いた側が
+解決する」という方針は変わらない。
 
 ## なぜ下端を `:app` で解決しないのか
 

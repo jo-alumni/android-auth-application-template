@@ -46,6 +46,8 @@ dependencies {
     implementation(projects.data)
 
     implementation(libs.findLibrary("androidx-core-ktx").get())
+    // 画面幅(WindowSizeClass)に応じてナビゲーションUIを出し分けるために使う。
+    implementation(libs.findLibrary("androidx-compose-material3-adaptive").get())
     implementation(libs.findLibrary("androidx-lifecycle-runtime-ktx").get())
 
     testImplementation(libs.findLibrary("kotlinx-coroutines-test").get())
