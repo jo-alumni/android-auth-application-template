@@ -78,6 +78,7 @@ Edge to Edge（`enableEdgeToEdge()`）で描画するため、WindowInsetsの解
 
 ## 規約
 
+- 機能を追加・変更したときは、仕様の一次情報である [docs/app.md](docs/app.md) を同じPRで更新する。実装だけ進めて `docs/app.md` を古いままにすると、参照した人が実装と異なる仕様を正として読んでしまう。
 - `.claude/rules/` 配下に規約ファイルを追加・編集する際は、必ず先頭にYAML frontmatterをつける。frontmatterには少なくとも以下のキーを含める。
   - `description`: そのルールが何を定めているかの一文サマリ
   - `globs`: そのルールが適用される対象ファイルのglobパターン(配列)
