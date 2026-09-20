@@ -39,8 +39,12 @@ jobs:
       # ANDROID_HOME / ANDROID_SDK_ROOT を設定し、SDKのライセンスに同意させる。
       # local.properties はコミットしていないので、AGPはこの環境変数からSDKを見つける
       # （不足しているplatform/build-toolsはAGPが自動でダウンロードする）。
+      # packagesを空にしているのは、既定値の `tools` がSDKリポジトリから廃止済みで、
+      # sdkmanagerが "Failed to find package 'tools'" で失敗するため。
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
+        with:
+          packages: ''
 
       # Gradleのキャッシュ（~/.gradle/caches, wrapper, configuration cache）を扱う。
       # mainのビルドだけがキャッシュを書き込み、PRは読み取りのみ。
@@ -75,8 +79,11 @@ jobs:
             11
             25
 
+      # packagesを空にする理由は build ジョブのコメントを参照。
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
+        with:
+          packages: ''
 
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
