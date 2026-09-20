@@ -36,7 +36,7 @@ LaunchedEffect(appState) {
 }
 
 AppNavHost(
-    startDestination = if (initialIsAuthenticated) AppRoute.MainGraph else AppRoute.AuthGraph,
+    startDestination = if (initialIsAuthenticated) MainGraphRoute else AuthGraphRoute,
     // ...
 )
 ```
@@ -183,8 +183,8 @@ fun navigateLogin() {
     TopLevelDestination.entries.forEach { destination ->
         navController.clearBackStack(destination.route)
     }
-    navController.navigate(AppRoute.AuthGraph) {
-        popUpTo(AppRoute.MainGraph) { inclusive = true }
+    navController.navigate(AuthGraphRoute) {
+        popUpTo(MainGraphRoute) { inclusive = true }
     }
 }
 ```

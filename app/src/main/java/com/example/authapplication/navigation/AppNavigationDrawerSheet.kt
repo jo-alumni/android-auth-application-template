@@ -10,7 +10,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
-import com.example.authapplication.core.navigation.TopLevelDestination
 
 /**
  * 画面幅がExpandedのときに、画面左端へ常設するナビゲーションドロワー。

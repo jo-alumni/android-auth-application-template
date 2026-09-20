@@ -19,7 +19,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.PreviewScreenSizes
-import com.example.authapplication.core.navigation.TopLevelDestination
 
 /**
  * ナビゲーションUI（ボトムバー / レール / 常設ドロワー）と画面本体を組み合わせる骨組み。

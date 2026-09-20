@@ -8,12 +8,19 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
 import com.example.authapplication.core.navigation.AppNavTransitions
-import com.example.authapplication.core.navigation.AppRoute
 import com.example.authapplication.core.ui.LocalSnackBarHostState
+import kotlinx.serialization.Serializable
+
+/**
+ * ホーム画面のルート。画面を所有するこのモジュールが定義する
+ * （配置の方針は docs/navigation-routes.md 参照）。
+ */
+@Serializable
+data object HomeRoute
 
 /** ホーム画面をNavGraphに登録する。NavControllerは公開せずコールバックで通知する。 */
 fun NavGraphBuilder.homeScreen(navigateDetail: (String) -> Unit) {
-    composable<AppRoute.Home>(
+    composable<HomeRoute>(
         enterTransition = AppNavTransitions.fadeEnter,
         exitTransition = AppNavTransitions.fadeExit,
         popEnterTransition = AppNavTransitions.fadeEnter,

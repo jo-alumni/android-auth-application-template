@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- お気に入り画面固有の文言。リソース名は resourcePrefix（feature_favorite_）で始める。 -->
 <resources>
+    <!-- ボトムバー/レール/ドロワーの項目名とTopAppBarのタイトルに使う -->
+    <string name="feature_favorite_title">お気に入り</string>
+
     <string name="feature_favorite_empty">お気に入りがありません</string>
     <string name="feature_favorite_error_item_load">アイテムの取得に失敗しました</string>
     <string name="feature_favorite_error_favorite_toggle">お気に入りの更新に失敗しました</string>

@@ -5,8 +5,9 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
-import com.example.authapplication.core.R as CoreR
-import com.example.authapplication.core.navigation.TopLevelDestination
+import com.example.authapplication.feature.favorite.R as FavoriteR
+import com.example.authapplication.feature.home.R as HomeR
+import com.example.authapplication.feature.search.R as SearchR
 import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
@@ -51,9 +52,9 @@ class AppNavigationScaffoldTest {
         setContent(navigationType = AppNavigationType.BOTTOM_BAR)
 
         composeTestRule.onNodeWithText(CONTENT).assertIsDisplayed()
-        composeTestRule.onNodeWithText(string(CoreR.string.core_destination_home)).assertIsDisplayed()
-        composeTestRule.onNodeWithText(string(CoreR.string.core_destination_search)).assertIsDisplayed()
-        composeTestRule.onNodeWithText(string(CoreR.string.core_destination_favorite)).assertIsDisplayed()
+        composeTestRule.onNodeWithText(string(HomeR.string.feature_home_title)).assertIsDisplayed()
+        composeTestRule.onNodeWithText(string(SearchR.string.feature_search_title)).assertIsDisplayed()
+        composeTestRule.onNodeWithText(string(FavoriteR.string.feature_favorite_title)).assertIsDisplayed()
     }
 
     @Test
@@ -61,9 +62,9 @@ class AppNavigationScaffoldTest {
         setContent(navigationType = AppNavigationType.NAVIGATION_RAIL)
 
         composeTestRule.onNodeWithText(CONTENT).assertIsDisplayed()
-        composeTestRule.onNodeWithText(string(CoreR.string.core_destination_home)).assertIsDisplayed()
-        composeTestRule.onNodeWithText(string(CoreR.string.core_destination_search)).assertIsDisplayed()
-        composeTestRule.onNodeWithText(string(CoreR.string.core_destination_favorite)).assertIsDisplayed()
+        composeTestRule.onNodeWithText(string(HomeR.string.feature_home_title)).assertIsDisplayed()
+        composeTestRule.onNodeWithText(string(SearchR.string.feature_search_title)).assertIsDisplayed()
+        composeTestRule.onNodeWithText(string(FavoriteR.string.feature_favorite_title)).assertIsDisplayed()
     }
 
     // 常設ドロワーは横に広いウィンドウでのみ使うUIなので、テストもタブレット相当の幅で動かす。
@@ -73,9 +74,9 @@ class AppNavigationScaffoldTest {
         setContent(navigationType = AppNavigationType.PERMANENT_DRAWER)
 
         composeTestRule.onNodeWithText(CONTENT).assertIsDisplayed()
-        composeTestRule.onNodeWithText(string(CoreR.string.core_destination_home)).assertIsDisplayed()
-        composeTestRule.onNodeWithText(string(CoreR.string.core_destination_search)).assertIsDisplayed()
-        composeTestRule.onNodeWithText(string(CoreR.string.core_destination_favorite)).assertIsDisplayed()
+        composeTestRule.onNodeWithText(string(HomeR.string.feature_home_title)).assertIsDisplayed()
+        composeTestRule.onNodeWithText(string(SearchR.string.feature_search_title)).assertIsDisplayed()
+        composeTestRule.onNodeWithText(string(FavoriteR.string.feature_favorite_title)).assertIsDisplayed()
     }
 
     @Test
@@ -83,7 +84,7 @@ class AppNavigationScaffoldTest {
         setContent(navigationType = AppNavigationType.NONE)
 
         composeTestRule.onNodeWithText(CONTENT).assertIsDisplayed()
-        composeTestRule.onNodeWithText(string(CoreR.string.core_destination_search)).assertDoesNotExist()
+        composeTestRule.onNodeWithText(string(SearchR.string.feature_search_title)).assertDoesNotExist()
     }
 
     @Test
@@ -94,7 +95,7 @@ class AppNavigationScaffoldTest {
             onDestinationSelected = { selected = it },
         )
 
-        composeTestRule.onNodeWithText(string(CoreR.string.core_destination_search)).performClick()
+        composeTestRule.onNodeWithText(string(SearchR.string.feature_search_title)).performClick()
 
         assertEquals(TopLevelDestination.SEARCH, selected)
     }
@@ -107,7 +108,7 @@ class AppNavigationScaffoldTest {
             onDestinationSelected = { selected = it },
         )
 
-        composeTestRule.onNodeWithText(string(CoreR.string.core_destination_search)).performClick()
+        composeTestRule.onNodeWithText(string(SearchR.string.feature_search_title)).performClick()
 
         assertEquals(TopLevelDestination.SEARCH, selected)
     }
@@ -121,7 +122,7 @@ class AppNavigationScaffoldTest {
             onDestinationSelected = { selected = it },
         )
 
-        composeTestRule.onNodeWithText(string(CoreR.string.core_destination_search)).performClick()
+        composeTestRule.onNodeWithText(string(SearchR.string.feature_search_title)).performClick()
 
         assertEquals(TopLevelDestination.SEARCH, selected)
     }

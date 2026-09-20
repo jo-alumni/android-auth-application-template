@@ -15,8 +15,7 @@ import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import androidx.window.core.layout.WindowSizeClass
-import com.example.authapplication.core.navigation.AppRoute
-import com.example.authapplication.core.navigation.TopLevelDestination
+import com.example.authapplication.feature.notification.NotificationRoute
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
@@ -92,11 +91,11 @@ class AppState(
 
     /** 通知画面へ遷移する。 */
     fun navigateNotification() {
-        navController.navigate(AppRoute.Notification)
+        navController.navigate(NotificationRoute)
     }
 
     /**
-     * 認証が解除されたときの遷移。認証後の画面群（[AppRoute.MainGraph]）をバックスタックごと
+     * 認証が解除されたときの遷移。認証後の画面群（[MainGraphRoute]）をバックスタックごと
      * 取り除き、戻るキーでログイン済みの画面に戻れないようにする。
      *
      * 呼び出すのは `AuthApplicationApp` が認証状態の変化を検知したときだけで、
@@ -108,12 +107,12 @@ class AppState(
         // バックスタックはそれとは別に保持され続けるため、再ログイン後に `restoreState` で
         // 前のセッションの画面が復元されてしまう。認証が解除されたら明示的に破棄する。
         // `clearBackStack` は現在地から辿れるルートしか解決できないため、
-        // 認証前のグラフへ移る前（まだ [AppRoute.MainGraph] にいるうち）に呼ぶ。
+        // 認証前のグラフへ移る前（まだ [MainGraphRoute] にいるうち）に呼ぶ。
         TopLevelDestination.entries.forEach { destination ->
             navController.clearBackStack(destination.route)
         }
-        navController.navigate(AppRoute.AuthGraph) {
-            popUpTo(AppRoute.MainGraph) { inclusive = true }
+        navController.navigate(AuthGraphRoute) {
+            popUpTo(MainGraphRoute) { inclusive = true }
         }
     }
 }

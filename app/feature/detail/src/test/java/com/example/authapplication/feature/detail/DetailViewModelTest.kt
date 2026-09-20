@@ -17,7 +17,7 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 
 /**
- * [DetailViewModel] は `SavedStateHandle.toRoute<AppRoute.Detail>()` で遷移引数を取り出す。
+ * [DetailViewModel] は `SavedStateHandle.toRoute<DetailRoute>()` で遷移引数を取り出す。
  * この復元処理はAndroidの `Bundle` に依存するため、素のJVMではなくRobolectric上で実行する。
  */
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -29,7 +29,7 @@ class DetailViewModelTest {
 
     private val itemRepository = FakeItemRepository()
 
-    /** `AppRoute.Detail(itemId)` で遷移してきた状態を、遷移引数を詰めた [SavedStateHandle] で再現する。 */
+    /** `DetailRoute(itemId)` で遷移してきた状態を、遷移引数を詰めた [SavedStateHandle] で再現する。 */
     private fun createViewModel(itemId: String) = DetailViewModel(
         savedStateHandle = SavedStateHandle(mapOf("itemId" to itemId)),
         getItemUseCase = GetItemUseCase(itemRepository),

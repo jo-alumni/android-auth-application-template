@@ -21,8 +21,8 @@ Jetpack Compose / Navigation / Hilt / DataStore を使い、マルチモジュ�
 多層のマルチモジュール構成になっており、`:app` が全 feature / domain / data に依存します。feature モジュール同士の直接依存はありません。
 
 ```
-:app                       アプリのエントリーポイント（MainActivity, App, AppViewModel, AppNavHost, AppState など）
-:app:core                  feature 共通の汎用機能（AppRoute, TopLevelDestination, 共通Composable, テーマ）
+:app                       アプリのエントリーポイント（MainActivity, App, AppViewModel, AppNavHost, AppState, TopLevelDestination など）
+:app:core                  feature 共通の汎用機能（AppNavTransitions, 共通Composable, テーマ）
 :app:feature:login         認証（ログイン）画面
 :app:feature:home          ホーム画面
 :app:feature:search        検索画面
@@ -33,9 +33,9 @@ Jetpack Compose / Navigation / Hilt / DataStore を使い、マルチモジュ�
 :data                      Repository実装（DataStoreベースの AuthRepositoryImpl など）・Hiltモジュール
 ```
 
-各 feature モジュールは `NavGraphBuilder` の拡張関数（例: `homeScreen(navigateDetail = ...)`）を公開し、`:app` の `AppNavHost` から呼び出されます。
+各 feature モジュールは自分の画面の Route（`@Serializable` な `HomeRoute` / `DetailRoute` など）と、それを登録する `NavGraphBuilder` の拡張関数（例: `homeScreen(navigateDetail = ...)`）を公開し、`:app` の `AppNavHost` から呼び出されます。
 
-画面の Route 定義は各 feature ではなく `:app:core` の `AppRoute`（`sealed interface`）に集約し、どの Route へ遷移するかの決定は `:app` の `AppNavHost` に閉じています。feature が受け取るのは `navigateDetail: (String) -> Unit` のようなコールバックだけなので、feature 同士が互いの Route 型を知る必要はありません。この配置を選んだ理由と feature 分散方式（Now in Android 方式）との比較は [docs/navigation-routes.md](docs/navigation-routes.md) を参照してください。
+Route は共通モジュールに集約せず画面を持つ feature が所有し、どの Route へ遷移するかの決定だけを `:app` の `AppNavHost` に閉じています。feature が受け取るのは `navigateDetail: (String) -> Unit` のようなコールバックなので、feature 同士が互いの Route 型を知ることはありません。この配置を選んだ理由と集約方式との比較は [docs/navigation-routes.md](docs/navigation-routes.md) を参照してください。
 
 ViewModel からのデータアクセスは必ず `:domain` の UseCase を経由します。リポジトリの1メソッドを呼ぶだけで1行の委譲になる UseCase（`GetItemUseCase` など）も省略せず、リポジトリインターフェースを直接呼んでよいのは `:domain` の UseCase だけ、という基準に統一しています（[.claude/rules/usecase.md](.claude/rules/usecase.md) 参照）。
 
@@ -95,7 +95,7 @@ ViewModel からのデータアクセスは必ず `:domain` の UseCase を経�
 
 - [.claude/rules/viewmodel-event-handling.md](.claude/rules/viewmodel-event-handling.md) — ViewModel→UIの単発イベントはコールバック引数ではなくSharedFlowで配信する
 - [.claude/rules/compose-navigation.md](.claude/rules/compose-navigation.md) — Navigationファイルのコールバックは `navigateXxx` のように遷移視点で命名する
-- [.claude/rules/navigation-routes.md](.claude/rules/navigation-routes.md) — 画面のRoute定義は `:app:core` の `AppRoute` に集約し、遷移先の決定は `:app` に閉じる
+- [.claude/rules/navigation-routes.md](.claude/rules/navigation-routes.md) — 画面のRouteはそれを持つfeatureモジュールが定義し、遷移先の決定は `:app` に閉じる
 - [.claude/rules/compose-preview.md](.claude/rules/compose-preview.md) — publicなComposable関数には同名+`Preview`の `@Preview` 関数を必ず用意する
 - [.claude/rules/viewmodel-uistate.md](.claude/rules/viewmodel-uistate.md) — ViewModelが公開する画面状態は `sealed interface XxxUiState`（Loading/Empty/Success/Error）で表現する
 - [.claude/rules/error-handling.md](.claude/rules/error-handling.md) — リポジトリ層の例外は `Flow.catch` で `UiState.Error` に変換し、リトライは購読のやり直しで実現する

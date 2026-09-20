@@ -5,156 +5,141 @@
 「このRouteはどこに置くのが正しいのか」を考え直すことになり、モジュールの依存の向きも
 その場の都合で変わってしまう。
 
-このドキュメントは本アプリが採った配置（**`:app:core` への集約**）と、採らなかった
-feature 分散方式（Now in Android 方式）との比較、そして将来分散へ切り替えるときの
-判断基準と手順を残す。規約としての要点は
+このドキュメントは本アプリが採った配置（**feature モジュールへの分散**）と、比較検討した
+共通モジュールへの集約方式との違い、そして分散方式でしか出てこない論点（feature 間遷移、
+複数 feature から遷移される画面、タブ項目の置き場所）への解を残す。規約としての要点は
 [.claude/rules/navigation-routes.md](../.claude/rules/navigation-routes.md) にある。
 
 ## 結論
 
-全画面のRouteを `:app:core` の `AppRoute`（`sealed interface`）に集約する。
+**画面のRouteは、その画面を持つ feature モジュールが所有する。**
 
 | 要素 | 置き場所 | 例 |
 | --- | --- | --- |
-| Route の型 | `:app:core` | `AppRoute.Home` / `AppRoute.Detail(itemId)` |
-| ネストしたグラフのRoute | `:app:core` | `AppRoute.AuthGraph` / `AppRoute.MainGraph` |
-| タブ項目の定義 | `:app:core` | `TopLevelDestination` |
-| 画面をグラフへ登録する関数 | 各 feature | `NavGraphBuilder.homeScreen(navigateDetail = ...)` |
+| 画面のRoute | その画面を持つ feature | `HomeRoute`（`:app:feature:home`）/ `DetailRoute(itemId)`（`:app:feature:detail`） |
+| 画面をグラフへ登録する関数 | 同じ feature | `NavGraphBuilder.homeScreen(navigateDetail = ...)` |
+| 画面固有のNavigation設定 | 同じ feature | `DETAIL_DEEP_LINK_BASE_PATH`、遷移アニメーションの指定、`dialog<...>` での登録 |
+| ネストしたグラフのRoute | `:app` | `AuthGraphRoute` / `MainGraphRoute` |
+| タブ項目の定義 | `:app` | `TopLevelDestination` |
 | グラフの構造と遷移の実装 | `:app` | `AppNavHost` / `AppState` |
-| 画面固有のNavigation設定 | 各 feature | `DETAIL_DEEP_LINK_BASE_PATH`（`:app:feature:detail`） |
 
-ポイントは「Routeの**型**は共通モジュールにあるが、**どのRouteへ遷移するかの判断**は
-feature には無い」こと。feature の Navigation 拡張関数が受け取るのは
-`navigateDetail: (String) -> Unit` のようなコールバックだけで、遷移先の `AppRoute.Detail` を
-組み立てるのは `:app` の `AppNavHost` に閉じている
-（命名規則は [.claude/rules/compose-navigation.md](../.claude/rules/compose-navigation.md)）。
+Routeは `XxxNavigation.kt` の先頭に、その画面を登録する拡張関数と並べて書く。
 
 ```kotlin
-// :app:feature:home — 遷移先を知らない。itemId を返すだけ
+// :app:feature:home/HomeNavigation.kt
+@Serializable
+data object HomeRoute
+
 fun NavGraphBuilder.homeScreen(navigateDetail: (String) -> Unit) {
-    composable<AppRoute.Home> { HomeScreen(onItemClick = navigateDetail, /* ... */) }
+    composable<HomeRoute> { HomeScreen(onItemClick = navigateDetail, /* ... */) }
 }
 
-// :app — 遷移先の組み立てはここだけ
-homeScreen(navigateDetail = { itemId -> navController.navigate(AppRoute.Detail(itemId)) })
+// :app/navigation/AppNavHost.kt — 遷移先を決めるのはここだけ
+navigation<MainGraphRoute>(startDestination = HomeRoute) {
+    homeScreen(navigateDetail = { itemId -> navController.navigate(DetailRoute(itemId)) })
+    // ...
+}
 ```
 
-feature が参照する `AppRoute` は、原則として**自分の画面のRouteだけ**になる
-（`composable<AppRoute.Home>`、`savedStateHandle.toRoute<AppRoute.Detail>()`）。
+`:app:core` の `navigation` パッケージに残るのは、画面に依存しない遷移アニメーションの定義
+（`AppNavTransitions`）だけになった。副次的に `:app:core` は
+kotlinx.serialization を必要としなくなっている。
 
 ## 2つの方式の比較
 
-| 観点 | 集約（本アプリ） | feature 分散（Now in Android 方式） |
+| 観点 | feature 分散（本アプリ） | 共通モジュールへ集約 |
 | --- | --- | --- |
-| 画面構成の見通し | `AppRoute.kt` 1ファイルで全画面とグラフ構造が読める | 全体像は `AppNavHost` を読み、各 feature のファイルへ飛ぶ必要がある |
-| feature 追加時の変更 | `:app:core` の `AppRoute` に1エントリ追加が必要 | feature モジュール内で完結する |
-| モジュールの独立性 | `:app:core` が全画面の名前を持つ（型として全 feature の存在を知る） | feature が自分のRouteを所有し、切り出し・再利用がしやすい |
-| 再コンパイルの範囲 | `AppRoute.kt` の変更で `:app:core` に依存する全モジュールが再コンパイルされる | Routeの変更はその feature と `:app` に閉じる |
-| 迷いの少なさ | 新しいRouteの置き場所を考える必要がない | 「複数 feature から遷移される画面」のRouteの置き場所を都度判断する |
-| `TopLevelDestination` | `:app:core` に置ける | `:app` へ移す必要がある（後述） |
+| feature 追加時の変更 | feature モジュール内で完結する | 共通モジュール（`:app:core`）の変更が必要 |
+| 再コンパイルの範囲 | Routeの変更はその feature と `:app` に閉じる | 共通モジュールに依存する全モジュールが再コンパイル対象 |
+| 並行開発 | 画面ごとにファイルが分かれ、衝突しにくい | 画面追加が1ファイルに集中し、コンフリクトしやすい |
+| モジュールの独立性 | feature が自分のRouteと引数を所有し、切り出し・再利用しやすい | 共通モジュールが全画面の名前と引数を知る |
+| 画面構成の見通し | Route定義は分散するが、グラフ構造は `AppNavHost` で一望できる | `AppRoute.kt` 1ファイルで引数まで含めて読める |
+| 型の扱い | 共通の親型が無く、`TopLevelDestination.route` は `Any` になる | `sealed interface AppRoute` として扱える |
 
-### 集約を選んだ理由
+### 分散を選んだ理由
 
-1. **学習用テンプレートとして、画面構成が1ファイルで読めることの価値が大きい。**
-   `AppRoute.kt` を開けば「認証前（`AuthGraph` → `Login`）」「認証後（`MainGraph` → `Home` /
-   `Search` / `Favorite` / `Detail` / `Notification`）」という構造がそのまま読み取れる。
-   本アプリの主題はナビゲーション構築そのものなので、全体像が一望できる方を優先した。
-2. **現状の規模では分散の利点が効かない。** feature は6つ、画面は7つで、`AppRoute.kt` を
-   変更するのは画面を追加するときだけ。再コンパイルの範囲が広がることの実害が、
-   全体像を失うコストに見合わない。
-3. **新しい画面を追加する手順が一定になる。** 「`AppRoute` にエントリを足す → feature に
-   `xxxScreen()` を書く → `AppNavHost` から呼ぶ」の3手順で、判断の余地が無い。
-   本プロジェクトは「どの画面を見ても同じ書き方になっている」ことを価値としており
-   （[.claude/rules/usecase.md](../.claude/rules/usecase.md) と同じ考え方）、
-   画面ごとに置き場所が変わり得る方式は採らない。
+1. **共通モジュールが全 feature を知る状態を作らない。** 集約方式では、画面を追加するたびに
+   `:app:core` を編集することになり、共通モジュールが全 feature の名前と引数を持つ。
+   feature を切り出したくなったとき、Routeが共通モジュールにあると feature 単体で完結しない。
+2. **変更の影響範囲が feature に閉じる。** 共通モジュールは全 feature の上流にあるため、
+   Routeを1つ足すだけで（ABIの変更として）全 feature とそのテストが再コンパイル対象になる。
+   モジュール数が増えるほどビルド時間に効き、複数チームで開発する場合は同じファイルへの
+   変更が集中してコンフリクトの常習地点になる。
+3. **実プロダクトの標準的な構成に合わせる。** 本リポジトリは学習用テンプレートであり、
+   ここで書いた形がそのまま実プロダクトへ持ち込まれる。Now in Android をはじめ、
+   マルチモジュールのAndroidアプリでは feature がRouteを所有する形が一般的で、
+   テンプレートが実務と違う構成を教える理由が無い。
 
-### 引き受けたデメリット
+### 引き受けたデメリットと、その扱い
 
-- **`:app:core` が全 feature の存在を知る。** ただし知っているのは「画面の名前と引数」だけで、
-  依存の向き（feature → `:app:core`）は変わらない。`:app:core` が feature モジュールに
-  依存するわけではないので、循環依存にはならない。
-- **`AppRoute.kt` の変更が広く再コンパイルを誘発する。** `sealed interface` にエントリを
-  足すことはABIの変更なので、`:app:core` に依存する全モジュールが再コンパイル対象になる。
-  発生するのは画面追加時だけなので許容する。
+- **全画面のRouteを1ファイルで見渡せなくなる。** ただしグラフのネスト構造と全画面の登録は
+  `AppNavHost` が20行ほどで示しており、「どんな画面があるか」はそこで読める。
+  1ファイルに集めることで増える見通しは、画面ごとの引数の一覧に限られる。
+- **Routeに共通の親型が無くなる。** `TopLevelDestination.route` は `AppRoute` ではなく `Any`
+  になった。Navigation Composeの型安全ナビゲーションは `@Serializable` なオブジェクトを
+  そのまま受け取るため、遷移も現在地の判定（`hasRoute(route::class)`）もこのままで行える。
+  `sealed interface` による網羅的な `when` は書けなくなるが、元々どこでも使っていない。
+- **タブ項目とアイコンの依存が `:app` に移る。** 後述のとおり `TopLevelDestination` は
+  `:app` へ移り、Material Icons への依存も `:app` に追加した。
+  なお `:app:core` の `AppTopBar` が別のアイコンを使っているため、
+  `:app:core` から Material Icons の依存が消えるわけではない。
 
-## 採らなかった案: feature 分散（Now in Android 方式）
-
-分散方式では、Routeと`NavGraphBuilder`拡張、そして他モジュールから呼ばれる遷移関数を
-feature がまとめて所有する。
-
-```kotlin
-// :app:feature:detail — Routeを自分で持つ
-@Serializable
-data class DetailRoute(val itemId: String)
-
-fun NavGraphBuilder.detailScreen(navigateBack: () -> Unit) {
-    composable<DetailRoute> { /* ... */ }
-}
-
-// 外から遷移させたい場合は NavController の拡張関数として公開する
-fun NavController.navigateToDetail(itemId: String) = navigate(DetailRoute(itemId))
-```
-
-issue で論点に挙がった項目について、分散を採る場合の解を示しておく。
+## 分散方式でだけ出てくる論点
 
 ### feature 間遷移（Home → Detail）の型解決
 
-**feature 同士が互いのRoute型を知る必要はない。** 本アプリはすでに、feature の Navigation
-拡張関数が遷移先を知らない形になっている（`navigateDetail: (String) -> Unit` を受け取り、
-`AppRoute.Detail` を組み立てるのは `:app`）。分散してもこの形は変わらず、
-`DetailRoute` を知るのは `:app:feature:detail` 自身と `:app` だけで済む。
+**feature 同士が互いのRoute型を知る必要はない。** 本アプリでは feature の Navigation 拡張関数が
+遷移先を知らず、`navigateDetail: (String) -> Unit` で `:app` に通知するだけになっている。
+`DetailRoute` を組み立てるのは `:app` の `AppNavHost` だけなので、
+`:app:feature:home` は `:app:feature:detail` に依存しない。
 
-つまり「遷移先の決定を `:app` へ持ち上げる」構造は集約/分散のどちらでも共通で、
-Route をどこに置くかとは独立に決められる。逆に、feature が直接 `navController.navigate(...)`
-を呼ぶ設計なら、遷移先のRoute型を共有する場所（共通モジュール、または feature 間の直接依存）が
-必要になる。本アプリが feature 間の直接依存を持たずに済んでいるのはこの構造のおかげ。
+この「遷移先の決定を `:app` へ持ち上げる」構造こそが feature 間の直接依存を防いでいる部分で、
+Routeをどこに置くかとは独立している。逆にこの持ち上げをやめると、遷移元が遷移先のRoute型を
+参照することになり、feature 間に依存が生まれる。
+
+ただしこの方式は万能ではない。画面の階層が深くなるとコールバックを下まで配ることになり、
+feature の奥から別の feature へ直接飛びたい要求も出てくる。そのときの選択肢は次の2つで、
+本アプリの規模ではまだ必要としていない。
+
+- feature が `fun NavController.navigateToDetail(itemId: String)` のような遷移用の拡張関数を
+  公開し、呼び出し側のモジュールがその feature に依存する（Now in Android の方式）
+- Routeと遷移関数だけを持つ薄い `:api` モジュールを feature から切り出し、
+  実装（`:impl`）への依存なしに遷移できるようにする
 
 ### 複数 feature から遷移される画面（Detail）の扱い
 
-上記のとおり Home / Search / Favorite は `itemId: String` を返すだけで `Detail` のRouteを
-参照しないため、**`Detail` のRouteは `:app:feature:detail` に置ける**。「複数の画面から
-遷移されるから共通モジュールへ」という判断は、遷移先の組み立てを `:app` に閉じている限り
-発生しない。
+上記のとおり Home / Search / Favorite は `itemId: String` を渡すだけで `DetailRoute` を
+参照しないため、**`DetailRoute` は `:app:feature:detail` に置ける**。
+「複数の画面から遷移されるから共通モジュールへ」という判断は、遷移先の組み立てを `:app` に
+閉じている限り発生しない。詳細画面のディープリンク（`DETAIL_DEEP_LINK_BASE_PATH`）も
+同じモジュールにあり、詳細画面へ入る経路の定義が1か所にまとまっている。
 
-なお、画面固有のNavigation設定のうち、すでに feature 側にあるものもある。詳細画面の
-ディープリンクのベースパス（`DETAIL_DEEP_LINK_BASE_PATH`）は `:app:feature:detail` にあり、
-`:app:core` は知らない。Route型だけが共通モジュールにあり、その使い方は feature が持つ、
-という切り分けになっている。
+### `TopLevelDestination` の置き場所
 
-### `TopLevelDestination` の扱い
+`TopLevelDestination` は3つのタブのRouteとラベルを束ねる定義なので、
+Routeを分散させると `:app:core` には置けない。共通モジュールが feature を参照することになり、
+依存が逆流するため。そこで `:app` の `navigation` パッケージへ移した。
+ラベルの文字列リソースも、画面を持つ feature が持つ方針（
+[.claude/rules/string-resources.md](../.claude/rules/string-resources.md)）に合わせて
+`:app:core` の `core_destination_*` から各 feature の `feature_xxx_title` へ移してある。
 
-`TopLevelDestination`（`:app:core`）は3つのタブのRoute（`AppRoute.Home` / `Search` /
-`Favorite`）と Material Icons に依存している。分散方式ではこの enum を `:app:core` に
-置けない。core が各 feature のRoute型を参照することになり、依存が逆流するため。
-Now in Android でも `TopLevelDestination` は app モジュール側にある。
+### グラフのRoute（`AuthGraphRoute` / `MainGraphRoute`）の置き場所
 
-したがって分散へ切り替える場合は `TopLevelDestination` を `:app` へ移す。アイコンへの依存も
-一緒に移るため、`:app:core` から `material-icons-core` の依存を落とせる。
+`:app` に置く。ネストの構造は「アプリが画面をどう束ねるか」の判断であって、
+個々の feature の持ち物ではない。参照するのも `AppNavHost` と `AppState` だけで、
+feature からは見えない。
 
-### グラフのRoute（`AuthGraph` / `MainGraph`）の扱い
+## 集約方式が向く場合
 
-どちらの方式でも `:app` 側に置くのが自然。ネストの構造は「アプリが画面をどう束ねるか」の
-判断であって、個々の feature の持ち物ではない。集約している現状でも、この2つを参照するのは
-`AppNavHost` と `AppState` だけで、feature からは参照されていない。
+次のような状況なら、`sealed interface AppRoute` に集約する方が読みやすいこともある。
 
-## 分散へ切り替える判断基準
+- 画面数が一桁で、今後 feature モジュールを増やす予定が無い
+- 1人で開発していて、並行変更によるコンフリクトが起きない
+- 全画面の引数仕様を1ファイルで見渡せることを、モジュールの独立性より優先したい
 
-次のいずれかに当てはまったら再検討する。
-
-- feature モジュールが増え、`AppRoute.kt` を触るたびの再コンパイル時間が体感できるようになった
-- feature を別アプリ・別リポジトリへ持ち出したくなった（Routeが core にあると feature 単体で
-  完結しない）
-- 画面ごとの引数が増え、`AppRoute.kt` が「全画面の引数仕様表」になって読みづらくなった
-
-切り替えるときの手順は次のとおりで、いずれも `:app` と各 feature の内部で完結する。
-Screen Composable も ViewModel の公開する `UiState` もRoute型に依存していないため、
-UI・状態のコードには影響しない。
-
-1. 各featureに `XxxRoute` を移し、`composable<XxxRoute>` と
-   `savedStateHandle.toRoute<XxxRoute>()` を feature 内で解決する
-2. `TopLevelDestination` を `:app` へ移す（Material Icons への依存も一緒に移す）
-3. `AuthGraph` / `MainGraph` を `:app` の `navigation` パッケージへ移す
-4. `:app:core` から `navigation` パッケージと `material-icons-core` の依存を削除する
+その場合でも、**遷移先の決定を `:app` に閉じる**部分は変えない方がよい。
+feature 間の直接依存を防いでいるのはRouteの配置ではなくこちらで、
+あとから分散へ移す際のコストもこの構造があるかどうかで決まる。
 
 ## 関連ドキュメント
 
