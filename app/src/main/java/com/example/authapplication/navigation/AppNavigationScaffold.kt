@@ -11,9 +11,12 @@ import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.adaptive.currentWindowAdaptiveInfoV2
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.PreviewScreenSizes
 import com.example.authapplication.core.navigation.TopLevelDestination
@@ -35,6 +38,12 @@ import com.example.authapplication.core.navigation.TopLevelDestination
  *
  * @param bottomBarModifier ボトムバーに適用する `Modifier`。スクロール追従で隠すための
  *   オフセットなど、[BottomBarScrollBehavior] の都合をここから渡す。
+ * @param snackbarHostModifier `SnackbarHost` に適用する `Modifier`。Snackbarはボトムバーの
+ *   **実測高**の分だけ持ち上げて配置されるが、`Modifier.offset` で隠したバーの高さは縮まないため、
+ *   バーと同じオフセットをここにも渡して追従させる。
+ * @param snackbarHostState Snackbarの表示に使う状態。アプリ本体からは
+ *   `LocalSnackBarHostState` の値を渡す（CompositionLocalをここで直接読まないのは、
+ *   このComposableをProvider無しでプレビュー・テストできるようにするため）。
  */
 @Composable
 fun AppNavigationScaffold(
@@ -43,6 +52,8 @@ fun AppNavigationScaffold(
     onDestinationSelected: (TopLevelDestination) -> Unit,
     modifier: Modifier = Modifier,
     bottomBarModifier: Modifier = Modifier,
+    snackbarHostModifier: Modifier = Modifier,
+    snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
     topBar: @Composable () -> Unit = {},
     content: @Composable () -> Unit,
 ) {
@@ -83,6 +94,9 @@ fun AppNavigationScaffold(
                         modifier = bottomBarModifier,
                     )
                 }
+            },
+            snackbarHost = {
+                SnackbarHost(hostState = snackbarHostState, modifier = snackbarHostModifier)
             },
         ) { innerPadding ->
             // 上端のinsetsだけを解決してconsumeし、下端は解決しない。ボトムバーはスクロールに

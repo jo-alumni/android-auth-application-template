@@ -1,10 +1,14 @@
 package com.example.authapplication
 
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.offset
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -18,6 +22,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.authapplication.core.navigation.AppRoute
 import com.example.authapplication.core.ui.AppTopBar
+import com.example.authapplication.core.ui.LocalSnackBarHostState
 import com.example.authapplication.navigation.AppNavHost
 import com.example.authapplication.navigation.AppNavigationScaffold
 import com.example.authapplication.navigation.AppNavigationType
@@ -88,36 +93,56 @@ fun AuthApplicationApp(
             }
 
             val navigationType = appState.navigationType
-            AppNavigationScaffold(
-                navigationType = navigationType,
-                currentDestination = currentTopLevelDestination,
-                onDestinationSelected = appState::navigateToTopLevelDestination,
-                // スクロールに追従して隠すのはボトムバーだけなので、レール/ドロワーのときは繋がない。
-                modifier = if (navigationType == AppNavigationType.BOTTOM_BAR) {
-                    Modifier.nestedScroll(bottomBarScrollBehavior.nestedScrollConnection)
-                } else {
-                    Modifier
-                },
-                bottomBarModifier = Modifier
-                    .onSizeChanged { bottomBarScrollBehavior.onBarHeightChanged(it.height.toFloat()) }
-                    .offset { IntOffset(x = 0, y = bottomBarScrollBehavior.hiddenHeightPx.roundToInt()) },
-                topBar = {
-                    if (currentTopLevelDestination != null) {
-                        AppTopBar(
-                            title = stringResource(currentTopLevelDestination.labelResId),
-                            isErrorInjectionEnabled = isErrorInjectionEnabled,
-                            onErrorInjectionChange = appViewModel::setErrorInjectionEnabled,
-                            onExpireTokenClick = appViewModel::expireAuthToken,
-                            onNotificationClick = appState::navigateNotification,
-                            onLogoutClick = appViewModel::logout,
-                        )
-                    }
-                },
-            ) {
-                AppNavHost(
-                    navController = appState.navController,
-                    startDestination = if (initialIsAuthenticated) AppRoute.MainGraph else AppRoute.AuthGraph,
-                )
+            // Snackbarはアプリに1つだけ置き、各featureのNavigationはCompositionLocal経由で使う
+            // （.claude/rules/error-handling.md 参照）。
+            val snackbarHostState = remember { SnackbarHostState() }
+            val navigationBarInsets = WindowInsets.navigationBars
+            CompositionLocalProvider(LocalSnackBarHostState provides snackbarHostState) {
+                AppNavigationScaffold(
+                    navigationType = navigationType,
+                    currentDestination = currentTopLevelDestination,
+                    onDestinationSelected = appState::navigateToTopLevelDestination,
+                    // スクロールに追従して隠すのはボトムバーだけなので、レール/ドロワーのときは繋がない。
+                    modifier = if (navigationType == AppNavigationType.BOTTOM_BAR) {
+                        Modifier.nestedScroll(bottomBarScrollBehavior.nestedScrollConnection)
+                    } else {
+                        Modifier
+                    },
+                    bottomBarModifier = Modifier
+                        .onSizeChanged { bottomBarScrollBehavior.onBarHeightChanged(it.height.toFloat()) }
+                        .offset { IntOffset(x = 0, y = bottomBarScrollBehavior.hiddenHeightPx.roundToInt()) },
+                    // 隠れたボトムバーの分だけSnackbarも下げ、バーと一緒に動くようにする。
+                    // ただしバーの高さにはナビゲーションバー分のinsetsが含まれるため、そこまで下げると
+                    // Snackbarがシステムバーの下に潜る。下げ幅はその手前で止める。
+                    snackbarHostModifier = if (navigationType == AppNavigationType.BOTTOM_BAR) {
+                        Modifier.offset {
+                            val maxShift = (bottomBarScrollBehavior.barHeightPx - navigationBarInsets.getBottom(this))
+                                .coerceAtLeast(0f)
+                            val shift = bottomBarScrollBehavior.hiddenHeightPx.coerceAtMost(maxShift)
+                            IntOffset(x = 0, y = shift.roundToInt())
+                        }
+                    } else {
+                        Modifier
+                    },
+                    snackbarHostState = snackbarHostState,
+                    topBar = {
+                        if (currentTopLevelDestination != null) {
+                            AppTopBar(
+                                title = stringResource(currentTopLevelDestination.labelResId),
+                                isErrorInjectionEnabled = isErrorInjectionEnabled,
+                                onErrorInjectionChange = appViewModel::setErrorInjectionEnabled,
+                                onExpireTokenClick = appViewModel::expireAuthToken,
+                                onNotificationClick = appState::navigateNotification,
+                                onLogoutClick = appViewModel::logout,
+                            )
+                        }
+                    },
+                ) {
+                    AppNavHost(
+                        navController = appState.navController,
+                        startDestination = if (initialIsAuthenticated) AppRoute.MainGraph else AppRoute.AuthGraph,
+                    )
+                }
             }
         }
     }

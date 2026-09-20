@@ -1,9 +1,7 @@
 package com.example.authapplication.feature.favorite
 
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalResources
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -11,6 +9,7 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
 import com.example.authapplication.core.navigation.AppNavTransitions
 import com.example.authapplication.core.navigation.AppRoute
+import com.example.authapplication.core.ui.LocalSnackBarHostState
 
 /** お気に入り画面をNavGraphに登録する。NavControllerは公開せずコールバックで通知する。 */
 fun NavGraphBuilder.favoriteScreen(navigateDetail: (String) -> Unit) {
@@ -22,7 +21,7 @@ fun NavGraphBuilder.favoriteScreen(navigateDetail: (String) -> Unit) {
     ) {
         val viewModel: FavoriteViewModel = hiltViewModel()
         val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-        val snackbarHostState = remember { SnackbarHostState() }
+        val snackbarHostState = LocalSnackBarHostState.current
         // Configuration変更時に読み直されるよう、Context経由ではなくLocalResourcesから解決する。
         val resources = LocalResources.current
 
@@ -42,7 +41,6 @@ fun NavGraphBuilder.favoriteScreen(navigateDetail: (String) -> Unit) {
             onItemClick = navigateDetail,
             onFavoriteClick = viewModel::toggleFavorite,
             onRetryClick = viewModel::retry,
-            snackbarHostState = snackbarHostState,
         )
     }
 }

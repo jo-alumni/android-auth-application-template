@@ -12,11 +12,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -33,9 +30,6 @@ fun HomeScreen(
     onFavoriteClick: (String) -> Unit,
     onRetryClick: () -> Unit,
     modifier: Modifier = Modifier,
-    // Snackbarの表示はイベントを受け取るNavigation側が制御するため、
-    // ホストの状態を外から渡せるようにする(Previewでは既定値で足りる)。
-    snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
 ) {
     Box(modifier = modifier.fillMaxSize()) {
         Column(
@@ -86,10 +80,6 @@ fun HomeScreen(
                 }
             }
         }
-        SnackbarHost(
-            hostState = snackbarHostState,
-            modifier = Modifier.align(Alignment.BottomCenter),
-        )
     }
 }
 

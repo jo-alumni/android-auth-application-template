@@ -44,6 +44,18 @@ alwaysApply: false
   `SharedFlow` で emit する([viewmodel-event-handling.md](viewmodel-event-handling.md) の方式)。
   Navigationファイル側で `LaunchedEffect` で collect し、`SnackbarHostState.showSnackbar` を呼ぶ。
 
+### 5. `SnackbarHost` はアプリに1つだけ置く
+- `SnackbarHost` を画面ごとに置かない。`:app` の骨組み(`AppNavigationScaffold` の `Scaffold`)に
+  1つだけ置き、その `SnackbarHostState` を `LocalSnackBarHostState`(`:app:core`)で配る。
+  各featureのNavigationファイルは `LocalSnackBarHostState.current` を読んで `showSnackbar` する。
+- Screen Composableは `SnackbarHostState` を受け取らない。Screenは「渡された状態を描くだけ」に保つ。
+- `LocalSnackBarHostState` に既定値は持たせず、未提供なら `error(...)` で落とす。
+  既定値を置くと、Providerの外で使ったときに `showSnackbar` が永久にsuspendして
+  `event` の collect ごと止まり、以降のイベントが無言で捨てられる。
+- CompositionLocalを読むのは `:app` の `AuthApplicationApp` と各featureのNavigationファイルだけにする。
+  `AppNavigationScaffold` のような部品は `snackbarHostState` を**引数**で受け取る。
+  部品側で `.current` を読むと、Provider無しのプレビューやRobolectricテストが落ちる。
+
 ## 理由
 - 例外をUiStateへ変換する境界をViewModelに固定すると、「どこで落ちるか分からない」状態が無くなり、
   失敗時の表示をユニットテストで検証できる。

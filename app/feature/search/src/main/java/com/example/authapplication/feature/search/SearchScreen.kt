@@ -17,11 +17,8 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
@@ -42,9 +39,6 @@ fun SearchScreen(
     onFavoriteClick: (String) -> Unit,
     onRetryClick: () -> Unit,
     modifier: Modifier = Modifier,
-    // Snackbarの表示はイベントを受け取るNavigation側が制御するため、
-    // ホストの状態を外から渡せるようにする(Previewでは既定値で足りる)。
-    snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
 ) {
     val keyboardController = LocalSoftwareKeyboardController.current
 
@@ -118,10 +112,6 @@ fun SearchScreen(
                 }
             }
         }
-        SnackbarHost(
-            hostState = snackbarHostState,
-            modifier = Modifier.align(Alignment.BottomCenter),
-        )
     }
 }
 
