@@ -24,7 +24,12 @@ style:
     active: false
   UnusedPrivateFunction:
     # @Preview関数は誰からも呼ばれないが必須（.claude/rules/compose-preview.md）。
-    ignoreAnnotated: ['Preview', 'PreviewLightDark']
+    # マルチプレビュー（@PreviewLightDark など）も同様に呼び出し元を持たない。
+    ignoreAnnotated:
+      - 'Preview'
+      - 'PreviewLightDark'
+      - 'PreviewFontScale'
+      - 'PreviewScreenSizes'
   ForbiddenComment:
     # TODO/FIXMEはIssue側で追うため、detektでは落とさない。
     active: false

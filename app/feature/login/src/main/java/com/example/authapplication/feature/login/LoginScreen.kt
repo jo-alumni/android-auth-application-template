@@ -30,8 +30,12 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.PreviewFontScale
+import androidx.compose.ui.tooling.preview.PreviewLightDark
+import androidx.compose.ui.tooling.preview.PreviewParameter
+import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.dp
+import com.example.authapplication.core.ui.preview.AppPreview
 
 @Composable
 fun LoginScreen(
@@ -110,8 +114,39 @@ fun LoginScreen(
     }
 }
 
-@Preview(showBackground = true)
+/**
+ * [LoginScreen] の全状態を1つのPreview関数で描くための供給元。
+ * 状態を追加したらここへ足す。
+ */
+internal class LoginUiStatePreviewParameterProvider : PreviewParameterProvider<LoginUiState> {
+    override val values = sequenceOf(
+        LoginUiState.Idle,
+        LoginUiState.Loading,
+        LoginUiState.Error(messageResId = R.string.feature_login_error_blank_input),
+    )
+}
+
+@PreviewLightDark
 @Composable
-private fun LoginScreenPreview() {
-    LoginScreen(uiState = LoginUiState.Idle, onLoginClick = { _, _ -> })
+private fun LoginScreenPreview(
+    @PreviewParameter(LoginUiStatePreviewParameterProvider::class) uiState: LoginUiState,
+) {
+    AppPreview {
+        LoginScreen(uiState = uiState, onLoginClick = { _, _ -> })
+    }
+}
+
+/**
+ * 入力欄・エラー文言・ボタンが縦に積み上がる画面なので、大フォント時に最も崩れやすい。
+ * エラー表示が加わる [LoginUiState.Error] でフォントスケールを確認する。
+ */
+@PreviewFontScale
+@Composable
+private fun LoginScreenFontScalePreview() {
+    AppPreview {
+        LoginScreen(
+            uiState = LoginUiState.Error(messageResId = R.string.feature_login_error_blank_input),
+            onLoginClick = { _, _ -> },
+        )
+    }
 }

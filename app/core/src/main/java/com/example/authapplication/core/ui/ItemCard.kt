@@ -14,9 +14,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.PreviewFontScale
+import androidx.compose.ui.tooling.preview.PreviewLightDark
+import androidx.compose.ui.tooling.preview.PreviewParameter
+import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.dp
 import com.example.authapplication.core.R
+import com.example.authapplication.core.ui.preview.AppPreview
 
 /**
  * ホーム/検索/お気に入りの一覧で共通利用するアイテム行。
@@ -53,14 +57,34 @@ fun ItemCard(
     }
 }
 
-@Preview(showBackground = true)
-@Composable
-private fun ItemCardPreview() {
-    ItemCard(title = "アイテム1", isFavorite = false, onClick = {}, onFavoriteClick = {})
+/** Previewで使うサンプル。1行に収まらない長さにして、折り返しと大フォント時の崩れを確認する。 */
+private const val LONG_TITLE =
+    "とても長いタイトルのアイテムで、1行に収まらず折り返したときにお気に入りボタンが押し出されないかを確認する"
+
+/** [ItemCard] の見た目が変わる組み合わせ（タイトルの長さ × お気に入りのON/OFF）を網羅する供給元。 */
+internal class ItemCardPreviewParameterProvider : PreviewParameterProvider<Pair<String, Boolean>> {
+    override val values = sequenceOf(
+        "アイテム1" to false,
+        "アイテム1" to true,
+        LONG_TITLE to true,
+    )
 }
 
-@Preview(showBackground = true)
+@PreviewLightDark
 @Composable
-private fun ItemCardFavoritePreview() {
-    ItemCard(title = "アイテム1", isFavorite = true, onClick = {}, onFavoriteClick = {})
+private fun ItemCardPreview(
+    @PreviewParameter(ItemCardPreviewParameterProvider::class) titleAndFavorite: Pair<String, Boolean>,
+) {
+    val (title, isFavorite) = titleAndFavorite
+    AppPreview {
+        ItemCard(title = title, isFavorite = isFavorite, onClick = {}, onFavoriteClick = {})
+    }
+}
+
+@PreviewFontScale
+@Composable
+private fun ItemCardFontScalePreview() {
+    AppPreview {
+        ItemCard(title = LONG_TITLE, isFavorite = true, onClick = {}, onFavoriteClick = {})
+    }
 }

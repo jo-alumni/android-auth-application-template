@@ -18,7 +18,9 @@ import androidx.compose.material3.adaptive.currentWindowAdaptiveInfoV2
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.tooling.preview.PreviewScreenSizes
+import com.example.authapplication.core.ui.preview.AppPreview
 
 /**
  * ナビゲーションUI（ボトムバー / レール / 常設ドロワー）と画面本体を組み合わせる骨組み。
@@ -121,6 +123,23 @@ fun AppNavigationScaffold(
 @PreviewScreenSizes
 @Composable
 private fun AppNavigationScaffoldPreview() {
+    AppPreview {
+        AppNavigationScaffoldPreviewContent()
+    }
+}
+
+/** 骨組みはバー・ドロワー・本文と面が重なるため、ダークテーマでの配色差を確認する。 */
+@PreviewLightDark
+@Composable
+private fun AppNavigationScaffoldThemePreview() {
+    AppPreview {
+        AppNavigationScaffoldPreviewContent()
+    }
+}
+
+/** 2つのプレビューで同じ中身を描くための共通部分。 */
+@Composable
+private fun AppNavigationScaffoldPreviewContent() {
     AppNavigationScaffold(
         navigationType = AppNavigationType.of(
             windowSizeClass = currentWindowAdaptiveInfoV2().windowSizeClass,

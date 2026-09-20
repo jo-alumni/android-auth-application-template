@@ -7,7 +7,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.PreviewFontScale
+import androidx.compose.ui.tooling.preview.PreviewLightDark
+import com.example.authapplication.core.ui.preview.AppPreview
 
 /**
  * 画面幅がMedium以上のときに、[AppBottomBar] の代わりに画面左端へ表示するナビゲーションレール。
@@ -39,11 +41,25 @@ fun AppNavigationRail(
     }
 }
 
-@Preview(showBackground = true)
+@PreviewLightDark
 @Composable
 private fun AppNavigationRailPreview() {
-    AppNavigationRail(
-        currentDestination = TopLevelDestination.HOME,
-        onDestinationClick = {},
-    )
+    AppPreview {
+        AppNavigationRail(
+            currentDestination = TopLevelDestination.HOME,
+            onDestinationClick = {},
+        )
+    }
+}
+
+/** レールは幅が固定なので、大フォントではラベルがアイコンからはみ出しやすい。 */
+@PreviewFontScale
+@Composable
+private fun AppNavigationRailFontScalePreview() {
+    AppPreview {
+        AppNavigationRail(
+            currentDestination = TopLevelDestination.FAVORITE,
+            onDestinationClick = {},
+        )
+    }
 }

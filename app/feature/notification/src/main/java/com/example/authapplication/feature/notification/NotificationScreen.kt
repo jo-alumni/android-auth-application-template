@@ -24,9 +24,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.PreviewFontScale
+import androidx.compose.ui.tooling.preview.PreviewLightDark
+import androidx.compose.ui.tooling.preview.PreviewParameter
+import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.dp
 import com.example.authapplication.core.ui.ErrorContent
+import com.example.authapplication.core.ui.preview.AppPreview
 import com.example.authapplication.domain.notification.Notification
 import com.example.authapplication.core.R as CoreR
 
@@ -106,27 +110,52 @@ fun NotificationScreen(
     }
 }
 
-@Preview(showBackground = true)
-@Composable
-private fun NotificationScreenPreview() {
-    NotificationScreen(
-        uiState = NotificationUiState.Success(
-            notifications = listOf(
-                Notification(id = "1", title = "お知らせ1", message = "サンプル通知メッセージです。"),
-                Notification(id = "2", title = "お知らせ2", message = "サンプル通知メッセージです。"),
-            ),
-        ),
-        onCloseClick = {},
-        onRetryClick = {},
+/**
+ * Previewで使うサンプル。2件目のメッセージを長文にして、
+ * カード内の折り返しと大フォント時の崩れを確認できるようにする。
+ */
+private val previewNotifications = listOf(
+    Notification(id = "1", title = "お知らせ1", message = "サンプル通知メッセージです。"),
+    Notification(
+        id = "2",
+        title = "長いタイトルのお知らせで、1行に収まらない場合の見え方を確認する",
+        message = "通知のメッセージは本文が長くなりやすく、カードの高さがどこまで伸びるかを" +
+            "確認しておきたい。ここでは複数行に折り返す長さのサンプルを入れている。",
+    ),
+)
+
+/**
+ * [NotificationScreen] の全状態を1つのPreview関数で描くための供給元。
+ * 状態を追加したらここへ足す。
+ */
+internal class NotificationUiStatePreviewParameterProvider : PreviewParameterProvider<NotificationUiState> {
+    override val values = sequenceOf(
+        NotificationUiState.Loading,
+        NotificationUiState.Empty,
+        NotificationUiState.Success(notifications = previewNotifications),
+        NotificationUiState.Error(messageResId = R.string.feature_notification_error_load),
     )
 }
 
-@Preview(showBackground = true)
+@PreviewLightDark
 @Composable
-private fun NotificationScreenErrorPreview() {
-    NotificationScreen(
-        uiState = NotificationUiState.Error(messageResId = R.string.feature_notification_error_load),
-        onCloseClick = {},
-        onRetryClick = {},
-    )
+private fun NotificationScreenPreview(
+    @PreviewParameter(NotificationUiStatePreviewParameterProvider::class) uiState: NotificationUiState,
+) {
+    AppPreview {
+        NotificationScreen(uiState = uiState, onCloseClick = {}, onRetryClick = {})
+    }
+}
+
+/** 崩れが出やすいのは本文が長い一覧表示なので、フォントスケールは [NotificationUiState.Success] で確認する。 */
+@PreviewFontScale
+@Composable
+private fun NotificationScreenFontScalePreview() {
+    AppPreview {
+        NotificationScreen(
+            uiState = NotificationUiState.Success(notifications = previewNotifications),
+            onCloseClick = {},
+            onRetryClick = {},
+        )
+    }
 }

@@ -7,7 +7,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.PreviewFontScale
+import androidx.compose.ui.tooling.preview.PreviewLightDark
+import com.example.authapplication.core.ui.preview.AppPreview
 
 /**
  * ホーム/検索/お気に入りを切り替えるボトムバー。
@@ -35,11 +37,25 @@ fun AppBottomBar(
     }
 }
 
-@Preview(showBackground = true)
+@PreviewLightDark
 @Composable
 private fun AppBottomBarPreview() {
-    AppBottomBar(
-        currentDestination = TopLevelDestination.HOME,
-        onDestinationClick = {},
-    )
+    AppPreview {
+        AppBottomBar(
+            currentDestination = TopLevelDestination.HOME,
+            onDestinationClick = {},
+        )
+    }
+}
+
+/** ラベルがアイコンの下に並ぶため、大フォントでは文字が省略されやすい。 */
+@PreviewFontScale
+@Composable
+private fun AppBottomBarFontScalePreview() {
+    AppPreview {
+        AppBottomBar(
+            currentDestination = TopLevelDestination.FAVORITE,
+            onDestinationClick = {},
+        )
+    }
 }

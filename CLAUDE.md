@@ -56,6 +56,8 @@ Gradleモジュールは以下の依存方向を持つ多層構成（`:app` が�
 
 テストは `./gradlew test`（JVM）で完結することを基本にする。ViewModelのユニットテストに加え、Screen Composable単体のUIテストもRobolectric上で `src/test` に置いており、実機/エミュレータが必要な計装テスト（`:app` の `androidTest`）は画面をまたぐナビゲーションの確認だけに絞っている。テスト用のFake（`FakeAuthRepository` など）は `:domain` の `testFixtures` に集約し、計装テストでは `@TestInstallIn` で `RepositoryModule` をFakeへ差し替えるため、実DataStoreの状態には依存しない([.claude/rules/testing.md](.claude/rules/testing.md) 参照)。
 
+Previewは「成功時の1パターンを置く」ではなく、崩れやすい側を見るために揃える。`XxxUiState` を受け取るComposableは `@PreviewParameter` + `PreviewParameterProvider` で全状態を1つのPreview関数に流し、`@PreviewLightDark` で明暗を、代表1状態の別関数に付けた `@PreviewFontScale` で大フォント時の崩れを確認する。どのPreviewも `:app:core` の `AppPreview`（`AuthApplicationTheme` + `Surface`）で包み、実機と同じ配色・文字色で描く（`@Preview(showBackground = true)` の白背景ではダークテーマの文字が読めなくなるため使わない）。サンプル値には必ず折り返しが起きる長いタイトル・長文メッセージを混ぜる([.claude/rules/compose-preview.md](.claude/rules/compose-preview.md) 参照)。
+
 ktlint(Spotless経由)とdetekt(compose-rules付き)は、各モジュールの `build.gradle.kts` には書かず、ルートの `build.gradle.kts` に `authapplication.quality`(`QualityConventionPlugin`)を1回だけ適用して全プロジェクトへ配る。モジュールを追加したときに静的解析だけ適用漏れになるのを構造的に防ぐため。ktlintの設定はルートの `.editorconfig`、detektの設定は `gradle/detekt/detekt.yml` に集約する。指摘はbaselineで凍結せずその場で直す方針で、Android Lintは警告もエラーとして扱う(`lint.warningsAsErrors`)。CIの構成と、この方針を選んだ理由は [docs/ci.md](docs/ci.md) にまとめてある。
 
 Android Library設定・Compose有効化・Hilt設定・リソース名の接頭辞(`resourcePrefix`)など、モジュール間で重複しがちなGradle設定は `build-logic`（Convention Plugin。`settings.gradle.kts` の `pluginManagement.includeBuild("build-logic")` で取り込まれるcomposite build）に集約している。各モジュールは `id("authapplication.android.library")` のようなConvention Plugin IDを適用し、`namespace` やモジュール固有の依存関係のみを自身の `build.gradle.kts` に残す。
@@ -84,7 +86,7 @@ Edge to Edge（`enableEdgeToEdge()`）で描画するため、WindowInsetsの解
   - [.claude/rules/viewmodel-event-handling.md](.claude/rules/viewmodel-event-handling.md) — ViewModel→UIの単発イベントはコールバック引数ではなくSharedFlowで配信する。ただし状態（`authState`）が決める遷移は状態駆動に任せ、イベントを重ねない
   - [.claude/rules/compose-navigation.md](.claude/rules/compose-navigation.md) — Navigationファイルのコールバックは `navigateXxx` のように遷移視点で命名する
   - [.claude/rules/navigation-routes.md](.claude/rules/navigation-routes.md) — 画面のRouteはそれを持つfeatureモジュールが定義し、遷移先の決定は `:app` に閉じる
-  - [.claude/rules/compose-preview.md](.claude/rules/compose-preview.md) — publicなComposable関数には同名+`Preview`の `@Preview` 関数を必ず用意する
+  - [.claude/rules/compose-preview.md](.claude/rules/compose-preview.md) — publicなComposable関数には同名+`Preview`の `@Preview` 関数を必ず用意し、`AppPreview` でテーマを被せて全状態・ダークテーマ・フォントスケールを網羅する
   - [.claude/rules/viewmodel-uistate.md](.claude/rules/viewmodel-uistate.md) — ViewModelが公開する画面状態は `sealed interface XxxUiState`(Loading/Empty/Success/Error)で表現する
   - [.claude/rules/error-handling.md](.claude/rules/error-handling.md) — リポジトリ層の例外は `Flow.catch` で `UiState.Error` に変換し、リトライは購読のやり直しで実現する
   - [.claude/rules/window-insets.md](.claude/rules/window-insets.md) — `:app` は上端insetsのみを解決してconsumeし、下端とIMEは各Screenが自分で解決する

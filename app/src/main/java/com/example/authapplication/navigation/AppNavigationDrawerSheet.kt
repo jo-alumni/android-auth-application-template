@@ -1,5 +1,6 @@
 package com.example.authapplication.navigation
 
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationDrawerItem
@@ -9,7 +10,10 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.PreviewFontScale
+import androidx.compose.ui.tooling.preview.PreviewLightDark
+import androidx.compose.ui.unit.dp
+import com.example.authapplication.core.ui.preview.AppPreview
 
 /**
  * 画面幅がExpandedのときに、画面左端へ常設するナビゲーションドロワー。
@@ -42,11 +46,28 @@ fun AppNavigationDrawerSheet(
     }
 }
 
-@Preview(showBackground = true, widthDp = 360, heightDp = 600)
+/**
+ * 常設ドロワーは高さいっぱいに伸びる部品なので、`AppPreview` に高さを与えて実機に近い箱で描く。
+ */
+@PreviewLightDark
 @Composable
 private fun AppNavigationDrawerSheetPreview() {
-    AppNavigationDrawerSheet(
-        currentDestination = TopLevelDestination.HOME,
-        onDestinationClick = {},
-    )
+    AppPreview(modifier = Modifier.height(600.dp)) {
+        AppNavigationDrawerSheet(
+            currentDestination = TopLevelDestination.HOME,
+            onDestinationClick = {},
+        )
+    }
+}
+
+/** ドロワーの項目はラベルが横に伸びるため、大フォントでの折り返しを確認する。 */
+@PreviewFontScale
+@Composable
+private fun AppNavigationDrawerSheetFontScalePreview() {
+    AppPreview(modifier = Modifier.height(600.dp)) {
+        AppNavigationDrawerSheet(
+            currentDestination = TopLevelDestination.FAVORITE,
+            onDestinationClick = {},
+        )
+    }
 }
