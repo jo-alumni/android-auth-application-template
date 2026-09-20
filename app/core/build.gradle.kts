@@ -4,7 +4,6 @@ import org.gradle.kotlin.dsl.getByType
 plugins {
     id("authapplication.android.library")
     id("authapplication.android.compose")
-    id("authapplication.kotlin.serialization")
 }
 
 android {

@@ -46,6 +46,8 @@ dependencies {
     implementation(projects.data)
 
     implementation(libs.findLibrary("androidx-core-ktx").get())
+    // TopLevelDestination（ボトムバー/レール/ドロワーの項目）のアイコンに使う。
+    implementation(libs.findLibrary("androidx-compose-material-icons-core").get())
     // 認証状態が確定するまでスプラッシュを維持するために使う（docs/auth-navigation.md 参照）。
     implementation(libs.findLibrary("androidx-core-splashscreen").get())
     // 画面幅(WindowSizeClass)に応じてナビゲーションUIを出し分けるために使う。

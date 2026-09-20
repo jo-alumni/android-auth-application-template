@@ -20,14 +20,14 @@ alwaysApply: false
 ```kotlin
 // Bad: 「アイテムをクリックしたとき」という発生イベント視点の命名
 fun NavGraphBuilder.homeScreen(onItemClick: (String) -> Unit) {
-    composable<AppRoute.Home> {
+    composable<HomeRoute> {
         HomeScreen(items = items, onItemClick = onItemClick)
     }
 }
 
 // Good: 「詳細画面へ遷移する」という操作視点の命名
 fun NavGraphBuilder.homeScreen(navigateDetail: (String) -> Unit) {
-    composable<AppRoute.Home> {
+    composable<HomeRoute> {
         HomeScreen(items = items, onItemClick = navigateDetail)
     }
 }

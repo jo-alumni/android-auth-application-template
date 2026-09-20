@@ -124,7 +124,7 @@ fun AppTopBar(
 private fun AppTopBarPreview() {
     AppPreview {
         AppTopBar(
-            title = stringResource(R.string.core_destination_home),
+            title = "ホーム",
             isErrorInjectionEnabled = false,
             onErrorInjectionChange = {},
             onExpireTokenClick = {},
@@ -140,7 +140,7 @@ private fun AppTopBarPreview() {
 private fun AppTopBarFontScalePreview() {
     AppPreview {
         AppTopBar(
-            title = stringResource(R.string.core_destination_favorite),
+            title = "お気に入り",
             isErrorInjectionEnabled = true,
             onErrorInjectionChange = {},
             onExpireTokenClick = {},

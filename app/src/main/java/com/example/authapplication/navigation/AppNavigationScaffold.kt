@@ -20,7 +20,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.tooling.preview.PreviewScreenSizes
-import com.example.authapplication.core.navigation.TopLevelDestination
 import com.example.authapplication.core.ui.preview.AppPreview
 
 /**

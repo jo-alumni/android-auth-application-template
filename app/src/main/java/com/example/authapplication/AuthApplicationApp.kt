@@ -20,14 +20,15 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.IntOffset
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.example.authapplication.core.navigation.AppRoute
 import com.example.authapplication.core.ui.AppTopBar
 import com.example.authapplication.core.ui.LocalSnackBarHostState
 import com.example.authapplication.navigation.AppNavHost
 import com.example.authapplication.navigation.AppNavigationScaffold
 import com.example.authapplication.navigation.AppNavigationType
 import com.example.authapplication.navigation.AppState
+import com.example.authapplication.navigation.AuthGraphRoute
 import com.example.authapplication.navigation.BottomBarScrollBehavior
+import com.example.authapplication.navigation.MainGraphRoute
 import com.example.authapplication.navigation.rememberAppState
 import com.example.authapplication.navigation.rememberBottomBarScrollBehavior
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -144,7 +145,7 @@ fun AuthApplicationApp(
                 ) {
                     AppNavHost(
                         navController = appState.navController,
-                        startDestination = if (initialIsAuthenticated) AppRoute.MainGraph else AppRoute.AuthGraph,
+                        startDestination = if (initialIsAuthenticated) MainGraphRoute else AuthGraphRoute,
                     )
                 }
             }

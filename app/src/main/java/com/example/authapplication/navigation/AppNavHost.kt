@@ -5,19 +5,28 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.navigation
-import com.example.authapplication.core.navigation.AppRoute
+import com.example.authapplication.feature.detail.DetailRoute
 import com.example.authapplication.feature.detail.detailScreen
+import com.example.authapplication.feature.favorite.FavoriteRoute
 import com.example.authapplication.feature.favorite.favoriteScreen
+import com.example.authapplication.feature.home.HomeRoute
 import com.example.authapplication.feature.home.homeScreen
+import com.example.authapplication.feature.login.LoginRoute
 import com.example.authapplication.feature.login.loginScreen
 import com.example.authapplication.feature.notification.notificationScreen
+import com.example.authapplication.feature.search.SearchRoute
 import com.example.authapplication.feature.search.searchScreen
 
 /**
  * 認証前後でネストされたNavGraphに分割する。
- * [AppRoute.AuthGraph] はログイン前の画面群、[AppRoute.MainGraph] はログイン後の画面群を束ねる。
- * グラフ間の遷移では `popUpTo` もグラフ単位（[AppRoute.AuthGraph] / [AppRoute.MainGraph]）で指定し、
+ * [AuthGraphRoute] はログイン前の画面群、[MainGraphRoute] はログイン後の画面群を束ねる。
+ * グラフ間の遷移では `popUpTo` もグラフ単位（[AuthGraphRoute] / [MainGraphRoute]）で指定し、
  * 遷移元グラフの画面をまとめてバックスタックから取り除く。
+ *
+ * 画面のルート（[HomeRoute] / [DetailRoute] など）は各featureモジュールが持ち、
+ * 「どのルートへ遷移するか」を決めるのはこのファイルだけにする。featureは遷移先を知らず、
+ * `navigateDetail: (String) -> Unit` のようなコールバックで通知するだけになる
+ * （配置の方針は docs/navigation-routes.md 参照）。
  *
  * WindowInsetsはこの層では扱わない。各画面が必要なinsetsを自分で解決する
  * （docs/window-insets.md 参照）。
@@ -31,7 +40,7 @@ import com.example.authapplication.feature.search.searchScreen
 @Composable
 fun AppNavHost(
     navController: NavHostController,
-    startDestination: AppRoute,
+    startDestination: Any,
     modifier: Modifier = Modifier,
 ) {
     NavHost(
@@ -39,17 +48,17 @@ fun AppNavHost(
         startDestination = startDestination,
         modifier = modifier,
     ) {
-        navigation<AppRoute.AuthGraph>(startDestination = AppRoute.Login) {
+        navigation<AuthGraphRoute>(startDestination = LoginRoute) {
             loginScreen(navigateHome = {
-                navController.navigate(AppRoute.MainGraph) {
-                    popUpTo(AppRoute.AuthGraph) { inclusive = true }
+                navController.navigate(MainGraphRoute) {
+                    popUpTo(AuthGraphRoute) { inclusive = true }
                 }
             })
         }
-        navigation<AppRoute.MainGraph>(startDestination = AppRoute.Home) {
-            homeScreen(navigateDetail = { itemId -> navController.navigate(AppRoute.Detail(itemId)) })
-            searchScreen(navigateDetail = { itemId -> navController.navigate(AppRoute.Detail(itemId)) })
-            favoriteScreen(navigateDetail = { itemId -> navController.navigate(AppRoute.Detail(itemId)) })
+        navigation<MainGraphRoute>(startDestination = HomeRoute) {
+            homeScreen(navigateDetail = { itemId -> navController.navigate(DetailRoute(itemId)) })
+            searchScreen(navigateDetail = { itemId -> navController.navigate(DetailRoute(itemId)) })
+            favoriteScreen(navigateDetail = { itemId -> navController.navigate(DetailRoute(itemId)) })
             detailScreen(navigateBack = { navController.popBackStack() })
             notificationScreen(navigateBack = { navController.popBackStack() })
         }

@@ -12,11 +12,6 @@
     <string name="core_retry">再読み込み</string>
     <string name="core_loading">読み込み中…</string>
 
-    <!-- ボトムバーのトップレベル画面（TopAppBarのタイトルにも使う） -->
-    <string name="core_destination_home">ホーム</string>
-    <string name="core_destination_search">検索</string>
-    <string name="core_destination_favorite">お気に入り</string>
-
     <!-- AppTopBar -->
     <string name="core_logout">ログアウト</string>
     <string name="core_logout_confirm_message">ログアウトしますか?</string>

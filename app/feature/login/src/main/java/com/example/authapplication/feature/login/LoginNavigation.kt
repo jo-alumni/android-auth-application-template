@@ -7,11 +7,10 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
 import com.example.authapplication.core.navigation.AppNavTransitions
-import com.example.authapplication.core.navigation.AppRoute
 
 /** ログイン画面をNavGraphに登録する。NavControllerは公開せずコールバックで通知する。 */
 fun NavGraphBuilder.loginScreen(navigateHome: () -> Unit) {
-    composable<AppRoute.Login>(
+    composable<LoginRoute>(
         enterTransition = AppNavTransitions.fadeEnter,
         exitTransition = AppNavTransitions.fadeExit,
     ) {

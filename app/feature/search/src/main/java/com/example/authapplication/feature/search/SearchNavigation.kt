@@ -8,12 +8,11 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
 import com.example.authapplication.core.navigation.AppNavTransitions
-import com.example.authapplication.core.navigation.AppRoute
 import com.example.authapplication.core.ui.LocalSnackBarHostState
 
 /** 検索画面をNavGraphに登録する。NavControllerは公開せずコールバックで通知する。 */
 fun NavGraphBuilder.searchScreen(navigateDetail: (String) -> Unit) {
-    composable<AppRoute.Search>(
+    composable<SearchRoute>(
         enterTransition = AppNavTransitions.fadeEnter,
         exitTransition = AppNavTransitions.fadeExit,
         popEnterTransition = AppNavTransitions.fadeEnter,

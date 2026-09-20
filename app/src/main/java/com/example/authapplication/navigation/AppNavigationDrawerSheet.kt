@@ -13,7 +13,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewFontScale
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
-import com.example.authapplication.core.navigation.TopLevelDestination
 import com.example.authapplication.core.ui.preview.AppPreview
 
 /**
