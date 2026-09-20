@@ -9,8 +9,12 @@ import androidx.navigation.createGraph
 import androidx.navigation.testing.TestNavHostController
 import androidx.window.core.layout.WindowSizeClass
 import androidx.window.core.layout.computeWindowSizeClass
-import com.example.authapplication.core.navigation.AppRoute
-import com.example.authapplication.core.navigation.TopLevelDestination
+import com.example.authapplication.feature.detail.DetailRoute
+import com.example.authapplication.feature.favorite.FavoriteRoute
+import com.example.authapplication.feature.home.HomeRoute
+import com.example.authapplication.feature.login.LoginRoute
+import com.example.authapplication.feature.notification.NotificationRoute
+import com.example.authapplication.feature.search.SearchRoute
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runCurrent
@@ -50,16 +54,16 @@ class AppStateTest {
     private fun TestScope.createAppState(windowSizeClass: WindowSizeClass = COMPACT_WIDTH): AppState {
         val navController = TestNavHostController(RuntimeEnvironment.getApplication()).apply {
             navigatorProvider.addNavigator(ComposeNavigator())
-            graph = createGraph(startDestination = AppRoute.MainGraph) {
-                navigation<AppRoute.AuthGraph>(startDestination = AppRoute.Login) {
-                    composable<AppRoute.Login> {}
+            graph = createGraph(startDestination = MainGraphRoute) {
+                navigation<AuthGraphRoute>(startDestination = LoginRoute) {
+                    composable<LoginRoute> {}
                 }
-                navigation<AppRoute.MainGraph>(startDestination = AppRoute.Home) {
-                    composable<AppRoute.Home> {}
-                    composable<AppRoute.Search> {}
-                    composable<AppRoute.Favorite> {}
-                    composable<AppRoute.Detail> {}
-                    composable<AppRoute.Notification> {}
+                navigation<MainGraphRoute>(startDestination = HomeRoute) {
+                    composable<HomeRoute> {}
+                    composable<SearchRoute> {}
+                    composable<FavoriteRoute> {}
+                    composable<DetailRoute> {}
+                    composable<NotificationRoute> {}
                 }
             }
         }
@@ -112,7 +116,7 @@ class AppStateTest {
         val appState = createAppState()
         runCurrent()
 
-        appState.navController.navigate(AppRoute.Detail(itemId = "item1"))
+        appState.navController.navigate(DetailRoute(itemId = "item1"))
         runCurrent()
 
         assertNull(appState.currentTopLevelDestination)
@@ -127,7 +131,7 @@ class AppStateTest {
         appState.navigateNotification()
         runCurrent()
 
-        assertTrue(appState.currentDestination?.hasRoute(AppRoute.Notification::class) == true)
+        assertTrue(appState.currentDestination?.hasRoute(NotificationRoute::class) == true)
         assertEquals(AppNavigationType.NONE, appState.navigationType)
     }
 
@@ -140,7 +144,7 @@ class AppStateTest {
         val appState = createAppState()
         runCurrent()
         appState.navigateToTopLevelDestination(TopLevelDestination.SEARCH)
-        appState.navController.navigate(AppRoute.Detail(itemId = "item1"))
+        appState.navController.navigate(DetailRoute(itemId = "item1"))
         appState.navigateToTopLevelDestination(TopLevelDestination.HOME)
         runCurrent()
 
@@ -148,7 +152,7 @@ class AppStateTest {
         runCurrent()
 
         // 検索タブで開いていた詳細画面まで含めて復元される。
-        assertTrue(appState.currentDestination?.hasRoute(AppRoute.Detail::class) == true)
+        assertTrue(appState.currentDestination?.hasRoute(DetailRoute::class) == true)
     }
 
     /**
@@ -161,24 +165,24 @@ class AppStateTest {
         val appState = createAppState()
         runCurrent()
         appState.navigateToTopLevelDestination(TopLevelDestination.SEARCH)
-        appState.navController.navigate(AppRoute.Detail(itemId = "item1"))
+        appState.navController.navigate(DetailRoute(itemId = "item1"))
         appState.navigateToTopLevelDestination(TopLevelDestination.HOME)
         runCurrent()
 
         appState.navigateLogin()
         runCurrent()
         // 再ログイン。AppNavHostのloginScreen(navigateHome = ...)と同じ遷移を行う。
-        appState.navController.navigate(AppRoute.MainGraph) {
-            popUpTo(AppRoute.AuthGraph) { inclusive = true }
+        appState.navController.navigate(MainGraphRoute) {
+            popUpTo(AuthGraphRoute) { inclusive = true }
         }
         appState.navigateToTopLevelDestination(TopLevelDestination.SEARCH)
         runCurrent()
 
         // 保存されていた詳細画面は復元されず、検索画面から始まる。
-        assertTrue(appState.currentDestination?.hasRoute(AppRoute.Search::class) == true)
+        assertTrue(appState.currentDestination?.hasRoute(SearchRoute::class) == true)
         assertTrue(
             appState.navController.currentBackStack.value.none { entry ->
-                entry.destination.hasRoute(AppRoute.Detail::class)
+                entry.destination.hasRoute(DetailRoute::class)
             },
         )
     }
@@ -193,11 +197,11 @@ class AppStateTest {
         appState.navigateLogin()
         runCurrent()
 
-        assertTrue(appState.currentDestination?.hasRoute(AppRoute.Login::class) == true)
+        assertTrue(appState.currentDestination?.hasRoute(LoginRoute::class) == true)
         assertEquals(AppNavigationType.NONE, appState.navigationType)
         assertTrue(
             appState.navController.currentBackStack.value.none { entry ->
-                entry.destination.hasRoute(AppRoute.MainGraph::class)
+                entry.destination.hasRoute(MainGraphRoute::class)
             },
         )
     }
@@ -238,7 +242,7 @@ class AppStateTest {
         val appState = createAppState(windowSizeClass = EXPANDED_WIDTH)
         runCurrent()
 
-        appState.navController.navigate(AppRoute.Detail(itemId = "item1"))
+        appState.navController.navigate(DetailRoute(itemId = "item1"))
         runCurrent()
 
         assertEquals(AppNavigationType.NONE, appState.navigationType)

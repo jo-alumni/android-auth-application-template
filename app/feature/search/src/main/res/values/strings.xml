@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- 検索画面固有の文言。リソース名は resourcePrefix（feature_search_）で始める。 -->
 <resources>
+    <!-- ボトムバー/レール/ドロワーの項目名とTopAppBarのタイトルに使う -->
+    <string name="feature_search_title">検索</string>
+
     <string name="feature_search_query_label">検索キーワード</string>
     <string name="feature_search_empty">アイテムがありません</string>
     <!-- %1$s は検索キーワード -->

@@ -5,7 +5,6 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
-import com.example.authapplication.core.navigation.AppRoute
 import com.example.authapplication.domain.error.AppError
 import com.example.authapplication.domain.error.toAppError
 import com.example.authapplication.domain.item.GetItemUseCase
@@ -29,7 +28,7 @@ sealed interface DetailUiState {
     data object Loading : DetailUiState
     data class Success(val item: Item) : DetailUiState
 
-    /** [AppRoute.Detail.itemId] に対応するアイテムが存在しなかった場合の状態。 */
+    /** [DetailRoute.itemId] に対応するアイテムが存在しなかった場合の状態。 */
     data object NotFound : DetailUiState
 
     /**
@@ -58,7 +57,7 @@ class DetailViewModel @Inject constructor(
         .onStart { emit(Unit) }
         .flatMapLatest {
             flow {
-                val itemId = savedStateHandle.toRoute<AppRoute.Detail>().itemId
+                val itemId = savedStateHandle.toRoute<DetailRoute>().itemId
                 val item = getItemUseCase(itemId)
                 emit(if (item != null) DetailUiState.Success(item) else DetailUiState.NotFound)
             }

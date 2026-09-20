@@ -6,14 +6,13 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.dialog
-import com.example.authapplication.core.navigation.AppRoute
 
 /**
  * 通知画面を全画面ダイアログとしてNavGraphに登録する。NavControllerは公開せずコールバックで通知する。
  * `DialogProperties(usePlatformDefaultWidth = false)` によりダイアログの幅制限を外し、画面全体を覆う。
  */
 fun NavGraphBuilder.notificationScreen(navigateBack: () -> Unit) {
-    dialog<AppRoute.Notification>(
+    dialog<NotificationRoute>(
         dialogProperties = DialogProperties(usePlatformDefaultWidth = false),
     ) {
         val viewModel: NotificationViewModel = hiltViewModel()

@@ -47,9 +47,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Gradleモジュールは以下の依存方向を持つ多層構成（`:app` が全feature/domain/dataに依存し、feature間の直接依存はない）。
 
-- `:app` — `MainActivity` / `App`（`@HiltAndroidApp`）/ `AppViewModel`（認証状態の集約）/ `AppNavHost`（画面統合のNavGraph）・`AppNavigationScaffold`（画面幅に応じて `AppBottomBar` / `AppNavigationRail` / `AppNavigationDrawerSheet` を組み替える骨組み）/ `AppState`・`BottomBarScrollBehavior`（画面の骨組みが使うState Holder）を持つエントリーポイント。
-- `:app:core` — 全feature共通の汎用機能。`AppRoute`（`@Serializable` sealedなNavigation経路定義）、`TopLevelDestination`（ボトムバー/レール/ドロワーの項目）、共通Composable（`AppTopBar`）、テーマを置く。
-- `:app:feature:*`（auth, home, search, favorite, detail） — 画面単位の機能モジュール。各モジュールは `NavGraphBuilder` の拡張関数（例: `homeScreen(navigateDetail = ...)`）を公開し、`:app` の `AppNavHost` から呼び出される。
+- `:app` — `MainActivity` / `App`（`@HiltAndroidApp`）/ `AppViewModel`（認証状態の集約）/ `AppNavHost`（画面統合のNavGraph）・`AuthGraphRoute`/`MainGraphRoute`（ネストしたグラフのRoute）・`TopLevelDestination`（ボトムバー/レール/ドロワーの項目）・`AppNavigationScaffold`（画面幅に応じて `AppBottomBar` / `AppNavigationRail` / `AppNavigationDrawerSheet` を組み替える骨組み）/ `AppState`・`BottomBarScrollBehavior`（画面の骨組みが使うState Holder）を持つエントリーポイント。
+- `:app:core` — 全feature共通の汎用機能。`AppNavTransitions`（画面に依存しない遷移アニメーション）、共通Composable（`AppTopBar`）、テーマを置く。画面のRouteは置かない（後述）。
+- `:app:feature:*`（login, home, search, favorite, detail, notification） — 画面単位の機能モジュール。各モジュールは自分の画面のRoute（`@Serializable` な `HomeRoute` / `DetailRoute` など。`XxxRoute.kt` に置く）と、それをNavGraphに登録する `NavGraphBuilder` の拡張関数（例: `homeScreen(navigateDetail = ...)`。`XxxNavigation.kt` に置く）を公開し、`:app` の `AppNavHost` から呼び出される。
+  Routeは共通モジュールに集約せず画面を持つfeatureが所有し、「どのRouteへ遷移するか」の決定（`navController.navigate(DetailRoute(itemId))`）だけを `:app` に閉じる。featureが受け取るのは `navigateDetail: (String) -> Unit` のようなコールバックなので、feature同士が互いのRoute型を知ることはない（[.claude/rules/navigation-routes.md](.claude/rules/navigation-routes.md) 参照）。分散を選んだ理由・集約方式との比較・feature間の直接遷移が必要になったときの選択肢は [docs/navigation-routes.md](docs/navigation-routes.md) にまとめてある。
 - `:domain` — UseCase・Repositoryインターフェース・モデル（Android非依存のKotlinモジュール）。ViewModelからのデータアクセスは必ずUseCaseを経由し、1行の委譲になるUseCaseも省略しない（[.claude/rules/usecase.md](.claude/rules/usecase.md) 参照）。リポジトリインターフェースを直接呼んでよいのは `:domain` のUseCaseだけ。
 - `:data` — Repository実装（DataStoreベースの `AuthRepositoryImpl` など）とHiltの `DataStoreModule` / `RepositoryModule`。
 
@@ -82,6 +83,7 @@ Edge to Edge（`enableEdgeToEdge()`）で描画するため、WindowInsetsの解
 - 現在定義済みのルール:
   - [.claude/rules/viewmodel-event-handling.md](.claude/rules/viewmodel-event-handling.md) — ViewModel→UIの単発イベントはコールバック引数ではなくSharedFlowで配信する。ただし状態（`authState`）が決める遷移は状態駆動に任せ、イベントを重ねない
   - [.claude/rules/compose-navigation.md](.claude/rules/compose-navigation.md) — Navigationファイルのコールバックは `navigateXxx` のように遷移視点で命名する
+  - [.claude/rules/navigation-routes.md](.claude/rules/navigation-routes.md) — 画面のRouteはそれを持つfeatureモジュールが定義し、遷移先の決定は `:app` に閉じる
   - [.claude/rules/compose-preview.md](.claude/rules/compose-preview.md) — publicなComposable関数には同名+`Preview`の `@Preview` 関数を必ず用意する
   - [.claude/rules/viewmodel-uistate.md](.claude/rules/viewmodel-uistate.md) — ViewModelが公開する画面状態は `sealed interface XxxUiState`(Loading/Empty/Success/Error)で表現する
   - [.claude/rules/error-handling.md](.claude/rules/error-handling.md) — リポジトリ層の例外は `Flow.catch` で `UiState.Error` に変換し、リトライは購読のやり直しで実現する

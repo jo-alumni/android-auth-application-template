@@ -16,12 +16,17 @@ import androidx.navigation.testing.TestNavHostController
 import androidx.test.espresso.Espresso
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
-import com.example.authapplication.core.navigation.AppRoute
-import com.example.authapplication.core.navigation.TopLevelDestination
 import com.example.authapplication.core.theme.AuthApplicationTheme
 import com.example.authapplication.domain.auth.FakeAuthRepository
 import com.example.authapplication.domain.item.FakeItemRepository
 import com.example.authapplication.domain.item.Item
+import com.example.authapplication.feature.detail.DetailRoute
+import com.example.authapplication.feature.home.HomeRoute
+import com.example.authapplication.feature.login.LoginRoute
+import com.example.authapplication.feature.search.SearchRoute
+import com.example.authapplication.navigation.AuthGraphRoute
+import com.example.authapplication.navigation.MainGraphRoute
+import com.example.authapplication.navigation.TopLevelDestination
 import com.example.authapplication.navigation.rememberAppState
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
@@ -100,7 +105,7 @@ class AppNavigationTest {
         }
     }
 
-    private fun waitUntilRoute(route: KClass<out AppRoute>) {
+    private fun waitUntilRoute(route: KClass<*>) {
         composeTestRule.waitUntil(timeoutMillis = 5_000) {
             navController.currentDestination?.hasRoute(route) == true
         }
@@ -146,9 +151,9 @@ class AppNavigationTest {
 
         launchApp()
 
-        waitUntilRoute(AppRoute.Login::class)
+        waitUntilRoute(LoginRoute::class)
         composeTestRule.onNodeWithText(string(LoginR.string.feature_login_title)).assertIsDisplayed()
-        assertTrue(navController.currentDestination?.hasRoute(AppRoute.Login::class) == true)
+        assertTrue(navController.currentDestination?.hasRoute(LoginRoute::class) == true)
     }
 
     /** 認証済みなら認証画面をスキップし、ホーム画面から起動する。 */
@@ -158,11 +163,11 @@ class AppNavigationTest {
 
         launchApp()
 
-        waitUntilRoute(AppRoute.Home::class)
+        waitUntilRoute(HomeRoute::class)
         composeTestRule.onNodeWithText(ITEMS.first().title).assertIsDisplayed()
         assertTrue(
             navController.currentBackStack.value.none { entry ->
-                entry.destination.hasRoute(AppRoute.Login::class)
+                entry.destination.hasRoute(LoginRoute::class)
             },
         )
     }
@@ -171,19 +176,19 @@ class AppNavigationTest {
     fun loginSuccessNavigatesToHomeAndRemovesLoginFromBackStack() {
         setAuthenticated(false)
         launchApp()
-        waitUntilRoute(AppRoute.Login::class)
+        waitUntilRoute(LoginRoute::class)
 
         login()
 
         // ログインは認証状態の書き込みを伴う非同期処理のため、Homeへの到達を明示的に待つ。
-        waitUntilRoute(AppRoute.Home::class)
+        waitUntilRoute(HomeRoute::class)
 
         composeTestRule.onNodeWithText(ITEMS.first().title).assertIsDisplayed()
-        assertTrue(navController.currentDestination?.hasRoute(AppRoute.Home::class) == true)
+        assertTrue(navController.currentDestination?.hasRoute(HomeRoute::class) == true)
         assertTrue(
             navController.currentBackStack.value.none { entry ->
-                entry.destination.hasRoute(AppRoute.Login::class) ||
-                    entry.destination.hasRoute(AppRoute.AuthGraph::class)
+                entry.destination.hasRoute(LoginRoute::class) ||
+                    entry.destination.hasRoute(AuthGraphRoute::class)
             },
         )
     }
@@ -196,19 +201,19 @@ class AppNavigationTest {
     fun logoutClearsMainGraphBackStack() {
         setAuthenticated(true)
         launchApp()
-        waitUntilRoute(AppRoute.Home::class)
+        waitUntilRoute(HomeRoute::class)
 
         logout()
 
         // ログアウトは認証状態のクリアを伴う非同期処理のため、Loginへの到達を明示的に待つ。
-        waitUntilRoute(AppRoute.Login::class)
+        waitUntilRoute(LoginRoute::class)
 
         composeTestRule.onNodeWithText(string(LoginR.string.feature_login_title)).assertIsDisplayed()
-        assertTrue(navController.currentDestination?.hasRoute(AppRoute.Login::class) == true)
+        assertTrue(navController.currentDestination?.hasRoute(LoginRoute::class) == true)
         assertTrue(
             navController.currentBackStack.value.none { entry ->
-                entry.destination.hasRoute(AppRoute.MainGraph::class) ||
-                    entry.destination.hasRoute(AppRoute.Home::class)
+                entry.destination.hasRoute(MainGraphRoute::class) ||
+                    entry.destination.hasRoute(HomeRoute::class)
             },
         )
         // 戻るキーで認証後の画面へ戻れないこと。
@@ -224,19 +229,19 @@ class AppNavigationTest {
     fun tokenExpirationNavigatesBackToLoginScreen() {
         setAuthenticated(true)
         launchApp()
-        waitUntilRoute(AppRoute.Home::class)
+        waitUntilRoute(HomeRoute::class)
         composeTestRule.onNodeWithText(ITEMS.first().title).performClick()
-        waitUntilRoute(AppRoute.Detail::class)
+        waitUntilRoute(DetailRoute::class)
 
         // ユーザー操作を経ない外部要因での失効。
         runBlocking { authRepository.clearAuthToken() }
 
-        waitUntilRoute(AppRoute.Login::class)
+        waitUntilRoute(LoginRoute::class)
         composeTestRule.onNodeWithText(string(LoginR.string.feature_login_title)).assertIsDisplayed()
         assertTrue(
             navController.currentBackStack.value.none { entry ->
-                entry.destination.hasRoute(AppRoute.MainGraph::class) ||
-                    entry.destination.hasRoute(AppRoute.Detail::class)
+                entry.destination.hasRoute(MainGraphRoute::class) ||
+                    entry.destination.hasRoute(DetailRoute::class)
             },
         )
         assertNull(navController.previousBackStackEntry)
@@ -254,10 +259,10 @@ class AppNavigationTest {
     fun reLoginAfterLogoutStartsFromHomeWithoutRestoringSavedState() {
         setAuthenticated(true)
         launchApp()
-        waitUntilRoute(AppRoute.Home::class)
+        waitUntilRoute(HomeRoute::class)
 
         selectTab(TopLevelDestination.SEARCH)
-        waitUntilRoute(AppRoute.Search::class)
+        waitUntilRoute(SearchRoute::class)
         composeTestRule.onNodeWithText(string(SearchR.string.feature_search_query_label))
             .performTextInput(ITEMS.first().title)
         // ソフトキーボードがボトムバーに重ならないよう閉じてからタブを操作する。
@@ -266,20 +271,20 @@ class AppNavigationTest {
 
         // ホームタブへ移ると検索タブの状態が保存され、戻ると復元される。
         selectTab(TopLevelDestination.HOME)
-        waitUntilRoute(AppRoute.Home::class)
+        waitUntilRoute(HomeRoute::class)
         selectTab(TopLevelDestination.SEARCH)
-        waitUntilRoute(AppRoute.Search::class)
+        waitUntilRoute(SearchRoute::class)
         composeTestRule.onNodeWithText(ITEMS.last().title).assertDoesNotExist()
 
         logout()
-        waitUntilRoute(AppRoute.Login::class)
+        waitUntilRoute(LoginRoute::class)
         login()
-        waitUntilRoute(AppRoute.Home::class)
+        waitUntilRoute(HomeRoute::class)
 
         // 再ログイン後はホーム画面から始まり、検索タブの状態も残っていない。
-        assertTrue(navController.currentDestination?.hasRoute(AppRoute.Home::class) == true)
+        assertTrue(navController.currentDestination?.hasRoute(HomeRoute::class) == true)
         selectTab(TopLevelDestination.SEARCH)
-        waitUntilRoute(AppRoute.Search::class)
+        waitUntilRoute(SearchRoute::class)
         composeTestRule.onNodeWithText(ITEMS.last().title).assertIsDisplayed()
     }
 

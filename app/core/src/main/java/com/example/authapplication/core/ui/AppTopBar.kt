@@ -121,7 +121,7 @@ fun AppTopBar(
 @Composable
 private fun AppTopBarPreview() {
     AppTopBar(
-        title = stringResource(R.string.core_destination_home),
+        title = "ホーム",
         isErrorInjectionEnabled = false,
         onErrorInjectionChange = {},
         onExpireTokenClick = {},
