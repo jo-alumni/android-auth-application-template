@@ -35,6 +35,8 @@ Jetpack Compose / Navigation / Hilt / DataStore を使い、マルチモジュ�
 
 各 feature モジュールは `NavGraphBuilder` の拡張関数（例: `homeScreen(navigateDetail = ...)`）を公開し、`:app` の `AppNavHost` から呼び出されます。
 
+画面の Route 定義は各 feature ではなく `:app:core` の `AppRoute`（`sealed interface`）に集約し、どの Route へ遷移するかの決定は `:app` の `AppNavHost` に閉じています。feature が受け取るのは `navigateDetail: (String) -> Unit` のようなコールバックだけなので、feature 同士が互いの Route 型を知る必要はありません。この配置を選んだ理由と feature 分散方式（Now in Android 方式）との比較は [docs/navigation-routes.md](docs/navigation-routes.md) を参照してください。
+
 ViewModel からのデータアクセスは必ず `:domain` の UseCase を経由します。リポジトリの1メソッドを呼ぶだけで1行の委譲になる UseCase（`GetItemUseCase` など）も省略せず、リポジトリインターフェースを直接呼んでよいのは `:domain` の UseCase だけ、という基準に統一しています（[.claude/rules/usecase.md](.claude/rules/usecase.md) 参照）。
 
 認証状態は `DataStore → AuthRepository → IsAuthenticatedUseCase/SetAuthTokenUseCase/ClearAuthTokenUseCase → AppViewModel.authState(StateFlow<AuthUiState>)` という流れで伝播します。認証状態とナビゲーションの結び方は状態駆動に一本化しており、起動時の入り口だけを `AppNavHost` の `startDestination` が決め、起動後に未認証へ変わったときの遷移は `AuthApplicationApp` が `authState` を購読して行います。そのためログアウト操作でもトークン失効でも同じ経路でログイン画面へ戻ります（詳しくは [docs/auth-navigation.md](docs/auth-navigation.md)）。
@@ -93,6 +95,7 @@ ViewModel からのデータアクセスは必ず `:domain` の UseCase を経�
 
 - [.claude/rules/viewmodel-event-handling.md](.claude/rules/viewmodel-event-handling.md) — ViewModel→UIの単発イベントはコールバック引数ではなくSharedFlowで配信する
 - [.claude/rules/compose-navigation.md](.claude/rules/compose-navigation.md) — Navigationファイルのコールバックは `navigateXxx` のように遷移視点で命名する
+- [.claude/rules/navigation-routes.md](.claude/rules/navigation-routes.md) — 画面のRoute定義は `:app:core` の `AppRoute` に集約し、遷移先の決定は `:app` に閉じる
 - [.claude/rules/compose-preview.md](.claude/rules/compose-preview.md) — publicなComposable関数には同名+`Preview`の `@Preview` 関数を必ず用意する
 - [.claude/rules/viewmodel-uistate.md](.claude/rules/viewmodel-uistate.md) — ViewModelが公開する画面状態は `sealed interface XxxUiState`（Loading/Empty/Success/Error）で表現する
 - [.claude/rules/error-handling.md](.claude/rules/error-handling.md) — リポジトリ層の例外は `Flow.catch` で `UiState.Error` に変換し、リトライは購読のやり直しで実現する

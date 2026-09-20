@@ -6,6 +6,11 @@ import kotlinx.serialization.Serializable
  * アプリ全体のナビゲーション先を表す型安全なルート定義。
  * route文字列を組み立てる代わりに、Navigation Composeの型安全ナビゲーション
  * （composable<T> / navController.navigate(T)）でこれらの型を直接使用する。
+ *
+ * ルートはfeatureモジュールに分散させず、この1ファイルへ集約する。画面を追加するときは
+ * ここにエントリを足す。どのルートへ遷移するかを決めるのは `:app` の `AppNavHost` だけで、
+ * featureモジュールは自分の画面のルートしか参照しない
+ * （選定理由とfeature分散方式との比較は docs/navigation-routes.md 参照）。
  */
 sealed interface AppRoute {
     /** 認証前の画面群（[Login]）をまとめるネストされたNavGraphのルート。 */

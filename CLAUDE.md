@@ -44,6 +44,7 @@ Gradleモジュールは以下の依存方向を持つ多層構成（`:app` が�
 - `:app` — `MainActivity` / `App`（`@HiltAndroidApp`）/ `AppViewModel`（認証状態の集約）/ `AppNavHost`（画面統合のNavGraph）・`AppNavigationScaffold`（画面幅に応じて `AppBottomBar` / `AppNavigationRail` / `AppNavigationDrawerSheet` を組み替える骨組み）/ `AppState`・`BottomBarScrollBehavior`（画面の骨組みが使うState Holder）を持つエントリーポイント。
 - `:app:core` — 全feature共通の汎用機能。`AppRoute`（`@Serializable` sealedなNavigation経路定義）、`TopLevelDestination`（ボトムバー/レール/ドロワーの項目）、共通Composable（`AppTopBar`）、テーマを置く。
 - `:app:feature:*`（auth, home, search, favorite, detail） — 画面単位の機能モジュール。各モジュールは `NavGraphBuilder` の拡張関数（例: `homeScreen(navigateDetail = ...)`）を公開し、`:app` の `AppNavHost` から呼び出される。
+  画面のRoute定義は各featureではなく `:app:core` の `AppRoute` に集約し、遷移先の決定（`navController.navigate(AppRoute.Detail(itemId))`）は `:app` に閉じる。featureが受け取るのはコールバックだけで、他featureのRoute型を参照しない（[.claude/rules/navigation-routes.md](.claude/rules/navigation-routes.md) 参照）。集約を選んだ理由とfeature分散方式（Now in Android方式）との比較は [docs/navigation-routes.md](docs/navigation-routes.md) にまとめてある。
 - `:domain` — UseCase・Repositoryインターフェース・モデル（Android非依存のKotlinモジュール）。ViewModelからのデータアクセスは必ずUseCaseを経由し、1行の委譲になるUseCaseも省略しない（[.claude/rules/usecase.md](.claude/rules/usecase.md) 参照）。リポジトリインターフェースを直接呼んでよいのは `:domain` のUseCaseだけ。
 - `:data` — Repository実装（DataStoreベースの `AuthRepositoryImpl` など）とHiltの `DataStoreModule` / `RepositoryModule`。
 
@@ -74,6 +75,7 @@ Edge to Edge（`enableEdgeToEdge()`）で描画するため、WindowInsetsの解
 - 現在定義済みのルール:
   - [.claude/rules/viewmodel-event-handling.md](.claude/rules/viewmodel-event-handling.md) — ViewModel→UIの単発イベントはコールバック引数ではなくSharedFlowで配信する。ただし状態（`authState`）が決める遷移は状態駆動に任せ、イベントを重ねない
   - [.claude/rules/compose-navigation.md](.claude/rules/compose-navigation.md) — Navigationファイルのコールバックは `navigateXxx` のように遷移視点で命名する
+  - [.claude/rules/navigation-routes.md](.claude/rules/navigation-routes.md) — 画面のRoute定義は `:app:core` の `AppRoute` に集約し、遷移先の決定は `:app` に閉じる
   - [.claude/rules/compose-preview.md](.claude/rules/compose-preview.md) — publicなComposable関数には同名+`Preview`の `@Preview` 関数を必ず用意する
   - [.claude/rules/viewmodel-uistate.md](.claude/rules/viewmodel-uistate.md) — ViewModelが公開する画面状態は `sealed interface XxxUiState`(Loading/Empty/Success/Error)で表現する
   - [.claude/rules/error-handling.md](.claude/rules/error-handling.md) — リポジトリ層の例外は `Flow.catch` で `UiState.Error` に変換し、リトライは購読のやり直しで実現する
