@@ -9,14 +9,6 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
 import com.example.authapplication.core.navigation.AppNavTransitions
 import com.example.authapplication.core.ui.LocalSnackBarHostState
-import kotlinx.serialization.Serializable
-
-/**
- * 検索画面のルート。画面を所有するこのモジュールが定義する
- * （配置の方針は docs/navigation-routes.md 参照）。
- */
-@Serializable
-data object SearchRoute
 
 /** 検索画面をNavGraphに登録する。NavControllerは公開せずコールバックで通知する。 */
 fun NavGraphBuilder.searchScreen(navigateDetail: (String) -> Unit) {

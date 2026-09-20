@@ -10,6 +10,7 @@ class AndroidLibraryConventionPlugin : Plugin<Project> {
 
             extensions.configure<LibraryExtension> {
                 configureAndroidCommon(this)
+                configureLint(this)
 
                 // マルチモジュールではリソース名がモジュール横断でマージされるため、
                 // 同名のリソースがあると意図しない上書きが起きる。

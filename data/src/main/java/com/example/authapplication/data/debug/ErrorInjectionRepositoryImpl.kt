@@ -3,11 +3,11 @@ package com.example.authapplication.data.debug
 import com.example.authapplication.domain.debug.ErrorInjectionRepository
 import com.example.authapplication.domain.error.AppDataException
 import com.example.authapplication.domain.error.AppError
-import javax.inject.Inject
-import javax.inject.Singleton
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
+import javax.inject.Inject
+import javax.inject.Singleton
 
 /**
  * エラー注入スイッチをメモリ上に保持する実装。

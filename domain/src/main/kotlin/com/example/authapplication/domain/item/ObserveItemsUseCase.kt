@@ -1,9 +1,9 @@
 package com.example.authapplication.domain.item
 
 import com.example.authapplication.domain.favorite.FavoriteRepository
-import javax.inject.Inject
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
+import javax.inject.Inject
 
 /**
  * 全アイテムと、お気に入りID集合を `combine` して

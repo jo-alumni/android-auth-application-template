@@ -13,8 +13,11 @@ alwaysApply: false
 
 ### 1. Routeは画面を持つfeatureモジュールに置く
 - 画面のRoute（Navigation Composeの型安全ナビゲーションで使う宛先の型）は、
-  その画面を持つfeatureモジュールの `XxxNavigation.kt` の先頭に定義する。
+  その画面を持つfeatureモジュールの `XxxRoute.kt` に定義し、同じモジュールの
+  `XxxNavigation.kt` が `composable<XxxRoute>` で登録する。
   `:app:core` のような共通モジュールに全画面のRouteを集約しない。
+  ファイルを分けるのは、detektの `MatchingDeclarationName` に合わせるため
+  （トップレベルの型がひとつだけのファイルは型名と同じファイル名にする）。
 - 引数を持たない画面は `@Serializable data object`、引数を持つ画面は
   `@Serializable data class` にする（`DetailRoute(val itemId: String)`）。
 - 命名は「画面名 + `Route`」（`HomeRoute` / `DetailRoute`）。
@@ -43,8 +46,8 @@ alwaysApply: false
   （[string-resources.md](string-resources.md)）。
 
 ### 4. 画面を追加する手順
-1. featureモジュールの `XxxNavigation.kt` に `@Serializable` なRouteと
-   `NavGraphBuilder.xxxScreen(navigateYyy = ...)` を書く。
+1. featureモジュールに `@Serializable` なRouteを持つ `XxxRoute.kt` と、
+   `NavGraphBuilder.xxxScreen(navigateYyy = ...)` を持つ `XxxNavigation.kt` を書く。
 2. `:app` の `AppNavHost` から呼び、遷移の実装（`navController.navigate(...)`）を書く。
 3. タブとして表示する画面なら `:app` の `TopLevelDestination` に追加し、
    ラベルの文字列はそのfeatureの `strings.xml` に置く。
@@ -87,17 +90,18 @@ fun NavGraphBuilder.homeScreen(navController: NavHostController) {
 
 ```kotlin
 // Good: Routeは画面を持つfeatureが定義し、遷移の組み立ては :app が行う
-// :app:feature:home/HomeNavigation.kt
+// :app:feature:home/HomeRoute.kt
 @Serializable
 data object HomeRoute
 
+// :app:feature:home/HomeNavigation.kt
 fun NavGraphBuilder.homeScreen(navigateDetail: (String) -> Unit) {
     composable<HomeRoute> {
         HomeScreen(onItemClick = navigateDetail, /* ... */)
     }
 }
 
-// :app:feature:detail/DetailNavigation.kt
+// :app:feature:detail/DetailRoute.kt
 @Serializable
 data class DetailRoute(val itemId: String)
 

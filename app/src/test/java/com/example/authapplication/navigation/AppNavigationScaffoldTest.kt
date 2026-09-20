@@ -5,9 +5,6 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
-import com.example.authapplication.feature.favorite.R as FavoriteR
-import com.example.authapplication.feature.home.R as HomeR
-import com.example.authapplication.feature.search.R as SearchR
 import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
@@ -15,6 +12,9 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
 import org.robolectric.annotation.Config
+import com.example.authapplication.feature.favorite.R as FavoriteR
+import com.example.authapplication.feature.home.R as HomeR
+import com.example.authapplication.feature.search.R as SearchR
 
 /**
  * [AppNavigationScaffold] 単体のUIテスト。
@@ -34,13 +34,13 @@ class AppNavigationScaffoldTest {
 
     private fun setContent(
         navigationType: AppNavigationType,
-        onDestinationSelected: (TopLevelDestination) -> Unit = {},
+        onDestinationClick: (TopLevelDestination) -> Unit = {},
     ) {
         composeTestRule.setContent {
             AppNavigationScaffold(
                 navigationType = navigationType,
                 currentDestination = TopLevelDestination.HOME,
-                onDestinationSelected = onDestinationSelected,
+                onDestinationClick = onDestinationClick,
             ) {
                 Text(text = CONTENT)
             }
@@ -92,7 +92,7 @@ class AppNavigationScaffoldTest {
         var selected: TopLevelDestination? = null
         setContent(
             navigationType = AppNavigationType.BOTTOM_BAR,
-            onDestinationSelected = { selected = it },
+            onDestinationClick = { selected = it },
         )
 
         composeTestRule.onNodeWithText(string(SearchR.string.feature_search_title)).performClick()
@@ -105,7 +105,7 @@ class AppNavigationScaffoldTest {
         var selected: TopLevelDestination? = null
         setContent(
             navigationType = AppNavigationType.NAVIGATION_RAIL,
-            onDestinationSelected = { selected = it },
+            onDestinationClick = { selected = it },
         )
 
         composeTestRule.onNodeWithText(string(SearchR.string.feature_search_title)).performClick()
@@ -119,7 +119,7 @@ class AppNavigationScaffoldTest {
         var selected: TopLevelDestination? = null
         setContent(
             navigationType = AppNavigationType.PERMANENT_DRAWER,
-            onDestinationSelected = { selected = it },
+            onDestinationClick = { selected = it },
         )
 
         composeTestRule.onNodeWithText(string(SearchR.string.feature_search_title)).performClick()

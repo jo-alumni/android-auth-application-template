@@ -5,13 +5,11 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
-import com.example.authapplication.core.R as CoreR
 import com.example.authapplication.domain.error.AppError
 import com.example.authapplication.domain.error.toAppError
 import com.example.authapplication.domain.item.GetItemUseCase
 import com.example.authapplication.domain.item.Item
 import dagger.hilt.android.lifecycle.HiltViewModel
-import javax.inject.Inject
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -22,6 +20,8 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
+import javax.inject.Inject
+import com.example.authapplication.core.R as CoreR
 
 /** 詳細画面の表示状態。 */
 sealed interface DetailUiState {

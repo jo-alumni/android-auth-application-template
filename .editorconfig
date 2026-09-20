@@ -1,0 +1,33 @@
+# ktlint(Spotless経由)とIDEの整形ルールをこの1ファイルに集約する。
+# ktlintはこのファイルを直接読むため、CIとAndroid Studioで同じ結果になる。
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+indent_style = space
+indent_size = 4
+
+[*.{kt,kts}]
+# gradle.properties の kotlin.code.style=official に合わせる。
+# ktlint_official は改行位置まで強く規定し既存コードとの差分が大きいため採用しない。
+ktlint_code_style = intellij_idea
+max_line_length = 120
+ij_kotlin_allow_trailing_comma = true
+ij_kotlin_allow_trailing_comma_on_call_site = true
+# import * は「どこから来た型か」を追えなくするため禁止する。
+ktlint_standard_no-wildcard-imports = enabled
+# @Composable 関数は PascalCase なので、関数名の命名規則は Compose 側の作法に任せる。
+ktlint_function_naming_ignore_when_annotated_with = Composable, Test
+# 引数が1つでも複数行で書く既存のシグネチャを、1行に畳み直させない。
+# 「引数を1行ずつ縦に並べる」書き方をプロジェクト全体で揃えているため。
+ktlint_standard_function-signature = disabled
+ktlint_standard_class-signature = disabled
+
+[*.{yml,yaml,json,xml}]
+indent_size = 2
+
+[*.md]
+trim_trailing_whitespace = false

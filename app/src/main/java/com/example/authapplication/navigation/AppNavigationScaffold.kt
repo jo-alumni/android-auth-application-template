@@ -48,7 +48,7 @@ import androidx.compose.ui.tooling.preview.PreviewScreenSizes
 fun AppNavigationScaffold(
     navigationType: AppNavigationType,
     currentDestination: TopLevelDestination?,
-    onDestinationSelected: (TopLevelDestination) -> Unit,
+    onDestinationClick: (TopLevelDestination) -> Unit,
     modifier: Modifier = Modifier,
     bottomBarModifier: Modifier = Modifier,
     snackbarHostModifier: Modifier = Modifier,
@@ -63,12 +63,12 @@ fun AppNavigationScaffold(
 
             AppNavigationType.NAVIGATION_RAIL -> AppNavigationRail(
                 currentDestination = currentDestination,
-                onDestinationSelected = onDestinationSelected,
+                onDestinationClick = onDestinationClick,
             )
 
             AppNavigationType.PERMANENT_DRAWER -> AppNavigationDrawerSheet(
                 currentDestination = currentDestination,
-                onDestinationSelected = onDestinationSelected,
+                onDestinationClick = onDestinationClick,
             )
         }
 
@@ -89,7 +89,7 @@ fun AppNavigationScaffold(
                 if (navigationType == AppNavigationType.BOTTOM_BAR) {
                     AppBottomBar(
                         currentDestination = currentDestination,
-                        onDestinationSelected = onDestinationSelected,
+                        onDestinationClick = onDestinationClick,
                         modifier = bottomBarModifier,
                     )
                 }
@@ -127,7 +127,7 @@ private fun AppNavigationScaffoldPreview() {
             isTopLevelDestination = true,
         ),
         currentDestination = TopLevelDestination.HOME,
-        onDestinationSelected = {},
+        onDestinationClick = {},
         topBar = { Text(text = "ホーム") },
     ) {
         Text(text = "画面の中身", modifier = Modifier.fillMaxSize())

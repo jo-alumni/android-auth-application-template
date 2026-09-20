@@ -10,7 +10,7 @@
     <string name="core_close">閉じる</string>
     <string name="core_cancel">キャンセル</string>
     <string name="core_retry">再読み込み</string>
-    <string name="core_loading">読み込み中...</string>
+    <string name="core_loading">読み込み中…</string>
 
     <!-- AppTopBar -->
     <string name="core_logout">ログアウト</string>

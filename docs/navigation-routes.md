@@ -16,20 +16,23 @@
 
 | 要素 | 置き場所 | 例 |
 | --- | --- | --- |
-| 画面のRoute | その画面を持つ feature | `HomeRoute`（`:app:feature:home`）/ `DetailRoute(itemId)`（`:app:feature:detail`） |
-| 画面をグラフへ登録する関数 | 同じ feature | `NavGraphBuilder.homeScreen(navigateDetail = ...)` |
+| 画面のRoute | その画面を持つ feature の `XxxRoute.kt` | `HomeRoute`（`:app:feature:home`）/ `DetailRoute(itemId)`（`:app:feature:detail`） |
+| 画面をグラフへ登録する関数 | 同じ feature の `XxxNavigation.kt` | `NavGraphBuilder.homeScreen(navigateDetail = ...)` |
 | 画面固有のNavigation設定 | 同じ feature | `DETAIL_DEEP_LINK_BASE_PATH`、遷移アニメーションの指定、`dialog<...>` での登録 |
 | ネストしたグラフのRoute | `:app` | `AuthGraphRoute` / `MainGraphRoute` |
 | タブ項目の定義 | `:app` | `TopLevelDestination` |
 | グラフの構造と遷移の実装 | `:app` | `AppNavHost` / `AppState` |
 
-Routeは `XxxNavigation.kt` の先頭に、その画面を登録する拡張関数と並べて書く。
+Routeは `XxxRoute.kt` に単独で置き、同じモジュールの `XxxNavigation.kt` がそれを登録する。
+ファイルを分けているのは、detektの `MatchingDeclarationName`（トップレベルの型がひとつだけの
+ファイルは型名と同じファイル名にする）に合わせるため。
 
 ```kotlin
-// :app:feature:home/HomeNavigation.kt
+// :app:feature:home/HomeRoute.kt
 @Serializable
 data object HomeRoute
 
+// :app:feature:home/HomeNavigation.kt
 fun NavGraphBuilder.homeScreen(navigateDetail: (String) -> Unit) {
     composable<HomeRoute> { HomeScreen(onItemClick = navigateDetail, /* ... */) }
 }

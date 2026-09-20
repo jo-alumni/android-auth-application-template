@@ -6,14 +6,6 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.dialog
-import kotlinx.serialization.Serializable
-
-/**
- * 通知画面のルート。画面を所有するこのモジュールが定義する
- * （配置の方針は docs/navigation-routes.md 参照）。
- */
-@Serializable
-data object NotificationRoute
 
 /**
  * 通知画面を全画面ダイアログとしてNavGraphに登録する。NavControllerは公開せずコールバックで通知する。

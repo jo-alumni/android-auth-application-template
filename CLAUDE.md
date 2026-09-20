@@ -35,6 +35,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 # Android Lint
 ./gradlew lint
+
+# フォーマット検査(ktlint)と静的解析(detekt)
+./gradlew spotlessCheck detekt
+
+# フォーマット違反の自動修正
+./gradlew spotlessApply
 ```
 
 ## モジュール構成とアーキテクチャ
@@ -43,12 +49,14 @@ Gradleモジュールは以下の依存方向を持つ多層構成（`:app` が�
 
 - `:app` — `MainActivity` / `App`（`@HiltAndroidApp`）/ `AppViewModel`（認証状態の集約）/ `AppNavHost`（画面統合のNavGraph）・`AuthGraphRoute`/`MainGraphRoute`（ネストしたグラフのRoute）・`TopLevelDestination`（ボトムバー/レール/ドロワーの項目）・`AppNavigationScaffold`（画面幅に応じて `AppBottomBar` / `AppNavigationRail` / `AppNavigationDrawerSheet` を組み替える骨組み）/ `AppState`・`BottomBarScrollBehavior`（画面の骨組みが使うState Holder）を持つエントリーポイント。
 - `:app:core` — 全feature共通の汎用機能。`AppNavTransitions`（画面に依存しない遷移アニメーション）、共通Composable（`AppTopBar`）、テーマを置く。画面のRouteは置かない（後述）。
-- `:app:feature:*`（login, home, search, favorite, detail, notification） — 画面単位の機能モジュール。各モジュールは自分の画面のRoute（`@Serializable` な `HomeRoute` / `DetailRoute` など）と、それをNavGraphに登録する `NavGraphBuilder` の拡張関数（例: `homeScreen(navigateDetail = ...)`）を `XxxNavigation.kt` で公開し、`:app` の `AppNavHost` から呼び出される。
+- `:app:feature:*`（login, home, search, favorite, detail, notification） — 画面単位の機能モジュール。各モジュールは自分の画面のRoute（`@Serializable` な `HomeRoute` / `DetailRoute` など。`XxxRoute.kt` に置く）と、それをNavGraphに登録する `NavGraphBuilder` の拡張関数（例: `homeScreen(navigateDetail = ...)`。`XxxNavigation.kt` に置く）を公開し、`:app` の `AppNavHost` から呼び出される。
   Routeは共通モジュールに集約せず画面を持つfeatureが所有し、「どのRouteへ遷移するか」の決定（`navController.navigate(DetailRoute(itemId))`）だけを `:app` に閉じる。featureが受け取るのは `navigateDetail: (String) -> Unit` のようなコールバックなので、feature同士が互いのRoute型を知ることはない（[.claude/rules/navigation-routes.md](.claude/rules/navigation-routes.md) 参照）。分散を選んだ理由・集約方式との比較・feature間の直接遷移が必要になったときの選択肢は [docs/navigation-routes.md](docs/navigation-routes.md) にまとめてある。
 - `:domain` — UseCase・Repositoryインターフェース・モデル（Android非依存のKotlinモジュール）。ViewModelからのデータアクセスは必ずUseCaseを経由し、1行の委譲になるUseCaseも省略しない（[.claude/rules/usecase.md](.claude/rules/usecase.md) 参照）。リポジトリインターフェースを直接呼んでよいのは `:domain` のUseCaseだけ。
 - `:data` — Repository実装（DataStoreベースの `AuthRepositoryImpl` など）とHiltの `DataStoreModule` / `RepositoryModule`。
 
 テストは `./gradlew test`（JVM）で完結することを基本にする。ViewModelのユニットテストに加え、Screen Composable単体のUIテストもRobolectric上で `src/test` に置いており、実機/エミュレータが必要な計装テスト（`:app` の `androidTest`）は画面をまたぐナビゲーションの確認だけに絞っている。テスト用のFake（`FakeAuthRepository` など）は `:domain` の `testFixtures` に集約し、計装テストでは `@TestInstallIn` で `RepositoryModule` をFakeへ差し替えるため、実DataStoreの状態には依存しない([.claude/rules/testing.md](.claude/rules/testing.md) 参照)。
+
+ktlint(Spotless経由)とdetekt(compose-rules付き)は、各モジュールの `build.gradle.kts` には書かず、ルートの `build.gradle.kts` に `authapplication.quality`(`QualityConventionPlugin`)を1回だけ適用して全プロジェクトへ配る。モジュールを追加したときに静的解析だけ適用漏れになるのを構造的に防ぐため。ktlintの設定はルートの `.editorconfig`、detektの設定は `gradle/detekt/detekt.yml` に集約する。指摘はbaselineで凍結せずその場で直す方針で、Android Lintは警告もエラーとして扱う(`lint.warningsAsErrors`)。CIの構成と、この方針を選んだ理由は [docs/ci.md](docs/ci.md) にまとめてある。
 
 Android Library設定・Compose有効化・Hilt設定・リソース名の接頭辞(`resourcePrefix`)など、モジュール間で重複しがちなGradle設定は `build-logic`（Convention Plugin。`settings.gradle.kts` の `pluginManagement.includeBuild("build-logic")` で取り込まれるcomposite build）に集約している。各モジュールは `id("authapplication.android.library")` のようなConvention Plugin IDを適用し、`namespace` やモジュール固有の依存関係のみを自身の `build.gradle.kts` に残す。
 
@@ -60,7 +68,7 @@ Android Library設定・Compose有効化・Hilt設定・リソース名の接頭
 
 Edge to Edge（`enableEdgeToEdge()`）で描画するため、WindowInsetsの解決場所は「そのinsetsを隠すUIを描いた側」に固定している。`:app` は自分が描く `AppTopBar` 分の上端insetsだけを `Modifier.padding` + `consumeWindowInsets` で解決し、下端（ナビゲーションバー）とIMEは各Screenが `WindowInsets` から自分で解決する。そのためNavigation層に `PaddingValues` を通さない。ボトムバーがスクロールで隠れる本アプリで下端を `:app` 側に寄せない理由、および `LazyColumn` の `contentPadding` を動的に変えるとremeasureでカクつくという知見は [docs/window-insets.md](docs/window-insets.md) にまとめてある([.claude/rules/window-insets.md](.claude/rules/window-insets.md) 参照)。
 
-アプリ全体の骨組みを組む `AuthApplicationApp` は「状態を読んでUIを組む」だけにし、ナビゲーションの判定は State Holder の `AppState`（`rememberAppState()` で生成）へ切り出している。`AppState` は `NavHostController.currentBackStackEntryFlow` を購読して現在地をSnapshot Stateとして保持し、`currentTopLevelDestination` / `navigationType` の判定と、タブ切り替え（`navigateToTopLevelDestination()`）・通知画面・ログアウト後の遷移を担う。そのため `AppBottomBar` は `NavHostController` を受け取らず、選択中のタブと `onDestinationSelected` だけを受け取る。スクロールに追従してボトムバーを隠す処理は `BottomBarScrollBehavior`（`rememberBottomBarScrollBehavior()`）に分けている。どちらもコンポジション無しで状態を確認できるため、`AppStateTest` / `BottomBarScrollBehaviorTest` でユニットテストする（`AppStateTest` は NavController が Context を必要とするため Robolectric 上で実行する）。
+アプリ全体の骨組みを組む `AuthApplicationApp` は「状態を読んでUIを組む」だけにし、ナビゲーションの判定は State Holder の `AppState`（`rememberAppState()` で生成）へ切り出している。`AppState` は `NavHostController.currentBackStackEntryFlow` を購読して現在地をSnapshot Stateとして保持し、`currentTopLevelDestination` / `navigationType` の判定と、タブ切り替え（`navigateToTopLevelDestination()`）・通知画面・ログアウト後の遷移を担う。そのため `AppBottomBar` は `NavHostController` を受け取らず、選択中のタブと `onDestinationClick` だけを受け取る。スクロールに追従してボトムバーを隠す処理は `BottomBarScrollBehavior`（`rememberBottomBarScrollBehavior()`）に分けている。どちらもコンポジション無しで状態を確認できるため、`AppStateTest` / `BottomBarScrollBehaviorTest` でユニットテストする（`AppStateTest` は NavController が Context を必要とするため Robolectric 上で実行する）。
 
 ナビゲーションUIの出し分けは `AppState.windowSizeClass`（`currentWindowAdaptiveInfoV2()` から受け取り、回転・リサイズのたびに `rememberAppState()` が書き戻す）と現在地から `AppNavigationType`（`NONE` / `BOTTOM_BAR` / `NAVIGATION_RAIL` / `PERMANENT_DRAWER`）を決める形にしてある。判定は `AppNavigationType.of()` に閉じ、`AppNavigationScaffold` は受け取った種類を `when` で分岐するだけにする（`else` を書かず、種類の追加漏れをコンパイルエラーで検出できる状態を保つ）。`AppNavigationScaffold` は種類が変わっても画面本体（`content`）の呼び出し位置を変えず、`Row` の中の `Scaffold` に固定する。呼び出し位置が変わるとComposeが部分木を作り直し、画面側の `rememberSaveable` やスクロール位置がリサイズのたびに失われるため。レール/ドロワーが覆う左端のinsetsは、それを描いた `AppNavigationScaffold` が `consumeWindowInsets` で差し引く。
 

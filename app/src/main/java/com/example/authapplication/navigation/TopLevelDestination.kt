@@ -7,11 +7,11 @@ import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.ui.graphics.vector.ImageVector
 import com.example.authapplication.feature.favorite.FavoriteRoute
-import com.example.authapplication.feature.favorite.R as FavoriteR
 import com.example.authapplication.feature.home.HomeRoute
+import com.example.authapplication.feature.search.SearchRoute
+import com.example.authapplication.feature.favorite.R as FavoriteR
 import com.example.authapplication.feature.home.R as HomeR
 import com.example.authapplication.feature.search.R as SearchR
-import com.example.authapplication.feature.search.SearchRoute
 
 /**
  * ボトムバー / レール / ドロワーに表示するトップレベル画面。
