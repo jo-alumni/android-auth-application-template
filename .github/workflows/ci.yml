@@ -34,13 +34,13 @@ jobs:
       # push/pull_requestどちらでもローカルのgit diffで判定するため、
       # 比較対象のコミットが揃うようfetch-depth: 0でフル履歴を取得する
       # （GitHub REST APIは使わないので、追加の権限は不要）。
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
       # ドキュメント・Claude Code設定だけの変更かどうかを判定する。
       # .editorconfig はktlintが直接読む設定ファイルなので除外しない。
-      - uses: dorny/paths-filter@v3
+      - uses: dorny/paths-filter@v4
         id: filter
         with:
           filters: |
@@ -64,14 +64,14 @@ jobs:
       (needs.changes.result == 'failure' || needs.changes.outputs.code == 'true')
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       # 11はモジュールのtoolchain（jvmToolchain(11) / compileOptions）用、
       # 25はGradle Daemon用（gradle/gradle-daemon-jvm.properties で固定されている）。
       # 最後に書いたものがJAVA_HOMEになる。Gradleへの見せ方は gradle.properties の
       # org.gradle.java.installations.fromEnv で指定している。
       - name: Set up JDK
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v6
         with:
           distribution: temurin
           java-version: |
@@ -84,21 +84,21 @@ jobs:
       # packagesを空にしているのは、既定値の `tools` がSDKリポジトリから廃止済みで、
       # sdkmanagerが "Failed to find package 'tools'" で失敗するため。
       - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
+        uses: android-actions/setup-android@v4
         with:
           packages: ''
 
       # Gradleのキャッシュ（~/.gradle/caches, wrapper, configuration cache）を扱う。
       # mainのビルドだけがキャッシュを書き込み、PRは読み取りのみ。
       - name: Set up Gradle
-        uses: gradle/actions/setup-gradle@v4
+        uses: gradle/actions/setup-gradle@v6
 
       - name: Assemble, test, lint
         run: ./gradlew assembleDebug test lint --stacktrace
 
       - name: Upload reports
         if: ${{ !cancelled() }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: build-reports
           path: |
@@ -116,10 +116,10 @@ jobs:
       (needs.changes.result == 'failure' || needs.changes.outputs.code == 'true')
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Set up JDK
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v6
         with:
           distribution: temurin
           java-version: |
@@ -128,12 +128,12 @@ jobs:
 
       # packagesを空にする理由は build ジョブのコメントを参照。
       - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
+        uses: android-actions/setup-android@v4
         with:
           packages: ''
 
       - name: Set up Gradle
-        uses: gradle/actions/setup-gradle@v4
+        uses: gradle/actions/setup-gradle@v6
 
       # spotlessCheckが落ちたら ./gradlew spotlessApply で直せる。
       - name: ktlint (Spotless) / detekt
@@ -141,7 +141,7 @@ jobs:
 
       - name: Upload detekt reports
         if: ${{ !cancelled() }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: detekt-reports
           path: '**/build/reports/detekt/**'
