@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 認証機能付きアプリケーションのナビゲーション構築を学ぶための学習用アプリ（詳細は [docs/app.md](docs/app.md) 参照）。
 
-- 認証状態は DataStore に永続化され、すでに認証済みなら認証画面をスキップしてホーム画面から起動する。
+- 認証状態は DataStore に永続化され、すでに認証済みなら認証画面をスキップしてホーム画面から起動する。認証状態が確定するまではスプラッシュを維持するため、起動時に中間のローディング画面は見えない。
 - ログアウトは認証状態のみ解除し、アプリデータ（DataStore 等）は削除しない。
 - ログアウト操作以外（トークンの失効）で認証が解除された場合も、自動的にログイン画面へ戻る。
 - 認証後はボトムバーで ホーム / 検索 / お気に入り の3画面を行き来でき、各画面から詳細画面へ遷移できる。
@@ -55,7 +55,7 @@ Android Library設定・Compose有効化・Hilt設定・リソース名の接頭
 
 表示文字列は各モジュールの `src/main/res/values/strings.xml` に置き、リソース名は `resourcePrefix`（`:app:core` なら `core_`、`:app:feature:home` なら `feature_home_`）で始める。画面固有の文言はfeatureモジュールが、「戻る」「閉じる」など画面に依存しない文言は `:app:core` が持つ。ViewModelは文言ではなく `@StringRes` のリソースIDを公開し、`stringResource` での解決はUI側で行う([.claude/rules/string-resources.md](.claude/rules/string-resources.md) 参照)。
 
-認証状態は `DataStore → AuthRepository → IsAuthenticatedUseCase/SetAuthTokenUseCase/ClearAuthTokenUseCase → AppViewModel.authState(StateFlow<AuthUiState>)` という流れで伝播する。認証状態とナビゲーションの結び方は**状態駆動に一本化**しており、起動時の入り口だけを `AppNavHost` の `startDestination`（初回の認証状態解決時の値で固定し、以降変化させない）が決め、起動後に未認証へ変わったときの遷移は `AuthApplicationApp` が `authState` を購読して `AppState.navigateLogin()` を呼ぶ。ログアウト操作もトークン失効（外部要因）も「トークンを破棄する」だけで、遷移用の `SharedFlow<AppEvent>` は持たない。選んだ理由、`startDestination` を変化させたときの `NavHost` の挙動、ログアウト時にタブの `saveState` も破棄する必要がある理由は [docs/auth-navigation.md](docs/auth-navigation.md) にまとめてある([.claude/rules/viewmodel-event-handling.md](.claude/rules/viewmodel-event-handling.md) 参照)。
+認証状態は `DataStore → AuthRepository → IsAuthenticatedUseCase/SetAuthTokenUseCase/ClearAuthTokenUseCase → AppViewModel.authState(StateFlow<AuthUiState>)` という流れで伝播する。認証状態とナビゲーションの結び方は**状態駆動に一本化**しており、起動時の入り口だけを `AppNavHost` の `startDestination`（初回の認証状態解決時の値で固定し、以降変化させない）が決め、起動後に未認証へ変わったときの遷移は `AuthApplicationApp` が `authState` を購読して `AppState.navigateLogin()` を呼ぶ。ログアウト操作もトークン失効（外部要因）も「トークンを破棄する」だけで、遷移用の `SharedFlow<AppEvent>` は持たない。起動時は認証状態が確定するまで Core SplashScreen API（`installSplashScreen()` + `setKeepOnScreenCondition`）でスプラッシュを維持し、「スプラッシュ → ローディング → 目的の画面」の2段階のちらつきを出さない。選んだ理由、`startDestination` を変化させたときの `NavHost` の挙動、スプラッシュ維持の条件と打ち切り、ログアウト時にタブの `saveState` も破棄する必要がある理由は [docs/auth-navigation.md](docs/auth-navigation.md) にまとめてある([.claude/rules/viewmodel-event-handling.md](.claude/rules/viewmodel-event-handling.md) 参照)。
 
 Edge to Edge（`enableEdgeToEdge()`）で描画するため、WindowInsetsの解決場所は「そのinsetsを隠すUIを描いた側」に固定している。`:app` は自分が描く `AppTopBar` 分の上端insetsだけを `Modifier.padding` + `consumeWindowInsets` で解決し、下端（ナビゲーションバー）とIMEは各Screenが `WindowInsets` から自分で解決する。そのためNavigation層に `PaddingValues` を通さない。ボトムバーがスクロールで隠れる本アプリで下端を `:app` 側に寄せない理由、および `LazyColumn` の `contentPadding` を動的に変えるとremeasureでカクつくという知見は [docs/window-insets.md](docs/window-insets.md) にまとめてある([.claude/rules/window-insets.md](.claude/rules/window-insets.md) 参照)。
 
