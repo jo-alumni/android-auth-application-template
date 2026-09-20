@@ -53,7 +53,12 @@ jobs:
   build:
     name: build / test / lint
     needs: changes
-    if: needs.changes.outputs.code == 'true'
+    # changesジョブ自体が失敗したときは「判定不能」なので、skipではなくフル実行に
+    # フェイルセーフする。ここをskipにすると、コードは一切ビルドされていないのに
+    # skipped=required checksは合格扱い、という偽陽性のグリーンになってしまう。
+    if: |
+      always() &&
+      (needs.changes.result == 'failure' || needs.changes.outputs.code == 'true')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -102,7 +107,10 @@ jobs:
   static-analysis:
     name: ktlint / detekt
     needs: changes
-    if: needs.changes.outputs.code == 'true'
+    # フェイルセーフの理由は build ジョブのコメントを参照。
+    if: |
+      always() &&
+      (needs.changes.result == 'failure' || needs.changes.outputs.code == 'true')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

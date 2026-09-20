@@ -53,9 +53,14 @@ PRと `main` へのpushで動き、ジョブを「ビルド・テスト・Lint�
   マージできなくなるおそれがあるため。`changes` ジョブに対する `needs:` +
   ジョブ単位の `if` でskipすれば、GitHub Actions上は「skipped」という結果が投稿され、
   required status checksとしては合格扱いになる。
-- 既知のトレードオフとして、`changes` ジョブ自体が失敗した場合は `needs:` の既定動作により
-  `build` / `static-analysis` も実行されずskip扱いになる。「判定不能ならフル実行する」という
-  フェイルセーフは入れていない。
+- `changes` ジョブ自体が失敗した場合(`dorny/paths-filter` のエラー・一時的なネットワーク障害など)は、
+  「判定不能」としてskipではなくフル実行にフェイルセーフする(`if: always() && (needs.changes.result
+  == 'failure' || needs.changes.outputs.code == 'true')`)。`needs:` の既定動作のまま
+  `if: needs.changes.outputs.code == 'true'` だけにすると、判定に失敗したときも
+  `build` / `static-analysis` がskipped(= required status checksとしては合格扱い)になり、
+  実際には一切ビルドもテストもされていないのにPRがグリーンに見える偽陽性を生む。
+  これは「壊れたか規約に反したかをチェック名で切り分ける」という設計そのものと矛盾するため、
+  判定不能な場合は安全側(フル実行)に倒す。
 
 ## 全モジュールへの適用はConvention Pluginで行う
 
