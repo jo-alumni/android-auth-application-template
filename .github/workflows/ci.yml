@@ -56,8 +56,11 @@ jobs:
     # changesジョブ自体が失敗したときは「判定不能」なので、skipではなくフル実行に
     # フェイルセーフする。ここをskipにすると、コードは一切ビルドされていないのに
     # skipped=required checksは合格扱い、という偽陽性のグリーンになってしまう。
+    # always()ではなく!cancelled()にしているのは、concurrencyのcancel-in-progressで
+    # このワークフロー実行自体がキャンセルされた場合はフェイルセーフより優先して
+    # 素直にキャンセルさせるため（always()だとキャンセル後も実行され続けてしまう）。
     if: |
-      always() &&
+      !cancelled() &&
       (needs.changes.result == 'failure' || needs.changes.outputs.code == 'true')
     runs-on: ubuntu-latest
     steps:
@@ -107,9 +110,9 @@ jobs:
   static-analysis:
     name: ktlint / detekt
     needs: changes
-    # フェイルセーフの理由は build ジョブのコメントを参照。
+    # フェイルセーフの理由・!cancelled()を使う理由は build ジョブのコメントを参照。
     if: |
-      always() &&
+      !cancelled() &&
       (needs.changes.result == 'failure' || needs.changes.outputs.code == 'true')
     runs-on: ubuntu-latest
     steps:

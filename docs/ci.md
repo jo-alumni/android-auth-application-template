@@ -54,13 +54,17 @@ PRと `main` へのpushで動き、ジョブを「ビルド・テスト・Lint�
   ジョブ単位の `if` でskipすれば、GitHub Actions上は「skipped」という結果が投稿され、
   required status checksとしては合格扱いになる。
 - `changes` ジョブ自体が失敗した場合(`dorny/paths-filter` のエラー・一時的なネットワーク障害など)は、
-  「判定不能」としてskipではなくフル実行にフェイルセーフする(`if: always() && (needs.changes.result
-  == 'failure' || needs.changes.outputs.code == 'true')`)。`needs:` の既定動作のまま
-  `if: needs.changes.outputs.code == 'true'` だけにすると、判定に失敗したときも
+  「判定不能」としてskipではなくフル実行にフェイルセーフする(`if: !cancelled() &&
+  (needs.changes.result == 'failure' || needs.changes.outputs.code == 'true')`)。`needs:` の
+  既定動作のまま `if: needs.changes.outputs.code == 'true'` だけにすると、判定に失敗したときも
   `build` / `static-analysis` がskipped(= required status checksとしては合格扱い)になり、
   実際には一切ビルドもテストもされていないのにPRがグリーンに見える偽陽性を生む。
   これは「壊れたか規約に反したかをチェック名で切り分ける」という設計そのものと矛盾するため、
   判定不能な場合は安全側(フル実行)に倒す。
+  `always()` ではなく `!cancelled()` を使っているのは、`concurrency.cancel-in-progress` で
+  ワークフロー実行自体がキャンセルされた場合にまでフェイルセーフを優先させないため。
+  `always()` だとキャンセル後もジョブが実行され続けてしまい、supersededになったコミットに
+  対して無駄にCIが回り続ける。
 
 ## 全モジュールへの適用はConvention Pluginで行う
 
