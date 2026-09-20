@@ -24,6 +24,39 @@
 PRと `main` へのpushで動き、ジョブを「ビルド・テスト・Lint」と「静的解析」に分けている。
 失敗したときに、チェック名だけで「壊れたのか」「規約に反したのか」を切り分けられるようにするため。
 
+## ドキュメントのみの変更はCIをskipする
+
+`docs/*.md` や `CLAUDE.md`、`.claude/rules/*.md` のような変更はビルド・テスト・静的解析の
+結果を左右しない。そうした変更でもAndroid SDKのセットアップを含むフルビルドが毎回走るのは
+無駄なので、`changes` ジョブで変更対象を判定し、コードに影響しないと分かれば
+`build` / `static-analysis` をskipする。
+
+- 判定は [dorny/paths-filter](https://github.com/dorny/paths-filter) の `code` フィルタで行う。
+  「`**` にマッチさせたあと、ドキュメント系パスを否定パターンで除外する」形で、
+  除外リスト以外のファイルが1つでも変更されていれば `code` を `true` にする。
+  - `**/*.md` … `README.md` / `CLAUDE.md` / `docs/**/*.md` / `.claude/rules/*.md` を含む
+    全Markdown。
+  - `docs/**` … `docs/` 配下に将来Markdown以外のファイルが増えても拾えるよう保険で明記。
+  - `.claude/**` … Claude Code用のフック・設定・ルールドキュメント一式。Gradleビルドには
+    一切関与しない。
+  - [.editorconfig](../.editorconfig) は**意図的に除外しない**。ktlintが直接読む設定ファイルで
+    `spotlessCheck` の結果を左右するため、コード変更として扱う。
+  - `.github/workflows/ci.yml` 自体の変更も除外しない。ワークフローを変えたときは
+    常にフルで検証する。
+- 粒度はモジュール単位ではなく「コードに影響するか/しないか」の二値にとどめている。
+  `spotlessCheck` / `detekt` は前述の通り `QualityConventionPlugin` が `allprojects` へ
+  一括適用する設計が前提になっており、モジュール単位で対象を絞る細粒度の最適化は
+  この前提と衝突する。ビルド時間の最適化よりも「例外を作らない」設計を優先する。
+- ワークフロー自体を `paths-ignore` で起動させない方式は採っていない。
+  ワークフローが起動しないとチェックが1件も投稿されず、branch protectionで
+  このCIをrequired status checksに設定していた場合、PRが永久にpending扱いになり
+  マージできなくなるおそれがあるため。`changes` ジョブに対する `needs:` +
+  ジョブ単位の `if` でskipすれば、GitHub Actions上は「skipped」という結果が投稿され、
+  required status checksとしては合格扱いになる。
+- 既知のトレードオフとして、`changes` ジョブ自体が失敗した場合は `needs:` の既定動作により
+  `build` / `static-analysis` も実行されずskip扱いになる。「判定不能ならフル実行する」という
+  フェイルセーフは入れていない。
+
 ## 全モジュールへの適用はConvention Pluginで行う
 
 ktlintとdetektは、各モジュールの `build.gradle.kts` には**書かない**。
