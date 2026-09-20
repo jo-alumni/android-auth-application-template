@@ -17,10 +17,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.PreviewFontScale
+import androidx.compose.ui.tooling.preview.PreviewLightDark
+import androidx.compose.ui.tooling.preview.PreviewParameter
+import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.dp
 import com.example.authapplication.core.ui.ErrorContent
 import com.example.authapplication.core.ui.ItemCard
+import com.example.authapplication.core.ui.preview.AppPreview
 import com.example.authapplication.domain.item.Item
 
 @Composable
@@ -83,52 +87,56 @@ fun HomeScreen(
     }
 }
 
-@Preview(showBackground = true)
-@Composable
-private fun HomeScreenPreview() {
-    HomeScreen(
-        uiState = HomeUiState.Success(
-            items = listOf(
-                Item(id = "1", title = "アイテム1", isFavorite = true),
-                Item(id = "2", title = "アイテム2"),
-                Item(id = "3", title = "アイテム3"),
-            ),
-        ),
-        onItemClick = {},
-        onFavoriteClick = {},
-        onRetryClick = {},
+/**
+ * Previewで使うサンプル。3件目だけ極端に長いタイトルにして、
+ * 折り返し・お気に入りボタンの押し出され方・大フォント時の崩れを確認できるようにする。
+ */
+private val previewItems = listOf(
+    Item(id = "1", title = "アイテム1", isFavorite = true),
+    Item(id = "2", title = "アイテム2"),
+    Item(id = "3", title = "とても長いタイトルのアイテムで、1行に収まらず折り返したときの見え方を確認する", isFavorite = true),
+)
+
+/**
+ * [HomeScreen] の全状態を1つのPreview関数で描くための供給元。
+ *
+ * 状態を追加したらここへ足す。Preview関数を状態ごとに増やす方式と違い、
+ * 足し忘れても「その状態のPreviewだけ無い」ではなく一覧から欠けるので気付きやすい。
+ */
+internal class HomeUiStatePreviewParameterProvider : PreviewParameterProvider<HomeUiState> {
+    override val values = sequenceOf(
+        HomeUiState.Loading,
+        HomeUiState.Empty,
+        HomeUiState.Success(items = previewItems),
+        HomeUiState.Error(messageResId = R.string.feature_home_error_item_load),
     )
 }
 
-@Preview(showBackground = true)
+@PreviewLightDark
 @Composable
-private fun HomeScreenLoadingPreview() {
-    HomeScreen(
-        uiState = HomeUiState.Loading,
-        onItemClick = {},
-        onFavoriteClick = {},
-        onRetryClick = {},
-    )
+private fun HomeScreenPreview(
+    @PreviewParameter(HomeUiStatePreviewParameterProvider::class) uiState: HomeUiState,
+) {
+    AppPreview {
+        HomeScreen(
+            uiState = uiState,
+            onItemClick = {},
+            onFavoriteClick = {},
+            onRetryClick = {},
+        )
+    }
 }
 
-@Preview(showBackground = true)
+/** 崩れが出やすいのは文字が増える一覧表示なので、フォントスケールは [HomeUiState.Success] で確認する。 */
+@PreviewFontScale
 @Composable
-private fun HomeScreenEmptyPreview() {
-    HomeScreen(
-        uiState = HomeUiState.Empty,
-        onItemClick = {},
-        onFavoriteClick = {},
-        onRetryClick = {},
-    )
-}
-
-@Preview(showBackground = true)
-@Composable
-private fun HomeScreenErrorPreview() {
-    HomeScreen(
-        uiState = HomeUiState.Error(messageResId = R.string.feature_home_error_item_load),
-        onItemClick = {},
-        onFavoriteClick = {},
-        onRetryClick = {},
-    )
+private fun HomeScreenFontScalePreview() {
+    AppPreview {
+        HomeScreen(
+            uiState = HomeUiState.Success(items = previewItems),
+            onItemClick = {},
+            onFavoriteClick = {},
+            onRetryClick = {},
+        )
+    }
 }

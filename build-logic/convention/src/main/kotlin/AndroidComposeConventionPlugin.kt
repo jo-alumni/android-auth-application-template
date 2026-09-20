@@ -38,6 +38,10 @@ class AndroidComposeConventionPlugin : Plugin<Project> {
                 add("implementation", libs.findLibrary("androidx-compose-material3").get())
                 add("implementation", libs.findLibrary("androidx-navigation-compose").get())
 
+                // @Preview の描画はui-toolingが担うため、Composeを有効にした全モジュールへ配る。
+                // :app だけに入れるとfeatureモジュールのPreviewがAndroid Studioで描画されない。
+                add("debugImplementation", libs.findLibrary("androidx-compose-ui-tooling").get())
+
                 // Composeを有効にしたモジュールでは、実機/エミュレータ無しでUIテストを書けるようにする。
                 add("testImplementation", platform(libs.findLibrary("androidx-compose-bom").get()))
                 add("testImplementation", libs.findLibrary("junit").get())

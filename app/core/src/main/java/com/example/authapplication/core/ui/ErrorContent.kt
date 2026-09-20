@@ -15,9 +15,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.PreviewFontScale
+import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import com.example.authapplication.core.R
+import com.example.authapplication.core.ui.preview.AppPreview
 
 /**
  * データの取得に失敗したときに表示する共通のエラー表示。
@@ -52,8 +54,22 @@ fun ErrorContent(
     }
 }
 
-@Preview(showBackground = true)
+@PreviewLightDark
 @Composable
 private fun ErrorContentPreview() {
-    ErrorContent(message = stringResource(R.string.core_error_unexpected), onRetryClick = {})
+    AppPreview {
+        ErrorContent(message = stringResource(R.string.core_error_unexpected), onRetryClick = {})
+    }
+}
+
+/** エラー文言は画面によって長さが変わるため、長文 × 大フォントで折り返しと中央寄せを確認する。 */
+@PreviewFontScale
+@Composable
+private fun ErrorContentFontScalePreview() {
+    AppPreview {
+        ErrorContent(
+            message = "アイテムの取得に失敗しました。通信環境を確認してから、もう一度お試しください。",
+            onRetryClick = {},
+        )
+    }
 }

@@ -23,9 +23,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.PreviewFontScale
+import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import com.example.authapplication.core.R
+import com.example.authapplication.core.ui.preview.AppPreview
 
 /**
  * ボトムバー配下の画面(ホーム/検索/お気に入り)で共通利用するTopAppBar。
@@ -117,15 +119,33 @@ fun AppTopBar(
     }
 }
 
-@Preview(showBackground = true)
+@PreviewLightDark
 @Composable
 private fun AppTopBarPreview() {
-    AppTopBar(
-        title = stringResource(R.string.core_destination_home),
-        isErrorInjectionEnabled = false,
-        onErrorInjectionChange = {},
-        onExpireTokenClick = {},
-        onNotificationClick = {},
-        onLogoutClick = {},
-    )
+    AppPreview {
+        AppTopBar(
+            title = stringResource(R.string.core_destination_home),
+            isErrorInjectionEnabled = false,
+            onErrorInjectionChange = {},
+            onExpireTokenClick = {},
+            onNotificationClick = {},
+            onLogoutClick = {},
+        )
+    }
+}
+
+/** アイコンと「ログアウト」ボタンが横に並ぶため、大フォントではタイトルが潰れやすい。 */
+@PreviewFontScale
+@Composable
+private fun AppTopBarFontScalePreview() {
+    AppPreview {
+        AppTopBar(
+            title = stringResource(R.string.core_destination_favorite),
+            isErrorInjectionEnabled = true,
+            onErrorInjectionChange = {},
+            onExpireTokenClick = {},
+            onNotificationClick = {},
+            onLogoutClick = {},
+        )
+    }
 }

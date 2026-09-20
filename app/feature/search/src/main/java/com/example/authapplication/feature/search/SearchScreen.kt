@@ -24,10 +24,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.PreviewFontScale
+import androidx.compose.ui.tooling.preview.PreviewLightDark
+import androidx.compose.ui.tooling.preview.PreviewParameter
+import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.dp
 import com.example.authapplication.core.ui.ErrorContent
 import com.example.authapplication.core.ui.ItemCard
+import com.example.authapplication.core.ui.preview.AppPreview
 import com.example.authapplication.domain.item.Item
 
 @Composable
@@ -115,73 +119,60 @@ fun SearchScreen(
     }
 }
 
-@Preview(showBackground = true)
-@Composable
-private fun SearchScreenPreview() {
-    SearchScreen(
-        uiState = SearchUiState.Success(
-            items = listOf(
-                Item(id = "1", title = "アイテム1", isFavorite = true),
-                Item(id = "2", title = "アイテム2"),
-                Item(id = "3", title = "アイテム3"),
-            ),
-        ),
-        query = "",
-        onQueryChange = {},
-        onItemClick = {},
-        onFavoriteClick = {},
-        onRetryClick = {},
+/**
+ * Previewで使うサンプル。3件目だけ極端に長いタイトルにして、
+ * 折り返し・お気に入りボタンの押し出され方・大フォント時の崩れを確認できるようにする。
+ */
+private val previewItems = listOf(
+    Item(id = "1", title = "アイテム1", isFavorite = true),
+    Item(id = "2", title = "アイテム2"),
+    Item(id = "3", title = "とても長いタイトルのアイテムで、1行に収まらず折り返したときの見え方を確認する", isFavorite = true),
+)
+
+/**
+ * [SearchScreen] の全状態を1つのPreview関数で描くための供給元。
+ * 状態を追加したらここへ足す。
+ */
+internal class SearchUiStatePreviewParameterProvider : PreviewParameterProvider<SearchUiState> {
+    override val values = sequenceOf(
+        SearchUiState.Loading,
+        SearchUiState.Empty,
+        SearchUiState.Success(items = previewItems),
+        SearchUiState.NoResults(query = "該当しない長めの検索キーワード"),
+        SearchUiState.Error(messageResId = R.string.feature_search_error_item_load),
     )
 }
 
-@Preview(showBackground = true)
+@PreviewLightDark
 @Composable
-private fun SearchScreenLoadingPreview() {
-    SearchScreen(
-        uiState = SearchUiState.Loading,
-        query = "",
-        onQueryChange = {},
-        onItemClick = {},
-        onFavoriteClick = {},
-        onRetryClick = {},
-    )
+private fun SearchScreenPreview(
+    @PreviewParameter(SearchUiStatePreviewParameterProvider::class) uiState: SearchUiState,
+) {
+    AppPreview {
+        SearchScreen(
+            uiState = uiState,
+            // 絞り込み結果が0件の状態では、検索欄にも同じキーワードが入っているのが実際の見え方。
+            query = (uiState as? SearchUiState.NoResults)?.query.orEmpty(),
+            onQueryChange = {},
+            onItemClick = {},
+            onFavoriteClick = {},
+            onRetryClick = {},
+        )
+    }
 }
 
-@Preview(showBackground = true)
+/** 崩れが出やすいのは検索欄と一覧が縦に並ぶ表示なので、フォントスケールは [SearchUiState.Success] で確認する。 */
+@PreviewFontScale
 @Composable
-private fun SearchScreenEmptyPreview() {
-    SearchScreen(
-        uiState = SearchUiState.Empty,
-        query = "",
-        onQueryChange = {},
-        onItemClick = {},
-        onFavoriteClick = {},
-        onRetryClick = {},
-    )
-}
-
-@Preview(showBackground = true)
-@Composable
-private fun SearchScreenNoResultsPreview() {
-    SearchScreen(
-        uiState = SearchUiState.NoResults(query = "アイテム9"),
-        query = "アイテム9",
-        onQueryChange = {},
-        onItemClick = {},
-        onFavoriteClick = {},
-        onRetryClick = {},
-    )
-}
-
-@Preview(showBackground = true)
-@Composable
-private fun SearchScreenErrorPreview() {
-    SearchScreen(
-        uiState = SearchUiState.Error(messageResId = R.string.feature_search_error_item_load),
-        query = "",
-        onQueryChange = {},
-        onItemClick = {},
-        onFavoriteClick = {},
-        onRetryClick = {},
-    )
+private fun SearchScreenFontScalePreview() {
+    AppPreview {
+        SearchScreen(
+            uiState = SearchUiState.Success(items = previewItems),
+            query = "アイテム",
+            onQueryChange = {},
+            onItemClick = {},
+            onFavoriteClick = {},
+            onRetryClick = {},
+        )
+    }
 }

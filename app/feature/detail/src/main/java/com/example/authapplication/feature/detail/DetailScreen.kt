@@ -11,9 +11,13 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.PreviewFontScale
+import androidx.compose.ui.tooling.preview.PreviewLightDark
+import androidx.compose.ui.tooling.preview.PreviewParameter
+import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.dp
 import com.example.authapplication.core.ui.ErrorContent
+import com.example.authapplication.core.ui.preview.AppPreview
 import com.example.authapplication.domain.item.Item
 import com.example.authapplication.core.R as CoreR
 
@@ -67,28 +71,45 @@ fun DetailScreen(
     }
 }
 
-@Preview(showBackground = true)
-@Composable
-private fun DetailScreenPreview() {
-    DetailScreen(
-        uiState = DetailUiState.Success(item = Item(id = "1", title = "アイテム1")),
-        onBackClick = {},
-        onRetryClick = {},
+/** Previewで使うサンプル。タイトルを長くして、見出しの折り返しと「戻る」ボタンの位置を確認する。 */
+private val previewItem = Item(
+    id = "1",
+    title = "とても長いタイトルのアイテムで、見出しが複数行になったときの見え方を確認する",
+    isFavorite = true,
+)
+
+/**
+ * [DetailScreen] の全状態を1つのPreview関数で描くための供給元。
+ * 状態を追加したらここへ足す。
+ */
+internal class DetailUiStatePreviewParameterProvider : PreviewParameterProvider<DetailUiState> {
+    override val values = sequenceOf(
+        DetailUiState.Loading,
+        DetailUiState.Success(item = previewItem),
+        DetailUiState.NotFound,
+        DetailUiState.Error(messageResId = R.string.feature_detail_error_item_load),
     )
 }
 
-@Preview(showBackground = true)
+@PreviewLightDark
 @Composable
-private fun DetailScreenNotFoundPreview() {
-    DetailScreen(uiState = DetailUiState.NotFound, onBackClick = {}, onRetryClick = {})
+private fun DetailScreenPreview(
+    @PreviewParameter(DetailUiStatePreviewParameterProvider::class) uiState: DetailUiState,
+) {
+    AppPreview {
+        DetailScreen(uiState = uiState, onBackClick = {}, onRetryClick = {})
+    }
 }
 
-@Preview(showBackground = true)
+/** 崩れが出やすいのは見出しが伸びる表示なので、フォントスケールは [DetailUiState.Success] で確認する。 */
+@PreviewFontScale
 @Composable
-private fun DetailScreenErrorPreview() {
-    DetailScreen(
-        uiState = DetailUiState.Error(messageResId = R.string.feature_detail_error_item_load),
-        onBackClick = {},
-        onRetryClick = {},
-    )
+private fun DetailScreenFontScalePreview() {
+    AppPreview {
+        DetailScreen(
+            uiState = DetailUiState.Success(item = previewItem),
+            onBackClick = {},
+            onRetryClick = {},
+        )
+    }
 }

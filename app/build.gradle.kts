@@ -67,5 +67,4 @@ dependencies {
     // @TestInstallIn でリポジトリ実装を差し替えるためのFake群。
     androidTestImplementation(testFixtures(projects.domain))
     kspAndroidTest(libs.findLibrary("hilt-compiler").get())
-    debugImplementation(libs.findLibrary("androidx-compose-ui-tooling").get())
 }
