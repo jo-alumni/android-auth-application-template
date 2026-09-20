@@ -7,6 +7,8 @@ group = "com.example.authapplication.buildlogic"
 dependencies {
     compileOnly(libs.android.gradlePlugin)
     compileOnly(libs.kotlin.gradlePlugin)
+    compileOnly(libs.spotless.gradlePlugin)
+    compileOnly(libs.detekt.gradlePlugin)
 }
 
 gradlePlugin {
@@ -38,6 +40,10 @@ gradlePlugin {
         register("jvmLibrary") {
             id = "authapplication.jvm.library"
             implementationClass = "JvmLibraryConventionPlugin"
+        }
+        register("quality") {
+            id = "authapplication.quality"
+            implementationClass = "QualityConventionPlugin"
         }
     }
 }

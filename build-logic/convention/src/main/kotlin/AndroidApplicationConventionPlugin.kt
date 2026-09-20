@@ -10,6 +10,7 @@ class AndroidApplicationConventionPlugin : Plugin<Project> {
 
             extensions.configure<ApplicationExtension> {
                 configureAndroidCommon(this)
+                configureLint(this)
             }
         }
     }

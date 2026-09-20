@@ -3,13 +3,11 @@ package com.example.authapplication.feature.notification
 import androidx.annotation.StringRes
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.authapplication.core.R as CoreR
 import com.example.authapplication.domain.error.AppError
 import com.example.authapplication.domain.error.toAppError
 import com.example.authapplication.domain.notification.Notification
 import com.example.authapplication.domain.notification.ObserveNotificationsUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
-import javax.inject.Inject
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -20,6 +18,8 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
+import javax.inject.Inject
+import com.example.authapplication.core.R as CoreR
 
 /** 通知画面の表示状態。 */
 sealed interface NotificationUiState {

@@ -25,7 +25,7 @@ import com.example.authapplication.core.navigation.TopLevelDestination
 @Composable
 fun AppNavigationDrawerSheet(
     currentDestination: TopLevelDestination?,
-    onDestinationSelected: (TopLevelDestination) -> Unit,
+    onDestinationClick: (TopLevelDestination) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     PermanentDrawerSheet(modifier = modifier) {
@@ -34,7 +34,7 @@ fun AppNavigationDrawerSheet(
             val label = stringResource(destination.labelResId)
             NavigationDrawerItem(
                 selected = destination == currentDestination,
-                onClick = { onDestinationSelected(destination) },
+                onClick = { onDestinationClick(destination) },
                 icon = { Icon(imageVector = destination.icon, contentDescription = label) },
                 label = { Text(label) },
                 modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding),
@@ -48,6 +48,6 @@ fun AppNavigationDrawerSheet(
 private fun AppNavigationDrawerSheetPreview() {
     AppNavigationDrawerSheet(
         currentDestination = TopLevelDestination.HOME,
-        onDestinationSelected = {},
+        onDestinationClick = {},
     )
 }

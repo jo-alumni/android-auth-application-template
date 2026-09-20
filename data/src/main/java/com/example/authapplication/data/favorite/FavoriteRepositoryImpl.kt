@@ -8,10 +8,10 @@ import com.example.authapplication.data.debug.throwIfErrorInjected
 import com.example.authapplication.domain.debug.ErrorInjectionRepository
 import com.example.authapplication.domain.error.AppError
 import com.example.authapplication.domain.favorite.FavoriteRepository
-import javax.inject.Inject
-import javax.inject.Singleton
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import javax.inject.Inject
+import javax.inject.Singleton
 
 /**
  * Preferences DataStoreにお気に入りIDの集合を永続化する実装。

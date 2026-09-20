@@ -1,0 +1,57 @@
+# detektの設定。buildUponDefaultConfig = true なので、ここには
+# 「既定のルールセットから変えたところ」だけを書く。
+#
+# フォーマット(改行・空白・import順)はktlint(Spotless)が担当するため、
+# detekt-formatting(ktlintのラッパー)は入れず、二重指摘にしない。
+#
+# 指摘をbaselineで凍結する運用は取らない（docs/ci.md 参照）。
+
+complexity:
+  LongMethod:
+    # Composableは宣言的に縦へ伸びるため、既定(60行)では実質機能しない。
+    allowedLines: 120
+  LongParameterList:
+    # Composableは状態とコールバックを引数で受け取るので既定(5/6)では足りない。
+    allowedFunctionParameters: 10
+    allowedConstructorParameters: 10
+  TooManyFunctions:
+    # 1ファイルにScreen + 各状態のContent + Previewが並ぶ構成を許容する。
+    active: false
+
+style:
+  MagicNumber:
+    # dp/spやアニメーションの数値がそのまま指摘になるため、Compose UIでは機能しない。
+    active: false
+  UnusedPrivateFunction:
+    # @Preview関数は誰からも呼ばれないが必須（.claude/rules/compose-preview.md）。
+    ignoreAnnotated: ['Preview', 'PreviewLightDark']
+  ForbiddenComment:
+    # TODO/FIXMEはIssue側で追うため、detektでは落とさない。
+    active: false
+  ReturnCount:
+    active: false
+
+naming:
+  FunctionNaming:
+    # @Composable関数はPascalCaseで書く。
+    ignoreAnnotated: ['Composable']
+
+# Compose向けルールセット（io.nlopez.compose.rules:detekt）。
+# Modifier引数の位置・デフォルト値、Preview関数の命名、CompositionLocalの扱いなどを検査する。
+# ここに書いていないルールはcompose-rules側の既定（ほぼ全て有効）に従う。
+Compose:
+  active: true
+  CompositionLocalAllowlist:
+    # SnackbarHostStateを配るLocalSnackBarHostStateだけを許可する
+    # （.claude/rules/error-handling.md「SnackbarHostはアプリに1つだけ置く」）。
+    allowedCompositionLocals: ['LocalSnackBarHostState']
+  PreviewNaming:
+    # 「対象のComposable名 + Preview」という命名を機械的に強制する
+    # （.claude/rules/compose-preview.md）。compose-rules既定では無効。
+    active: true
+  Material2:
+    # Material3のみを使う。androidx.compose.material(M2)のAPIを弾く。
+    active: true
+  UnstableCollections:
+    # List<Item>をそのままUiStateに載せる構成なので、安定性の指摘は出さない。
+    active: false

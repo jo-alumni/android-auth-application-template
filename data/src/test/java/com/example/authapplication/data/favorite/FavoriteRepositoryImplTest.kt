@@ -4,7 +4,6 @@ import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import com.example.authapplication.domain.debug.FakeErrorInjectionRepository
 import com.example.authapplication.domain.error.AppDataException
 import com.example.authapplication.domain.error.AppError
-import java.io.File
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -16,6 +15,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
+import java.io.File
 
 class FavoriteRepositoryImplTest {
 

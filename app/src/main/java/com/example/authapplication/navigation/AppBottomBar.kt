@@ -14,12 +14,12 @@ import com.example.authapplication.core.navigation.TopLevelDestination
  * ホーム/検索/お気に入りを切り替えるボトムバー。
  *
  * NavControllerは受け取らず、「今どのタブか」([currentDestination]) と
- * 「タブが選ばれた」([onDestinationSelected]) だけを扱う。遷移の実処理は [AppState] が持つ。
+ * 「タブが選ばれた」([onDestinationClick]) だけを扱う。遷移の実処理は [AppState] が持つ。
  */
 @Composable
 fun AppBottomBar(
     currentDestination: TopLevelDestination?,
-    onDestinationSelected: (TopLevelDestination) -> Unit,
+    onDestinationClick: (TopLevelDestination) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     NavigationBar(modifier = modifier) {
@@ -28,7 +28,7 @@ fun AppBottomBar(
             val label = stringResource(destination.labelResId)
             NavigationBarItem(
                 selected = destination == currentDestination,
-                onClick = { onDestinationSelected(destination) },
+                onClick = { onDestinationClick(destination) },
                 icon = { Icon(imageVector = destination.icon, contentDescription = label) },
                 label = { Text(label) },
             )
@@ -41,6 +41,6 @@ fun AppBottomBar(
 private fun AppBottomBarPreview() {
     AppBottomBar(
         currentDestination = TopLevelDestination.HOME,
-        onDestinationSelected = {},
+        onDestinationClick = {},
     )
 }

@@ -16,20 +16,15 @@ import androidx.navigation.testing.TestNavHostController
 import androidx.test.espresso.Espresso
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
-import com.example.authapplication.core.R as CoreR
 import com.example.authapplication.core.navigation.AppRoute
 import com.example.authapplication.core.navigation.TopLevelDestination
 import com.example.authapplication.core.theme.AuthApplicationTheme
 import com.example.authapplication.domain.auth.FakeAuthRepository
 import com.example.authapplication.domain.item.FakeItemRepository
 import com.example.authapplication.domain.item.Item
-import com.example.authapplication.feature.login.R as LoginR
-import com.example.authapplication.feature.search.R as SearchR
 import com.example.authapplication.navigation.rememberAppState
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
-import javax.inject.Inject
-import kotlin.reflect.KClass
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
@@ -37,6 +32,11 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import javax.inject.Inject
+import kotlin.reflect.KClass
+import com.example.authapplication.core.R as CoreR
+import com.example.authapplication.feature.login.R as LoginR
+import com.example.authapplication.feature.search.R as SearchR
 
 /**
  * [AuthApplicationApp] をHilt統合計装テストとして起動し、
@@ -48,6 +48,10 @@ import org.junit.runner.RunWith
  * Fakeに差し替わっているため、実DataStore（端末上の実ファイル）には触れない。
  * 起動時の認証状態やアイテム一覧は各テストがFakeへ直接仕込む。
  */
+// バックスタック全体を覗く手段は NavController.currentBackStack しかなく、
+// これは @RestrictTo(LIBRARY_GROUP) のAPI。「Loginが残っていないこと」を確かめるには
+// 現在地(currentDestination)だけでは足りないため、テスト限定の利用として抑制する。
+@Suppress("RestrictedApi")
 @HiltAndroidTest
 @RunWith(AndroidJUnit4::class)
 class AppNavigationTest {

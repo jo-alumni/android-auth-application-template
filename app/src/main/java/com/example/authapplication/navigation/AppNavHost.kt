@@ -6,10 +6,10 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.navigation
 import com.example.authapplication.core.navigation.AppRoute
-import com.example.authapplication.feature.login.loginScreen
 import com.example.authapplication.feature.detail.detailScreen
 import com.example.authapplication.feature.favorite.favoriteScreen
 import com.example.authapplication.feature.home.homeScreen
+import com.example.authapplication.feature.login.loginScreen
 import com.example.authapplication.feature.notification.notificationScreen
 import com.example.authapplication.feature.search.searchScreen
 

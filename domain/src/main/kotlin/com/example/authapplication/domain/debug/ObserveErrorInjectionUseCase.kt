@@ -1,7 +1,7 @@
 package com.example.authapplication.domain.debug
 
-import javax.inject.Inject
 import kotlinx.coroutines.flow.Flow
+import javax.inject.Inject
 
 /** エラー注入が有効かどうかを監視するユースケース。 */
 class ObserveErrorInjectionUseCase @Inject constructor(
