@@ -23,7 +23,7 @@ import com.example.authapplication.core.navigation.TopLevelDestination
 @Composable
 fun AppNavigationRail(
     currentDestination: TopLevelDestination?,
-    onDestinationSelected: (TopLevelDestination) -> Unit,
+    onDestinationClick: (TopLevelDestination) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     NavigationRail(modifier = modifier) {
@@ -32,7 +32,7 @@ fun AppNavigationRail(
             val label = stringResource(destination.labelResId)
             NavigationRailItem(
                 selected = destination == currentDestination,
-                onClick = { onDestinationSelected(destination) },
+                onClick = { onDestinationClick(destination) },
                 icon = { Icon(imageVector = destination.icon, contentDescription = label) },
                 label = { Text(label) },
             )
@@ -45,6 +45,6 @@ fun AppNavigationRail(
 private fun AppNavigationRailPreview() {
     AppNavigationRail(
         currentDestination = TopLevelDestination.HOME,
-        onDestinationSelected = {},
+        onDestinationClick = {},
     )
 }

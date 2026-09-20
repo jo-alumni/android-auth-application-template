@@ -1,0 +1,95 @@
+# PRとmainへのpushで、ビルド・テスト・静的解析を回す。
+#
+# ジョブを2つに分けているのは、失敗したときに「壊れたのか」「規約に反したのか」を
+# チェック名だけで切り分けられるようにするため。
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# 同じブランチに続けてpushしたら、古い実行は打ち切る。
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: build / test / lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # 11はモジュールのtoolchain（jvmToolchain(11) / compileOptions）用、
+      # 25はGradle Daemon用（gradle/gradle-daemon-jvm.properties で固定されている）。
+      # 最後に書いたものがJAVA_HOMEになる。Gradleへの見せ方は gradle.properties の
+      # org.gradle.java.installations.fromEnv で指定している。
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: |
+            11
+            25
+
+      # ANDROID_HOME / ANDROID_SDK_ROOT を設定し、SDKのライセンスに同意させる。
+      # local.properties はコミットしていないので、AGPはこの環境変数からSDKを見つける
+      # （不足しているplatform/build-toolsはAGPが自動でダウンロードする）。
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      # Gradleのキャッシュ（~/.gradle/caches, wrapper, configuration cache）を扱う。
+      # mainのビルドだけがキャッシュを書き込み、PRは読み取りのみ。
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Assemble, test, lint
+        run: ./gradlew assembleDebug test lint --stacktrace
+
+      - name: Upload reports
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-reports
+          path: |
+            **/build/reports/tests/**
+            **/build/reports/lint-results-*.html
+          retention-days: 7
+          if-no-files-found: ignore
+
+  static-analysis:
+    name: ktlint / detekt
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: |
+            11
+            25
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      # spotlessCheckが落ちたら ./gradlew spotlessApply で直せる。
+      - name: ktlint (Spotless) / detekt
+        run: ./gradlew spotlessCheck detekt --stacktrace
+
+      - name: Upload detekt reports
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: detekt-reports
+          path: '**/build/reports/detekt/**'
+          retention-days: 7
+          if-no-files-found: ignore

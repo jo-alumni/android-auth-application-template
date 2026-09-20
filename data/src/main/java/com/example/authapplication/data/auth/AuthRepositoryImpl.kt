@@ -4,10 +4,10 @@ import androidx.datastore.core.DataStore
 import com.example.authapplication.data.auth.proto.AuthPrefs
 import com.example.authapplication.data.auth.proto.copy
 import com.example.authapplication.domain.auth.AuthRepository
-import javax.inject.Inject
-import javax.inject.Singleton
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import javax.inject.Inject
+import javax.inject.Singleton
 
 /** Tink AEAD暗号化されたProto DataStoreで認証トークンを永続化する実装。 */
 @Singleton

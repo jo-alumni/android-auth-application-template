@@ -81,11 +81,30 @@ ViewModel からのデータアクセスは必ず `:domain` の UseCase を経�
 ./gradlew connectedAndroidTest
 ```
 
-### Lint
+### Lint / 静的解析
 
 ```bash
+# Android Lint
 ./gradlew lint
+
+# フォーマット検査(ktlint)と静的解析(detekt + compose-rules)
+./gradlew spotlessCheck detekt
+
+# フォーマット違反の自動修正
+./gradlew spotlessApply
 ```
+
+## CI
+
+PR と `main` への push で GitHub Actions がビルド・テスト・静的解析を実行します
+（[.github/workflows/ci.yml](.github/workflows/ci.yml)）。
+
+- `build / test / lint` — `./gradlew assembleDebug test lint`
+- `ktlint / detekt` — `./gradlew spotlessCheck detekt`
+
+ktlint と detekt はルートの `build.gradle.kts` に Convention Plugin
+（`authapplication.quality`）を1回適用するだけで全モジュールへ適用されます。
+指摘は baseline で凍結せずその場で修正する方針です。詳しくは [docs/ci.md](docs/ci.md) を参照してください。
 
 ## 開発時の規約
 

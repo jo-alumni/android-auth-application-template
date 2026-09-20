@@ -33,7 +33,8 @@ enum class AppNavigationType {
          * 現在地とウィンドウ幅から、表示するナビゲーションUIの種類を決める。
          *
          * @param windowSizeClass 現在のウィンドウサイズ。`currentWindowAdaptiveInfoV2()` から得る。
-         * @param isTopLevelDestination 現在地がタブ（[com.example.authapplication.core.navigation.TopLevelDestination]）の画面かどうか。
+         * @param isTopLevelDestination 現在地がタブ
+         *   （[com.example.authapplication.core.navigation.TopLevelDestination]）の画面かどうか。
          */
         fun of(windowSizeClass: WindowSizeClass, isTopLevelDestination: Boolean): AppNavigationType = when {
             !isTopLevelDestination -> NONE

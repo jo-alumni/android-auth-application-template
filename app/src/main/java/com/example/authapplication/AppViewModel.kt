@@ -7,12 +7,12 @@ import com.example.authapplication.domain.auth.IsAuthenticatedUseCase
 import com.example.authapplication.domain.debug.ObserveErrorInjectionUseCase
 import com.example.authapplication.domain.debug.SetErrorInjectionUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
-import javax.inject.Inject
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 /** アプリ全体の認証状態。起動直後は永続化層の読み込みが終わるまで [Loading]。 */
 sealed interface AuthUiState {

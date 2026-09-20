@@ -30,11 +30,11 @@ import com.example.authapplication.navigation.AppState
 import com.example.authapplication.navigation.BottomBarScrollBehavior
 import com.example.authapplication.navigation.rememberAppState
 import com.example.authapplication.navigation.rememberBottomBarScrollBehavior
-import kotlin.math.roundToInt
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.dropWhile
 import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.map
+import kotlin.math.roundToInt
 
 /**
  * アプリ全体の骨組み（TopAppBar / ナビゲーションUI / NavHost）を組み立てるComposable。
@@ -51,6 +51,7 @@ import kotlinx.coroutines.flow.map
  */
 @Composable
 fun AuthApplicationApp(
+    modifier: Modifier = Modifier,
     appViewModel: AppViewModel = hiltViewModel(),
     appState: AppState = rememberAppState(),
     bottomBarScrollBehavior: BottomBarScrollBehavior = rememberBottomBarScrollBehavior(),
@@ -62,7 +63,7 @@ fun AuthApplicationApp(
         // スプラッシュの打ち切り時間を過ぎてもDataStoreの読み込みが終わらなかったときだけ、
         // 操作不能に見えないようここが表に出る。
         AuthUiState.Loading -> {
-            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 CircularProgressIndicator()
             }
         }
@@ -104,12 +105,12 @@ fun AuthApplicationApp(
                 AppNavigationScaffold(
                     navigationType = navigationType,
                     currentDestination = currentTopLevelDestination,
-                    onDestinationSelected = appState::navigateToTopLevelDestination,
+                    onDestinationClick = appState::navigateToTopLevelDestination,
                     // スクロールに追従して隠すのはボトムバーだけなので、レール/ドロワーのときは繋がない。
                     modifier = if (navigationType == AppNavigationType.BOTTOM_BAR) {
-                        Modifier.nestedScroll(bottomBarScrollBehavior.nestedScrollConnection)
+                        modifier.nestedScroll(bottomBarScrollBehavior.nestedScrollConnection)
                     } else {
-                        Modifier
+                        modifier
                     },
                     bottomBarModifier = Modifier
                         .onSizeChanged { bottomBarScrollBehavior.onBarHeightChanged(it.height.toFloat()) }

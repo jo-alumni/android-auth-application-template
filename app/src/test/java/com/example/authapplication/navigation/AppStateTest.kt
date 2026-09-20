@@ -33,6 +33,9 @@ import org.robolectric.annotation.Config
  * [Config] でApplicationを差し替えているのは、マニフェストの `App`（`@HiltAndroidApp`）を
  * 起動するとHiltの初期化が必要になり、ナビゲーションの検証と関係ない準備が増えるため。
  */
+// バックスタックの中身を確かめる手段は NavController.currentBackStack しかなく、
+// これは @RestrictTo(LIBRARY_GROUP) のAPI。テスト限定の利用として抑制する。
+@Suppress("RestrictedApi")
 @OptIn(ExperimentalCoroutinesApi::class)
 @RunWith(RobolectricTestRunner::class)
 @Config(application = Application::class)

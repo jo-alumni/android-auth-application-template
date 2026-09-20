@@ -5,10 +5,10 @@ import com.example.authapplication.domain.debug.ErrorInjectionRepository
 import com.example.authapplication.domain.error.AppError
 import com.example.authapplication.domain.item.Item
 import com.example.authapplication.domain.item.ItemRepository
-import javax.inject.Inject
-import javax.inject.Singleton
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
+import javax.inject.Inject
+import javax.inject.Singleton
 
 /** メモリ上のモックデータを返す実装（学習用の最小構成）。 */
 @Singleton
