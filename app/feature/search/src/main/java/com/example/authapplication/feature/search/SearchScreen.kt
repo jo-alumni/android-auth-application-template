@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
@@ -23,6 +24,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.tooling.preview.Preview
@@ -44,6 +46,8 @@ fun SearchScreen(
     // ホストの状態を外から渡せるようにする(Previewでは既定値で足りる)。
     snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
 ) {
+    val keyboardController = LocalSoftwareKeyboardController.current
+
     Box(modifier = modifier.fillMaxSize()) {
         Column(
             modifier = Modifier
@@ -58,8 +62,10 @@ fun SearchScreen(
                 onValueChange = onQueryChange,
                 label = { Text(stringResource(R.string.feature_search_query_label)) },
                 singleLine = true,
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                // 絞り込みは入力のたびに走るので、検索キーではキーボードを畳んで結果を見せるだけにする。
+                keyboardActions = KeyboardActions(onSearch = { keyboardController?.hide() }),
                 modifier = Modifier.fillMaxWidth(),
-                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search)
             )
             when (uiState) {
                 SearchUiState.Loading -> {
