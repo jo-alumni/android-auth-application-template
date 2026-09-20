@@ -41,6 +41,72 @@ AppNavHost(
 )
 ```
 
+## 起動時はスプラッシュで認証状態の確定を待つ
+
+`startDestination` は「初回の認証状態が解決したとき」の値で決まるため、それまでの間
+`AuthApplicationApp` は `AuthUiState.Loading` にとどまる。ここで画面を出してしまうと、
+起動のたびに「システムのスプラッシュ → 白背景＋ローディング → ホーム/ログイン」という
+2段階のちらつきになる。
+
+そこで `androidx.core:core-splashscreen` の `setKeepOnScreenCondition` を使い、
+認証状態が確定するまでスプラッシュを維持する。
+
+```kotlin
+// MainActivity.kt
+private val appViewModel: AppViewModel by viewModels()
+
+override fun onCreate(savedInstanceState: Bundle?) {
+    val splashScreen = installSplashScreen() // setContent より前に呼ぶ
+    super.onCreate(savedInstanceState)
+    enableEdgeToEdge()
+
+    val splashScreenTimeoutAt = SystemClock.uptimeMillis() + SPLASH_SCREEN_TIMEOUT_MILLIS
+    splashScreen.setKeepOnScreenCondition {
+        appViewModel.authState.value is AuthUiState.Loading &&
+            SystemClock.uptimeMillis() < splashScreenTimeoutAt
+    }
+
+    setContent { AuthApplicationTheme { AuthApplicationApp(appViewModel = appViewModel) } }
+}
+```
+
+### テーマ
+
+`MainActivity` には `Theme.SplashScreen` を継承した `Theme.AuthApplication.Splash` を指定し、
+その `postSplashScreenTheme` に元の `Theme.AuthApplication` を指定する。
+`installSplashScreen()` がスプラッシュを畳むときに `setTheme()` でこちらへ戻すので、
+Activityの最終的なテーマは変わらない。
+`windowSplashScreenBackground` は `Theme.AuthApplication` のウィンドウ背景（白）に合わせ、
+スプラッシュから画面本体へ切り替わるときに背景色が動かないようにしている。
+
+### `setContent` はスプラッシュの裏で先に済ませる
+
+`setKeepOnScreenCondition` は `android.R.id.content` に `OnPreDrawListener` を足して
+**描画だけ**を止める。測定・レイアウト・コンポジションは進むので、`setContent` は先に呼んでおく。
+
+これは「ちらつかないように」以上の意味を持つ。`AppViewModel.authState` は
+`SharingStarted.WhileSubscribed(5_000)` なので、**購読されている間だけ**上流（DataStore）を読む。
+購読を始めるのはコンポジション側の `collectAsStateWithLifecycle` なので、
+`setContent` を後回しにすると `authState.value` は `Loading` のまま動かず、スプラッシュも解けない。
+
+### タイムアウトが「条件の中の時刻比較」で成立する理由
+
+`OnPreDrawListener` が `false` を返すと `ViewRootImpl` は描画を飛ばして
+トラバースをスケジュールし直す。つまりこの条件は**フレームごとに評価され直す**。
+そのため `authState` が変化しなくても、時刻の比較だけで条件を外すことができる。
+
+打ち切りを入れているのは、DataStoreのファイルが壊れている等で読み込みが終わらないときに
+スプラッシュのまま操作不能になるのを避けるため。1秒を過ぎたら `AuthApplicationApp` の
+`Loading`（`CircularProgressIndicator`）へ進む。通常の起動でこの表示が見えることはない。
+
+### `AppViewModel` の取得口が2つあることについて
+
+`MainActivity` の `by viewModels()` と `AuthApplicationApp` の既定引数 `hiltViewModel()` は、
+ViewModelStoreOwner（このActivity）もキー（既定のクラス名）も同じなので**同じインスタンス**を返す。
+とはいえ読み手にそれを推測させたくないので、`MainActivity` からは明示的に引数で渡している。
+既定引数の `hiltViewModel()` は、`MainActivity` を介さず `AuthApplicationApp` を直接起動する
+計装テスト（`AppNavigationTest`）のために残してある。
+
 ## 以前の実装の何が問題だったか
 
 ログアウト時に2つの経路が同時に働いていた。

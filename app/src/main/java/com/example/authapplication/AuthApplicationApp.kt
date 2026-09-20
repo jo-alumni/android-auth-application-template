@@ -58,6 +58,9 @@ fun AuthApplicationApp(
     val authState by appViewModel.authState.collectAsStateWithLifecycle()
     val isErrorInjectionEnabled by appViewModel.isErrorInjectionEnabled.collectAsStateWithLifecycle()
     when (val state = authState) {
+        // 通常の起動ではこの状態はスプラッシュに隠れて見えない（MainActivity参照）。
+        // スプラッシュの打ち切り時間を過ぎてもDataStoreの読み込みが終わらなかったときだけ、
+        // 操作不能に見えないようここが表に出る。
         AuthUiState.Loading -> {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 CircularProgressIndicator()

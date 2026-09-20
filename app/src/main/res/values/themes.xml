@@ -2,4 +2,17 @@
 <resources>
 
     <style name="Theme.AuthApplication" parent="android:Theme.Material.Light.NoActionBar" />
+
+    <!--
+      起動用のテーマ。AndroidManifestのMainActivityにはこちらを指定する。
+      installSplashScreen() が postSplashScreenTheme を setTheme() で適用するため、
+      スプラッシュが消えた後のActivityのテーマは Theme.AuthApplication になる。
+      背景色は Theme.AuthApplication のウィンドウ背景（白）に合わせ、
+      スプラッシュから画面本体へ切り替わるときに色が変わらないようにしている。
+    -->
+    <style name="Theme.AuthApplication.Splash" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">@color/white</item>
+        <item name="windowSplashScreenAnimatedIcon">@mipmap/ic_launcher</item>
+        <item name="postSplashScreenTheme">@style/Theme.AuthApplication</item>
+    </style>
 </resources>
