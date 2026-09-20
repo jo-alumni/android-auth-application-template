@@ -2,6 +2,13 @@
 #
 # ジョブを2つに分けているのは、失敗したときに「壊れたのか」「規約に反したのか」を
 # チェック名だけで切り分けられるようにするため。
+#
+# ドキュメントのみの変更（docs/ や *.md、.claude/ 配下）ではビルド・静的解析ジョブを
+# skipする（`changes` ジョブ参照）。トリガー自体を paths-ignore で止めない理由は、
+# ワークフローが起動しないとチェックが1件も投稿されず、branch protectionで
+# required status checksに設定していた場合にPRが永久にpending扱いになるため。
+# ジョブ単位でskipすれば「skipped」として結果が投稿され、required checksとしては
+# 合格扱いになる。
 name: CI
 
 on:
@@ -18,8 +25,43 @@ permissions:
   contents: read
 
 jobs:
+  changes:
+    name: detect changes
+    runs-on: ubuntu-latest
+    outputs:
+      code: ${{ steps.filter.outputs.code }}
+    steps:
+      # push/pull_requestどちらでもローカルのgit diffで判定するため、
+      # 比較対象のコミットが揃うようfetch-depth: 0でフル履歴を取得する
+      # （GitHub REST APIは使わないので、追加の権限は不要）。
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # ドキュメント・Claude Code設定だけの変更かどうかを判定する。
+      # .editorconfig はktlintが直接読む設定ファイルなので除外しない。
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            code:
+              - '**'
+              - '!**/*.md'
+              - '!docs/**'
+              - '!.claude/**'
+
   build:
     name: build / test / lint
+    needs: changes
+    # changesジョブ自体が失敗したときは「判定不能」なので、skipではなくフル実行に
+    # フェイルセーフする。ここをskipにすると、コードは一切ビルドされていないのに
+    # skipped=required checksは合格扱い、という偽陽性のグリーンになってしまう。
+    # always()ではなく!cancelled()にしているのは、concurrencyのcancel-in-progressで
+    # このワークフロー実行自体がキャンセルされた場合はフェイルセーフより優先して
+    # 素直にキャンセルさせるため（always()だとキャンセル後も実行され続けてしまう）。
+    if: |
+      !cancelled() &&
+      (needs.changes.result == 'failure' || needs.changes.outputs.code == 'true')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -67,6 +109,11 @@ jobs:
 
   static-analysis:
     name: ktlint / detekt
+    needs: changes
+    # フェイルセーフの理由・!cancelled()を使う理由は build ジョブのコメントを参照。
+    if: |
+      !cancelled() &&
+      (needs.changes.result == 'failure' || needs.changes.outputs.code == 'true')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

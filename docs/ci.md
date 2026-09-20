@@ -24,6 +24,48 @@
 PRと `main` へのpushで動き、ジョブを「ビルド・テスト・Lint」と「静的解析」に分けている。
 失敗したときに、チェック名だけで「壊れたのか」「規約に反したのか」を切り分けられるようにするため。
 
+## ドキュメントのみの変更はCIをskipする
+
+`docs/*.md` や `CLAUDE.md`、`.claude/rules/*.md` のような変更はビルド・テスト・静的解析の
+結果を左右しない。そうした変更でもAndroid SDKのセットアップを含むフルビルドが毎回走るのは
+無駄なので、`changes` ジョブで変更対象を判定し、コードに影響しないと分かれば
+`build` / `static-analysis` をskipする。
+
+- 判定は [dorny/paths-filter](https://github.com/dorny/paths-filter) の `code` フィルタで行う。
+  「`**` にマッチさせたあと、ドキュメント系パスを否定パターンで除外する」形で、
+  除外リスト以外のファイルが1つでも変更されていれば `code` を `true` にする。
+  - `**/*.md` … `README.md` / `CLAUDE.md` / `docs/**/*.md` / `.claude/rules/*.md` を含む
+    全Markdown。
+  - `docs/**` … `docs/` 配下に将来Markdown以外のファイルが増えても拾えるよう保険で明記。
+  - `.claude/**` … Claude Code用のフック・設定・ルールドキュメント一式。Gradleビルドには
+    一切関与しない。
+  - [.editorconfig](../.editorconfig) は**意図的に除外しない**。ktlintが直接読む設定ファイルで
+    `spotlessCheck` の結果を左右するため、コード変更として扱う。
+  - `.github/workflows/ci.yml` 自体の変更も除外しない。ワークフローを変えたときは
+    常にフルで検証する。
+- 粒度はモジュール単位ではなく「コードに影響するか/しないか」の二値にとどめている。
+  `spotlessCheck` / `detekt` は前述の通り `QualityConventionPlugin` が `allprojects` へ
+  一括適用する設計が前提になっており、モジュール単位で対象を絞る細粒度の最適化は
+  この前提と衝突する。ビルド時間の最適化よりも「例外を作らない」設計を優先する。
+- ワークフロー自体を `paths-ignore` で起動させない方式は採っていない。
+  ワークフローが起動しないとチェックが1件も投稿されず、branch protectionで
+  このCIをrequired status checksに設定していた場合、PRが永久にpending扱いになり
+  マージできなくなるおそれがあるため。`changes` ジョブに対する `needs:` +
+  ジョブ単位の `if` でskipすれば、GitHub Actions上は「skipped」という結果が投稿され、
+  required status checksとしては合格扱いになる。
+- `changes` ジョブ自体が失敗した場合(`dorny/paths-filter` のエラー・一時的なネットワーク障害など)は、
+  「判定不能」としてskipではなくフル実行にフェイルセーフする(`if: !cancelled() &&
+  (needs.changes.result == 'failure' || needs.changes.outputs.code == 'true')`)。`needs:` の
+  既定動作のまま `if: needs.changes.outputs.code == 'true'` だけにすると、判定に失敗したときも
+  `build` / `static-analysis` がskipped(= required status checksとしては合格扱い)になり、
+  実際には一切ビルドもテストもされていないのにPRがグリーンに見える偽陽性を生む。
+  これは「壊れたか規約に反したかをチェック名で切り分ける」という設計そのものと矛盾するため、
+  判定不能な場合は安全側(フル実行)に倒す。
+  `always()` ではなく `!cancelled()` を使っているのは、`concurrency.cancel-in-progress` で
+  ワークフロー実行自体がキャンセルされた場合にまでフェイルセーフを優先させないため。
+  `always()` だとキャンセル後もジョブが実行され続けてしまい、supersededになったコミットに
+  対して無駄にCIが回り続ける。
+
 ## 全モジュールへの適用はConvention Pluginで行う
 
 ktlintとdetektは、各モジュールの `build.gradle.kts` には**書かない**。
