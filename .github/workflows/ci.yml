@@ -40,7 +40,7 @@ jobs:
 
       # ドキュメント・Claude Code設定だけの変更かどうかを判定する。
       # .editorconfig はktlintが直接読む設定ファイルなので除外しない。
-      - uses: dorny/paths-filter@v3
+      - uses: dorny/paths-filter@v4
         id: filter
         with:
           filters: |
