@@ -11,6 +11,7 @@
 | 検査 | コマンド | CIのジョブ | 担当範囲 |
 | --- | --- | --- | --- |
 | ビルド | `./gradlew assembleDebug` | `build / test / lint` | コンパイルが通ること |
+| リリースビルド(R8) | `./gradlew assembleRelease` | `build / test / lint` | R8のminify/keepルール構成が壊れていないこと（詳細は [docs/release-build.md](release-build.md)） |
 | ユニットテスト（Robolectric含む） | `./gradlew test` | `build / test / lint` | ViewModel・UseCase・Screen Composable |
 | Android Lint | `./gradlew lint` | `build / test / lint` | Android固有の問題（未使用リソース、リソース名の接頭辞など） |
 | フォーマット（ktlint） | `./gradlew spotlessCheck` | `ktlint / detekt` | 改行・空白・import順・トレイリングカンマ |
