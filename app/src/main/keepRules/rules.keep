@@ -10,3 +10,35 @@
 #-keepclassmembers class fqcn.of.javascript.interface.for.webview {
 #   public *;
 #}
+
+# --- Protobuf Lite: AuthPrefs (data/src/main/proto/auth_prefs.proto) の生成クラス ---
+# GeneratedMessageLite は newMessageInfo() が生成する情報文字列に埋め込まれた
+# フィールド名(例: "authToken_")をもとに、リフレクションで実フィールドを解決する。
+# R8のobfuscationでフィールド名がリネームされるとこの解決が NoSuchFieldException で失敗し、
+# AuthPrefsSerializer 経由のDataStore読み書きがクラッシュする(実際にminify有効でビルドし
+# app/build/outputs/mapping/release/mapping.txt を確認すると、このルール無しでは
+# `authToken_` フィールドがリネームされることを確認済み)。
+# tink-android/datastore-preferences が consumer rules で保護しているのはそれぞれが
+# shade/内蔵する GeneratedMessageLite サブクラスのみで、本プロジェクト自身が
+# protobuf-javalite から生成する AuthPrefs はどのライブラリからも保護されないため、
+# ここで明示的にフィールド名を保持する。
+-keepclassmembers class com.example.authapplication.data.auth.proto.** extends com.google.protobuf.GeneratedMessageLite {
+    <fields>;
+}
+
+# --- kotlinx.serialization: @Serializable な Route のシリアライザ解決 ---
+# Navigation Compose の型安全ナビゲーション(navigation-compose 2.9.8)は、composable<XxxRoute>
+# のように呼び出し時点で型が確定しているため、mapping.txt で確認する限り現状は
+# XxxRoute.serializer() への直接呼び出しにコンパイルされ、リフレクションを経由しない
+# (フィールド自体はリネームされるが、シリアライザが生成コードから直接アクセスするため
+# 実行時には影響しない)。ただし将来 sealed class での多態的なRouteを追加する等、
+# 実行時にシリアライザをリフレクション解決する経路が増えた場合に備え、
+# kotlinx.serialization公式README推奨のルールを本プロジェクトのパッケージへ絞って適用しておく。
+-keepattributes InnerClasses
+-keepclassmembers class com.example.authapplication.** {
+    *** Companion;
+}
+-keepclasseswithmembers class com.example.authapplication.** {
+    kotlinx.serialization.KSerializer serializer(...);
+}
+-keep,includedescriptorclasses class com.example.authapplication.**$$serializer { *; }

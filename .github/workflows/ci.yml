@@ -93,8 +93,10 @@ jobs:
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v6
 
+      # assembleReleaseも含めるのは、release専用のR8/keepルール設定(docs/release-build.md)が
+      # 壊れてもビルドが通ってしまう(=検知できない)状態に戻さないため。
       - name: Assemble, test, lint
-        run: ./gradlew assembleDebug test lint --stacktrace
+        run: ./gradlew assembleDebug assembleRelease test lint --stacktrace
 
       - name: Upload reports
         if: ${{ !cancelled() }}

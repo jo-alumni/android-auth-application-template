@@ -66,6 +66,21 @@ ViewModel からのデータアクセスは必ず `:domain` の UseCase を経�
 ./gradlew assembleDebug
 ```
 
+### リリースビルド(R8)
+
+release ビルドは R8 によるコード最適化・リソース最適化を有効化しています
+(`app/build.gradle.kts` の `optimization { enable = true }`)。
+
+```bash
+# releaseビルド(R8 minify 有効。成果物は未署名APK)
+./gradlew assembleRelease
+```
+
+`signingConfig` を定義していないため成果物は未署名です。実機で動作確認する場合は
+デバッグ鍵で署名してからインストールしてください。有効化した経緯・実際にR8で壊れた箇所
+(protobuf-liteのフィールドリネーム)・追加した keep ルールの理由、未署名/デバッグ署名での
+インストール手順は [docs/release-build.md](docs/release-build.md) を参照してください。
+
 ### テスト
 
 ```bash
